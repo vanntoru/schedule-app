@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template   # ← ここを追加
 
 def create_app() -> Flask:
     """Flask アプリを生成して返すファクトリ関数（最小構成）"""
@@ -12,7 +12,7 @@ def create_app() -> Flask:
     # 暫定トップページ
     @app.get("/")
     def index():
-        return "It works! 🚀", 200, {"Content-Type": "text/plain; charset=utf-8"}
+        return render_template("index.html")
 
     return app
 
