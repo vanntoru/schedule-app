@@ -9,6 +9,18 @@ from __future__ import annotations
 
 from typing import Any
 
+# OAuth scopes required for the application
+# openid, profile and email allow user authentication,
+# Calendar and Sheets readonly scopes provide read access
+# to the user's calendar and spreadsheet data.
+SCOPES = [
+    "openid",
+    "profile",
+    "email",
+    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/spreadsheets.readonly",
+]
+
 
 class GoogleClient:
     """Lightweight wrapper around Google service clients."""
