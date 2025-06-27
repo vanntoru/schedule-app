@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
+
 # OAuth scopes required for accessing Google APIs
+
 SCOPES = [
     "openid",
     "profile",
