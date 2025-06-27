@@ -10,12 +10,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from schedule_app.services.rounding import quantize
 
-@pytest.mark.parametrize("iso,up,expected", [
-    ("2025-01-01T00:05:00Z", False, "2025-01-01T00:00:00Z"),
-    ("2025-01-01T00:05:00Z", True, "2025-01-01T00:10:00Z"),
-    ("2025-01-01T00:00:00Z", True, "2025-01-01T00:00:00Z"),
-])
-def test_quantize(iso: str, up: bool, expected: str):
+@pytest.mark.parametrize(
+    "iso,up,expected",
+    [
+        ("2025-01-01T00:05:00Z", False, "2025-01-01T00:00:00Z"),
+        ("2025-01-01T00:05:00Z", True, "2025-01-01T00:10:00Z"),
+        ("2025-01-01T00:00:00Z", True, "2025-01-01T00:00:00Z"),
+    ],
+)
+def test_quantize(iso: str, up: bool, expected: str) -> None:
     dt = datetime.fromisoformat(iso.replace("Z", "+00:00")).replace(tzinfo=None)
-    want = datetime.fromisoformat(expected.replace("Z", "+00:00")).replace(tzinfo=None)
+    want = datetime.fromisoformat(expected.replace("Z", "+00:00"))
     assert quantize(dt, up=up) == want
