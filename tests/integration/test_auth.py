@@ -1,14 +1,14 @@
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pytest
 
 pytest.importorskip("flask")
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from schedule_app import create_app
+from schedule_app import create_app  # noqa: E402
 
 GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 
