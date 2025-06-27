@@ -1,7 +1,24 @@
-from flask import Flask, jsonify, render_template   # ← ここを追加
+"""Minimal Flask application factory.
 
-def create_app() -> Flask:
-    """Flask アプリを生成して返すファクトリ関数（最小構成）"""
+This module avoids importing Flask at module import time when the package is
+used purely for utilities (e.g. during unit tests).  The heavy import occurs
+only inside :func:`create_app`.
+"""
+
+from __future__ import annotations
+
+try:  # Flask may be absent in some test environments
+    from flask import Flask  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    Flask = None  # type: ignore
+
+def create_app() -> Flask:  # type: ignore[name-defined]
+    """Return a minimal Flask application."""
+    if Flask is None:  # pragma: no cover - import guard for tests
+        raise RuntimeError("Flask is required to create the application")
+
+    from flask import jsonify, render_template
+
     app = Flask(__name__)
 
     # ヘルスチェック用エンドポイント
@@ -18,4 +35,7 @@ def create_app() -> Flask:
 
 
 # `flask --app schedule_app run` で自動検出されるエントリ
-app = create_app()
+if Flask is not None:  # pragma: no cover - optional in test env
+    app = create_app()
+else:  # keep a stub for type checkers
+    app = None  # type: ignore
