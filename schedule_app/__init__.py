@@ -1,10 +1,4 @@
-"""Minimal Flask application factory.
-
-This module avoids importing Flask at module import time when the package is
-used purely for utilities (e.g. during unit tests).  The heavy import occurs
-only inside :func:`create_app`.
-"""
-
+"""Minimal Flask application factory with OAuth callback stub."""
 from __future__ import annotations
 
 try:  # Flask may be absent in some test environments
@@ -12,12 +6,18 @@ try:  # Flask may be absent in some test environments
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Flask = None  # type: ignore
 
+from flask import abort, jsonify, make_response, render_template, request
+
+
+def _exchange_code_for_token(code: str):
+    """Placeholder for the OAuth token exchange."""
+    raise NotImplementedError
+
+
 def create_app() -> Flask:  # type: ignore[name-defined]
     """Return a minimal Flask application."""
     if Flask is None:  # pragma: no cover - import guard for tests
         raise RuntimeError("Flask is required to create the application")
-
-    from flask import jsonify, render_template
 
     app = Flask(__name__)
 
@@ -30,6 +30,18 @@ def create_app() -> Flask:  # type: ignore[name-defined]
     @app.get("/")
     def index():
         return render_template("index.html")
+
+    @app.get("/oauth2callback")
+    def oauth2callback():
+        resp = _exchange_code_for_token(request.args.get("code", ""))
+        if getattr(resp, "status_code", None) != 200:
+            problem = {
+                "type": "about:blank",
+                "title": "token exchange failed",
+                "status": 422,
+            }
+            abort(make_response(jsonify(problem), 422))
+        return jsonify(status="ok")
 
     return app
 
