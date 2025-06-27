@@ -1,0 +1,19 @@
+{
+  // Python 拡張に「プロジェクト専用 venv」を明示
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+
+  // 保存時に Ruff & Black を自動実行（好みで true/false）
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+
+  // テスト探索を pytest に固定
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+
+  // ターミナル初期化時に venv を自動アクティベート
+  "terminal.integrated.env.windows": {
+    "VENV": "${workspaceFolder}\\.venv"
+  }
+}
