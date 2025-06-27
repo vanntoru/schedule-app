@@ -9,6 +9,15 @@ from __future__ import annotations
 
 from typing import Any
 
+# OAuth scopes required for accessing Google APIs
+SCOPES = [
+    "openid",
+    "profile",
+    "email",
+    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/spreadsheets.readonly",
+]
+
 
 class GoogleClient:
     """Lightweight wrapper around Google service clients."""
