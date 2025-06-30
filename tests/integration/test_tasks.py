@@ -7,13 +7,12 @@ import pytest
 from flask import Flask
 
 from schedule_app import create_app
-from schedule_app.api.tasks import bp as tasks_bp, TASKS
+from schedule_app.api.tasks import TASKS
 
 
 @pytest.fixture()
 def app() -> Flask:
     flask_app = create_app(testing=True)
-    flask_app.register_blueprint(tasks_bp)
     return flask_app
 
 
