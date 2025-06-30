@@ -90,6 +90,7 @@ def test_calendar_unauthorized(app: Flask, client) -> None:
 def test_calendar_forbidden(app: Flask, client) -> None:
     class FakeResp:
         status = 403
+        reason = "Forbidden"
 
     app.extensions["gclient"] = DummyGClient(raise_exc=HttpError(FakeResp(), b""))
     resp = client.get("/api/calendar?date=2025-01-01")
