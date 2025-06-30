@@ -20,7 +20,7 @@ __all__ = ["bp", "TASKS"]
 # ---------------------------------------------------------------------------
 
 
-def _problem(status: int, code: str, detail: str):
+def _problem(status: int, code: str, detail: str) -> None:
     """Problem Details 仕様フォーマットで abort する。"""
     response = jsonify(
         {
@@ -28,9 +28,11 @@ def _problem(status: int, code: str, detail: str):
             "title": "Validation failed" if status == 422 else "Not found",
             "status": status,
             "detail": detail,
+            "instance": request.path,
         }
     )
     response.status_code = status
+    response.mimetype = "application/problem+json"
     abort(response)
 
 

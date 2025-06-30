@@ -6,20 +6,12 @@ from datetime import datetime
 from flask import Blueprint, abort, current_app, jsonify, request
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
-from werkzeug.exceptions import HTTPException
 
 from schedule_app.services.google_client import GoogleClient
 
 
 bp = Blueprint("calendar_bp", __name__)
 calendar_bp = bp
-
-
-@bp.errorhandler(HTTPException)
-def handle_http_exception(exc: HTTPException) -> tuple[dict, int]:
-    """Return errors as JSON Problem Details."""
-    payload = {"type": "about:blank", "title": exc.name, "status": exc.code}
-    return jsonify(payload), exc.code
 
 
 @bp.get("/api/calendar")
