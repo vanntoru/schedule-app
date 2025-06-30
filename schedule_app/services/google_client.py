@@ -8,6 +8,8 @@ added later.
 from __future__ import annotations
 
 from typing import Any
+from urllib import parse, request
+import json
 
 
 # OAuth scopes required for accessing Google APIs
@@ -35,3 +37,29 @@ class GoogleClient:
     def sheets_service(self) -> Any:
         """Return a Google Sheets service client (stub)."""
         raise NotImplementedError
+
+    def fetch_calendar_events(self, *, time_min: str, time_max: str) -> list[dict]:
+        """Fetch calendar events within the given time range.
+
+        Parameters
+        ----------
+        time_min: str
+            ISO 8601 start datetime in UTC.
+        time_max: str
+            ISO 8601 end datetime in UTC.
+        """
+
+        query = parse.urlencode(
+            {
+                "timeMin": time_min,
+                "timeMax": time_max,
+                "singleEvents": "true",
+            }
+        )
+        url = (
+            "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
+        )
+        req = request.Request(url)
+        with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
+            data = json.loads(resp.read().decode())
+        return data.get("items", [])
