@@ -83,6 +83,14 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     if testing:
         app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 
+    # Optional API blueprints
+    try:
+        from .api import calendar_bp
+    except Exception:  # pragma: no cover - optional
+        calendar_bp = None  # type: ignore
+    if calendar_bp is not None:
+        app.register_blueprint(calendar_bp)
+
     # ヘルスチェック用エンドポイント
     @app.get("/api/health")
     def health():
