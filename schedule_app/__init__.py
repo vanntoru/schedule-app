@@ -12,6 +12,18 @@ try:  # Flask may be absent in some test environments
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Flask = None  # type: ignore
 
+try:
+    from google_auth_oauthlib.flow import Flow  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    Flow = None  # type: ignore
+
+
+def _build_flow(*, redirect_uri: str) -> Flow:  # pragma: no cover - placeholder
+    """Return an OAuth2 Flow object."""
+    if Flow is None:
+        raise RuntimeError("google-auth-oauthlib is required")
+    raise NotImplementedError
+
 def create_app() -> Flask:  # type: ignore[name-defined]
     """Return a minimal Flask application."""
     if Flask is None:  # pragma: no cover - import guard for tests
