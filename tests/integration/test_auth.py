@@ -30,8 +30,8 @@ def app():
     """Real Flask app from create_app(), in TESTING mode."""
     from schedule_app import create_app
 
-    flask_app = create_app()
-    flask_app.config.update(TESTING=True, SECRET_KEY="test-secret")
+    flask_app = create_app(testing=True)
+    flask_app.config.update(SECRET_KEY="test-secret")
     return flask_app
 
 
