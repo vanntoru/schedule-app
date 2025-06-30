@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 # Explicitly export optional blueprints
-__all__ = ["bp_calendar"]
+__all__ = ["calendar_bp"]
 
 try:
-    from .calendar import bp_calendar  # type: ignore
+    from .calendar import calendar_bp  # type: ignore
 except Exception:  # pragma: no cover - optional blueprint
-    bp_calendar = None  # type: ignore
+    calendar_bp = None  # type: ignore

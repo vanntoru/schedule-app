@@ -10,10 +10,11 @@ from googleapiclient.errors import HttpError
 from schedule_app.services.google_client import GoogleClient
 
 
-bp_calendar = Blueprint("bp_calendar", __name__)
+bp = Blueprint("calendar_bp", __name__)
+calendar_bp = bp
 
 
-@bp_calendar.get("/api/calendar")
+@bp.get("/api/calendar")
 def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
     date_str = request.args.get("date")
     if not date_str:
@@ -46,4 +47,4 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
     return jsonify([asdict(ev) for ev in events]), 200
 
 
-__all__ = ["bp_calendar"]
+__all__ = ["calendar_bp"]
