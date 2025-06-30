@@ -17,11 +17,9 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 
 try:
     from google_auth_oauthlib.flow import Flow  # type: ignore
-    import google.oauth2.credentials as gcreds  # type: ignore
     from flask import session, redirect, url_for, abort  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Flow = None  # type: ignore
-    gcreds = None  # type: ignore
 
 
 def _get_setting(name: str) -> str | None:
