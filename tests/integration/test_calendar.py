@@ -1,49 +1,98 @@
 from __future__ import annotations
 
 import json
-import re
-from unittest.mock import MagicMock
+from datetime import datetime, timezone
+from typing import Any
 
-import httpretty
-from urllib import parse
 import pytest
+from freezegun import freeze_time
+from flask import Flask
 
-from schedule_app.services.google_client import GoogleClient
+from schedule_app import create_app
+from schedule_app.api.calendar import calendar_bp, HttpError, RefreshError
+from schedule_app.models import Event
+
+
+class DummyGClient:
+    """Simple Google client mock."""
+
+    def __init__(self, *, raise_exc: Exception | None = None, events: list[Event] | None = None) -> None:
+        self.raise_exc = raise_exc
+        self.events = events or []
+
+    def list_events(self, *, date: datetime) -> list[Event]:
+        if self.raise_exc:
+            raise self.raise_exc
+        return self.events
 
 
 @pytest.fixture()
-def client():
-    return GoogleClient(credentials=MagicMock())
+def app() -> Flask:
+    flask_app = create_app(testing=True)
+    flask_app.register_blueprint(calendar_bp)
+    return flask_app
 
 
-def test_fetch_calendar_events_request_url(client):
-    start = "2025-01-01T00:00:00Z"
-    end = "2025-01-02T00:00:00Z"
+@pytest.fixture()
+def client(app: Flask):
+    return app.test_client()
 
-    url_re = re.compile(
-        r"https://www.googleapis.com/calendar/v3/calendars/primary/events.*"
-    )
-    query = parse.urlencode(
-        {
-            "timeMin": start,
-            "timeMax": end,
-            "singleEvents": "true",
-        }
-    )
-    expected_url = (
-        "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
-    )
 
-    httpretty.enable()
-    httpretty.register_uri(
-        httpretty.GET,
-        uri=url_re,
-        body=json.dumps({"items": []}),
-        status=200,
+def _assert_problem_details(data: Any) -> None:
+    assert isinstance(data, dict)
+    for key in ("type", "title", "status"):
+        assert key in data
+
+
+def test_calendar_missing_date(app: Flask, client) -> None:
+    app.extensions["gclient"] = DummyGClient()
+    resp = client.get("/api/calendar")
+    assert resp.status_code == 400
+    data = json.loads(resp.data)
+    _assert_problem_details(data)
+
+
+def test_calendar_invalid_date(app: Flask, client) -> None:
+    app.extensions["gclient"] = DummyGClient()
+    resp = client.get("/api/calendar?date=2025/01/01")
+    assert resp.status_code == 400
+    data = json.loads(resp.data)
+    _assert_problem_details(data)
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_success(app: Flask, client) -> None:
+    event = Event(
+        id="1",
+        start_utc=datetime(2025, 1, 1, 1, 0, tzinfo=timezone.utc),
+        end_utc=datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc),
+        title="Demo",
     )
-    try:
-        client.fetch_calendar_events(time_min=start, time_max=end)
-        assert httpretty.last_request().url == expected_url
-    finally:
-        httpretty.disable()
-        httpretty.reset()
+    app.extensions["gclient"] = DummyGClient(events=[event])
+    resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["title"] == "Demo"
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_unauthorized(app: Flask, client) -> None:
+    app.extensions["gclient"] = DummyGClient(raise_exc=RefreshError("unauthorized"))
+    resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 401
+    data = json.loads(resp.data)
+    _assert_problem_details(data)
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_forbidden(app: Flask, client) -> None:
+    class FakeResp:
+        status = 403
+
+    app.extensions["gclient"] = DummyGClient(raise_exc=HttpError(FakeResp(), b""))
+    resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 403
+    data = json.loads(resp.data)
+    _assert_problem_details(data)
