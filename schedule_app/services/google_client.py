@@ -2,7 +2,8 @@
 
 This module defines a minimal :class:`GoogleClient` with placeholders for
 accessing Google Calendar and Google Sheets. Actual API integration will be
-added later.
+added later.  A convenience :meth:`GoogleClient.list_events` computes the
+UTC range for a given day before calling :meth:`fetch_calendar_events`.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 from urllib import parse, request
 import json
+from datetime import datetime, timedelta, timezone
 
 
 # OAuth scopes required for accessing Google APIs
@@ -63,3 +65,25 @@ class GoogleClient:
         with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
             data = json.loads(resp.read().decode())
         return data.get("items", [])
+
+    def list_events(self, *, date: datetime) -> list[dict]:
+        """Return events for the 24-hour period starting at UTC midnight.
+
+        Parameters
+        ----------
+        date : datetime
+            Target day. Naive values are treated as UTC.
+        """
+
+        if date.tzinfo is None:
+            date = date.replace(tzinfo=timezone.utc)
+        else:
+            date = date.astimezone(timezone.utc)
+
+        start = datetime.combine(date.date(), datetime.min.time(), tzinfo=timezone.utc)
+        end = start + timedelta(days=1)
+
+        return self.fetch_calendar_events(
+            time_min=start.isoformat().replace("+00:00", "Z"),
+            time_max=end.isoformat().replace("+00:00", "Z"),
+        )

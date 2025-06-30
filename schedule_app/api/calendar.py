@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from flask import Blueprint, abort, current_app, jsonify, request
 from google.auth.exceptions import RefreshError
@@ -24,13 +24,10 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
     except ValueError:
         abort(400, description="invalid date format")
 
-    start_utc = datetime.combine(date_obj, datetime.min.time())
-    end_utc = start_utc + timedelta(days=1)
-
     client: GoogleClient = current_app.extensions["gclient"]
 
     try:
-        events = client.list_events(start_utc=start_utc, end_utc=end_utc)
+        events = client.list_events(date=date_obj)
     except RefreshError:
         abort(401)
     except HttpError as exc:
