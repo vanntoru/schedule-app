@@ -36,7 +36,6 @@ def test_list_empty(client) -> None:
 
 def test_create_and_get(client) -> None:
     payload = {
-        "id": "1",
         "title": "Task",
         "category": "general",
         "duration_min": 20,
@@ -47,7 +46,7 @@ def test_create_and_get(client) -> None:
     resp = client.post("/api/tasks", json=payload)
     assert resp.status_code == 201
     data = resp.get_json()
-    assert data["id"] == "1"
+    assert "id" in data
     assert data["earliest_start_utc"] == "2025-01-01T09:00:00Z"
 
     resp = client.get("/api/tasks")
@@ -56,7 +55,6 @@ def test_create_and_get(client) -> None:
 
 def test_validation_error(client) -> None:
     payload = {
-        "id": "x",
         "title": "bad",
         "category": "g",
         "duration_min": 21,
@@ -70,7 +68,6 @@ def test_validation_error(client) -> None:
 
 def test_invalid_priority(client) -> None:
     payload = {
-        "id": "p",
         "title": "badprio",
         "category": "g",
         "duration_min": 10,
@@ -90,21 +87,21 @@ def test_update_not_found(client) -> None:
 
 def test_update_and_delete(client) -> None:
     payload = {
-        "id": "2",
         "title": "T",
         "category": "c",
         "duration_min": 10,
         "duration_raw_min": 10,
         "priority": "B",
     }
-    client.post("/api/tasks", json=payload)
+    resp = client.post("/api/tasks", json=payload)
+    task_id = resp.get_json()["id"]
 
     upd = payload | {"title": "Updated"}
-    resp = client.put("/api/tasks/2", json=upd)
+    resp = client.put(f"/api/tasks/{task_id}", json=upd)
     assert resp.status_code == 200
     assert resp.get_json()["title"] == "Updated"
 
-    del_resp = client.delete("/api/tasks/2")
+    del_resp = client.delete(f"/api/tasks/{task_id}")
     assert del_resp.status_code == 204
 
     resp = client.get("/api/tasks")
