@@ -73,6 +73,9 @@ def _task_from_json(data: dict[str, Any]) -> Task:
 
     _validate_durations(data["duration_min"], data["duration_raw_min"])
 
+    if data["priority"] not in {"A", "B"}:
+        _problem(422, "invalid-field", "Priority must be 'A' or 'B'.")
+
     return Task(
         id=data["id"],
         title=data["title"],

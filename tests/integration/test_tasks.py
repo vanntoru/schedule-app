@@ -68,6 +68,20 @@ def test_validation_error(client) -> None:
     _assert_problem_details(resp.get_json())
 
 
+def test_invalid_priority(client) -> None:
+    payload = {
+        "id": "p",
+        "title": "badprio",
+        "category": "g",
+        "duration_min": 10,
+        "duration_raw_min": 10,
+        "priority": "C",
+    }
+    resp = client.post("/api/tasks", json=payload)
+    assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+
 def test_update_not_found(client) -> None:
     resp = client.put("/api/tasks/404", json={"duration_min": 10, "duration_raw_min": 10})
     assert resp.status_code == 404
