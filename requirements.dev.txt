@@ -9,3 +9,4 @@ httpretty==1.*
 playwright==1.*
 pre-commit==3.*
 pip-audit==2.*
+google-auth-oauthlib>=1.2.0
