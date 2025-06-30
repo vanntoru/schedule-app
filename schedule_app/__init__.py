@@ -60,7 +60,6 @@ def _build_flow(*, redirect_uri: str) -> Flow:
         client_config,
         scopes=scopes,
         redirect_uri=redirect_uri,
-        code_challenge_method="S256",
     )
 
 def create_app() -> Flask:  # type: ignore[name-defined]
@@ -89,7 +88,10 @@ def create_app() -> Flask:  # type: ignore[name-defined]
 
         redirect_uri = _get_setting("GOOGLE_REDIRECT_URI")
         flow = _build_flow(redirect_uri=redirect_uri)
-        auth_url, state = flow.authorization_url()
+        auth_url, state = flow.authorization_url(
+            include_granted_scopes="true",
+            code_challenge_method="S256",
+        )
         session["pkce_state"] = state
         session["pkce_verifier"] = flow.code_verifier
         return redirect(auth_url)
