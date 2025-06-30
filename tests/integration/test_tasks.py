@@ -63,7 +63,9 @@ def test_validation_error(client) -> None:
     }
     resp = client.post("/api/tasks", json=payload)
     assert resp.status_code == 422
-    _assert_problem_details(resp.get_json())
+    data = resp.get_json()
+    _assert_problem_details(data)
+    assert data["detail"] == "Duration must be a positive multiple of 5 minutes."
 
 
 def test_invalid_priority(client) -> None:

@@ -55,14 +55,14 @@ def _validate_durations(duration_min: int, duration_raw_min: int) -> None:
         and isinstance(duration_raw_min, int)
         and duration_min > 0
         and duration_raw_min > 0
-        and duration_min % 10 == 0
+        and duration_min % 5 == 0
         and duration_raw_min % 5 == 0
     )
     if not ok:
         _problem(
             422,
             "invalid-field",
-            "Duration must be positive; raw multiple of 5, rounded multiple of 10.",
+            "Duration must be a positive multiple of 5 minutes.",
         )
 
 
