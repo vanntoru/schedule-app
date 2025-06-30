@@ -5,6 +5,7 @@ import re
 from unittest.mock import MagicMock
 
 import httpretty
+from urllib import parse
 import pytest
 
 from schedule_app.services.google_client import GoogleClient
@@ -22,9 +23,15 @@ def test_fetch_calendar_events_request_url(client):
     url_re = re.compile(
         r"https://www.googleapis.com/calendar/v3/calendars/primary/events.*"
     )
+    query = parse.urlencode(
+        {
+            "timeMin": start,
+            "timeMax": end,
+            "singleEvents": "true",
+        }
+    )
     expected_url = (
-        "https://www.googleapis.com/calendar/v3/calendars/primary/events"
-        f"?timeMin={start}&timeMax={end}&singleEvents=true"
+        "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
     )
 
     httpretty.enable()
