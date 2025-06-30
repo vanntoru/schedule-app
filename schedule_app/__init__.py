@@ -64,8 +64,14 @@ def _build_flow(*, redirect_uri: str) -> Flow:
         redirect_uri=redirect_uri,
     )
 
-def create_app() -> Flask:  # type: ignore[name-defined]
-    """Return a minimal Flask application."""
+def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
+    """Return a minimal Flask application.
+
+    Parameters
+    ----------
+    testing:
+        When ``True``, enable Flask testing mode and disable CSRF protection.
+    """
     if Flask is None:  # pragma: no cover - import guard for tests
         raise RuntimeError("Flask is required to create the application")
 
@@ -73,6 +79,9 @@ def create_app() -> Flask:  # type: ignore[name-defined]
 
     app = Flask(__name__)
     app.secret_key = "dev-secret-key"
+
+    if testing:
+        app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 
     # ヘルスチェック用エンドポイント
     @app.get("/api/health")
