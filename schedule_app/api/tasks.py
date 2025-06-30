@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any
+import uuid
 
 from flask import Blueprint, abort, jsonify, request, url_for
 
@@ -66,7 +67,7 @@ def _validate_durations(duration_min: int, duration_raw_min: int) -> None:
 
 
 def _task_from_json(data: dict[str, Any]) -> Task:
-    required = {"id", "title", "category", "duration_min", "duration_raw_min", "priority"}
+    required = {"title", "category", "duration_min", "duration_raw_min", "priority"}
     missing = required - data.keys()
     if missing:
         _problem(422, "invalid-field", f"Missing field(s): {', '.join(sorted(missing))}")
@@ -110,6 +111,7 @@ def list_tasks():
 @bp.post("")
 def create_task():
     data = request.get_json(force=True, silent=False)
+    data["id"] = str(uuid.uuid4())
     task = _task_from_json(data)
     TASKS[task.id] = task
 
