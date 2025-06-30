@@ -32,3 +32,16 @@ Execute the unit tests with:
 pytest -q
 ```
 
+
+## Tasks API
+
+Simple in-memory endpoints used by the front-end.
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/api/tasks` | List all tasks |
+| POST | `/api/tasks` | Create a task |
+| PUT | `/api/tasks/<id>` | Update a task |
+| DELETE | `/api/tasks/<id>` | Remove a task |
+
+All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response with type `https://schedule.app/errors/invalid-field`.
