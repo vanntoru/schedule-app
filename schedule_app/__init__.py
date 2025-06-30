@@ -43,15 +43,17 @@ def _build_flow(*, redirect_uri: str) -> Flow:
         "web": {
             "client_id": client_id,
             "client_secret": client_secret or "",
+            "redirect_uris": [redirect_uri],
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
         }
     }
 
+    # OAuth2 認証スコープをURI形式で指定（短縮表記を使用しない）
     scopes = [
         "openid",
-        "profile",
-        "email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/calendar.readonly",
         "https://www.googleapis.com/auth/spreadsheets",
     ]
