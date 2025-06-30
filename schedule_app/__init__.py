@@ -8,6 +8,7 @@ only inside :func:`create_app`.
 from __future__ import annotations
 
 import os
+from werkzeug.exceptions import HTTPException
 
 try:  # Flask may be absent in some test environments
     from flask import Flask  # type: ignore
@@ -17,7 +18,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 try:
     from google_auth_oauthlib.flow import Flow  # type: ignore
     import google.oauth2.credentials as gcreds  # type: ignore
-    from flask import session, redirect, url_for, request, abort  # type: ignore
+    from flask import session, redirect, url_for, abort  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Flow = None  # type: ignore
     gcreds = None  # type: ignore
@@ -75,7 +76,7 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     if Flask is None:  # pragma: no cover - import guard for tests
         raise RuntimeError("Flask is required to create the application")
 
-    from flask import jsonify, render_template
+    from flask import jsonify, render_template, request
 
     app = Flask(__name__)
     app.secret_key = "dev-secret-key"
@@ -125,6 +126,23 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
 
         session["google_creds"] = flow.credentials.to_json()
         return redirect(url_for("index"))
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(exc: HTTPException):
+        status = exc.code or 500
+        code = "invalid-field" if status == 422 else exc.name.lower().replace(" ", "-")
+        title = "Validation failed" if status == 422 else exc.name
+        payload = {
+            "type": f"https://schedule.app/errors/{code}",
+            "title": title,
+            "status": status,
+            "detail": exc.description,
+            "instance": request.path,
+        }
+        response = jsonify(payload)
+        response.status_code = status
+        response.mimetype = "application/problem+json"
+        return response
 
     return app
 
