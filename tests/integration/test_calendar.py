@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from flask import Flask
 
 from schedule_app import create_app
-from schedule_app.api.calendar import calendar_bp, HttpError, RefreshError
+from schedule_app.api.calendar import HttpError, RefreshError
 from schedule_app.models import Event
 
 
@@ -29,7 +29,6 @@ class DummyGClient:
 @pytest.fixture()
 def app() -> Flask:
     flask_app = create_app(testing=True)
-    flask_app.register_blueprint(calendar_bp)
     return flask_app
 
 
