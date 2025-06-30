@@ -3,38 +3,40 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timezone, tzinfo
 
 SLOT_SEC = 600  # 10 minutes
 
 
-def _to_utc(dt: datetime) -> datetime:
-    """Return *dt* as a timezone-aware UTC datetime.
+def _to_tz(dt: datetime, tz: tzinfo) -> datetime:
+    """Return *dt* converted to the given timezone ``tz``.
 
-    *   naive ⇒ UTC と見なす（仕様書 §9「内部: UTC 固定」）
-    *   TZ 付き ⇒ UTC に変換
+    *   naive ⇒ assume ``tz``
+    *   aware ⇒ convert to ``tz``
     """
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        return dt.replace(tzinfo=tz)
+    return dt.astimezone(tz)
 
 
-def quantize(dt: datetime, *, up: bool) -> datetime:
+def quantize(dt: datetime, *, up: bool, tz: tzinfo = timezone.utc) -> datetime:
     """Round *dt* to the nearest 10-minute boundary.
 
     Parameters
     ----------
     dt : datetime
-        UTC or naive (treated as UTC).
+        The datetime to round. Naive values are interpreted in ``tz``.
+    tz : tzinfo, optional
+        Target timezone for rounding and return value (default: UTC).
     up : bool
         False ⇒ floor, True ⇒ ceil.
 
     Returns
     -------
     datetime
-        UTC, **timezone-aware**.
+        A timezone-aware datetime in ``tz``.
     """
-    dt_utc = _to_utc(dt)
-    ts = dt_utc.timestamp()
+    dt_local = _to_tz(dt, tz)
+    ts = dt_local.timestamp()
     rounded = (math.ceil(ts / SLOT_SEC) if up else math.floor(ts / SLOT_SEC)) * SLOT_SEC
-    return datetime.fromtimestamp(rounded, timezone.utc)
+    return datetime.fromtimestamp(rounded, tz)
