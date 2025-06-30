@@ -70,9 +70,12 @@ def create_app() -> Flask:  # type: ignore[name-defined]
         raise RuntimeError("Flask is required to create the application")
 
     from flask import jsonify, render_template
+    from .api.calendar import bp as calendar_bp
 
     app = Flask(__name__)
     app.secret_key = "dev-secret-key"
+
+    app.register_blueprint(calendar_bp)
 
     # ヘルスチェック用エンドポイント
     @app.get("/api/health")
