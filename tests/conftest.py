@@ -1,4 +1,9 @@
 # tests/conftest.py  ★新規
+"""Pytest configuration.
+
+Tests rely on ``freezegun`` for time manipulation. They are skipped if the
+package isn't installed.
+"""
 import sys
 import pathlib
 import importlib

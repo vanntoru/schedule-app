@@ -26,9 +26,10 @@ The `requirements.dev.txt` file includes **freezegun**, which the tests rely on.
 
 ## Running Tests
 
-Execute the unit tests with:
+Install the development requirements and then execute the unit tests with:
 
 ```bash
+pip install -r requirements.dev.txt
 pytest -q
 ```
 
