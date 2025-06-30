@@ -17,10 +17,12 @@ cd schedule-app
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install -U pip
-pip install -r requirements.dev.txt
+pip install -r requirements.dev.txt  # installs dev packages like freezegun
 pre-commit install
 flask --app schedule_app run --debug --port 5173
 ```
+
+The `requirements.dev.txt` file includes **freezegun**, which the tests rely on.
 
 ## Running Tests
 
