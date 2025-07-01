@@ -20,10 +20,22 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
     if not date_str:
         abort(400, description="date parameter required")
 
+    # If '+' was decoded to ' ', restore it
+    if " " in date_str and "+" not in date_str:
+        date_str = date_str.replace(" ", "+")
+
+    if date_str.endswith("Z"):
+        date_str = date_str[:-1] + "+00:00"
+
     try:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        date_obj = datetime.fromisoformat(date_str)
     except ValueError:
         abort(400, description="invalid date format")
+
+    if date_obj.tzinfo is None:
+        date_obj = date_obj.replace(tzinfo=timezone.utc)
+    else:
+        date_obj = date_obj.astimezone(timezone.utc)
 
     client: GoogleClient = current_app.extensions["gclient"]
 
