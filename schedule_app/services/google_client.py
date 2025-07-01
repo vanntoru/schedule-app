@@ -10,10 +10,17 @@ from __future__ import annotations
 
 from typing import Any
 from urllib import parse, request
+from urllib.error import HTTPError
 import json
 from datetime import datetime, timedelta, timezone
 
 from schedule_app.models import Event
+
+
+class APIError(Exception):
+    """Raised when token is missing or unauthorized."""
+
+
 
 
 # OAuth scopes required for accessing Google APIs
@@ -30,7 +37,7 @@ SCOPES = [
 class GoogleClient:
     """Lightweight wrapper around Google service clients."""
 
-    def __init__(self, credentials: Any) -> None:
+    def __init__(self, credentials: Any | None) -> None:
         """Initialize the client with OAuth2 *credentials*."""
         self.credentials = credentials
 
@@ -41,6 +48,16 @@ class GoogleClient:
     def sheets_service(self) -> Any:
         """Return a Google Sheets service client (stub)."""
         raise NotImplementedError
+
+    def _get_token(self) -> str:
+        """Return OAuth access token from stored credentials."""
+
+        creds = self.credentials
+        if hasattr(creds, "token") and getattr(creds, "token"):
+            return getattr(creds, "token")
+        if isinstance(creds, dict) and creds.get("access_token"):
+            return creds["access_token"]
+        raise APIError("missing_token")
 
     def fetch_calendar_events(self, *, time_min: str, time_max: str) -> list[dict]:
         """Fetch calendar events within the given time range.
@@ -53,6 +70,8 @@ class GoogleClient:
             ISO 8601 end datetime in UTC.
         """
 
+        token = self._get_token()
+
         query = parse.urlencode(
             {
                 "timeMin": time_min,
@@ -63,9 +82,14 @@ class GoogleClient:
         url = (
             "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
         )
-        req = request.Request(url)
-        with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
-            data = json.loads(resp.read().decode())
+        req = request.Request(url, headers={"Authorization": f"Bearer {token}"})
+        try:
+            with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
+                data = json.loads(resp.read().decode())
+        except HTTPError as e:  # pragma: no cover - network stubbed
+            if e.code in (401, 403):
+                raise APIError("unauthorized") from e
+            raise
         return data.get("items", [])
 
     def _parse_dt(self, value: str) -> datetime:
@@ -119,3 +143,6 @@ class GoogleClient:
         )
 
         return [self._to_event(item) for item in items]
+
+
+__all__ = ["GoogleClient", "APIError", "SCOPES"]
