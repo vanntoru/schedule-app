@@ -19,9 +19,9 @@
                   {% if m != '00' %}opacity-0{% endif %}">
         {{ h }}:{{ m }}
       </div>
-      <div class="slot border-b border-gray-200 hover:bg-blue-50
-                  cursor-pointer"
-           data-slot="{{ i }}"></div>
+      <div class="slot border-b border-gray-200 hover:bg-blue-50 cursor-pointer
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+           role="listitem" tabindex="0" data-slot="{{ i }}"></div>
     {% endfor %}
   </section>
 </main>
