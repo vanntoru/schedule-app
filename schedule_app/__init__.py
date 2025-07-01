@@ -83,12 +83,16 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
         app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 
     from schedule_app.api import calendar_bp, tasks_bp
+    from schedule_app.api.blocks import init_blocks_api
 
     if calendar_bp is not None:
         app.register_blueprint(calendar_bp)
 
     if tasks_bp is not None:
         app.register_blueprint(tasks_bp)
+
+    # blocks API
+    init_blocks_api(app)
 
     # ヘルスチェック用エンドポイント
     @app.get("/api/health")
