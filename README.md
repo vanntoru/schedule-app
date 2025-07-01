@@ -34,6 +34,13 @@ pip install -r requirements.dev.txt  # includes freezegun
 pytest -q
 ```
 
+## Google Calendar Stub
+
+When the application runs without OAuth credentials, the `GoogleClient`
+automatically returns two dummy events at 09:00 and 13:00 for the requested
+day. This allows the `/api/calendar` endpoint and tests to work without real
+Google access.
+
 
 ## Tasks API
 
