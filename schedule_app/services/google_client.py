@@ -13,6 +13,8 @@ from urllib import parse, request
 import json
 from datetime import datetime, timedelta, timezone
 
+from schedule_app.models import Event
+
 
 # OAuth scopes required for accessing Google APIs
 
@@ -66,7 +68,35 @@ class GoogleClient:
             data = json.loads(resp.read().decode())
         return data.get("items", [])
 
-    def list_events(self, *, date: datetime) -> list[dict]:
+    def _parse_dt(self, value: str) -> datetime:
+        """Return a timezone-aware UTC datetime from ISO string."""
+
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt
+
+    def _to_event(self, data: dict) -> Event:
+        """Convert a Google Calendar event dictionary to an :class:`Event`."""
+
+        start_info = data.get("start", {})
+        end_info = data.get("end", {})
+        start_raw = start_info.get("dateTime") or start_info.get("date")
+        end_raw = end_info.get("dateTime") or end_info.get("date")
+        start_dt = self._parse_dt(start_raw) if start_raw else datetime.min.replace(tzinfo=timezone.utc)
+        end_dt = self._parse_dt(end_raw) if end_raw else start_dt
+        all_day = "date" in start_info or "date" in end_info
+        return Event(
+            id=data.get("id", ""),
+            start_utc=start_dt,
+            end_utc=end_dt,
+            title=data.get("summary", ""),
+            all_day=all_day,
+        )
+
+    def list_events(self, *, date: datetime) -> list[Event]:
         """Return events for the 24-hour period starting at UTC midnight.
 
         Parameters
@@ -83,7 +113,9 @@ class GoogleClient:
         start = datetime.combine(date.date(), datetime.min.time(), tzinfo=timezone.utc)
         end = start + timedelta(days=1)
 
-        return self.fetch_calendar_events(
+        items = self.fetch_calendar_events(
             time_min=start.isoformat().replace("+00:00", "Z"),
             time_max=end.isoformat().replace("+00:00", "Z"),
         )
+
+        return [self._to_event(item) for item in items]
