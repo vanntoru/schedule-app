@@ -1,158 +1,36 @@
-"""Simple task scheduler service for the 1-Day Schedule Generator."""
+"""Simplified scheduling service."""
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from typing import Literal
+from datetime import date
+from typing import Literal, TypedDict
 
-from schedule_app.models import Block, Event, Task
-from schedule_app.services.rounding import quantize
-
-__all__ = ["generate", "generate_schedule"]
-
-SLOT_MIN = 10
-DAY_SLOTS = 144
+NUM_SLOTS = 24 * 6
 
 
-def _day_start(date_utc: datetime) -> datetime:
-    if date_utc.tzinfo is None:
-        date_utc = date_utc.replace(tzinfo=timezone.utc)
-    else:
-        date_utc = date_utc.astimezone(timezone.utc)
-    return datetime.combine(date_utc.date(), datetime.min.time(), tzinfo=timezone.utc)
+class ScheduleGrid(TypedDict):
+    """Schedule grid representation."""
+
+    date: str
+    algo: Literal["greedy", "compact"]
+    slots: list[int]
+    unplaced: list[str]
 
 
-def _to_index(dt: datetime, *, base: datetime) -> int:
-    delta = dt - base
-    return int(delta.total_seconds() // (SLOT_MIN * 60))
+__all__ = ["NUM_SLOTS", "ScheduleGrid", "generate_schedule"]
 
 
-def _mark_busy(slot_map: list[bool], start: datetime, end: datetime, *, base: datetime) -> None:
-    s = _to_index(quantize(start, up=False), base=base)
-    e = _to_index(quantize(end, up=True), base=base)
-    s = max(s, 0)
-    e = min(e, DAY_SLOTS)
-    for i in range(s, e):
-        if 0 <= i < DAY_SLOTS:
-            slot_map[i] = True
-
-
-def _init_slot_map(date_utc: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
-    start = _day_start(date_utc)
-    slot_map = [False] * DAY_SLOTS
-    for ev in events:
-        _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=start)
-    for blk in blocks:
-        _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=start)
-    return slot_map
-
-
-def _sort_tasks(tasks: list[Task], *, day_start: datetime) -> list[Task]:
-    """Return *tasks* sorted by priority, start time and duration."""
-
-    def key(t: Task) -> tuple[int, datetime, int]:
-        prio = 0 if t.priority == "A" else 1
-        es = t.earliest_start_utc or day_start
-        if es < day_start:
-            es = day_start
-        es = quantize(es, up=True)
-        return (prio, es, -t.duration_min)
-
-    return sorted(tasks, key=key)
-
-
-def _find_slot(slot_map: list[bool], start_idx: int, slots_needed: int) -> int | None:
-    for idx in range(start_idx, DAY_SLOTS - slots_needed + 1):
-        if all(not slot_map[i] for i in range(idx, idx + slots_needed)):
-            return idx
-    return None
-
-
-def _place_tasks(slot_map: list[bool], tasks: list[Task], *, base: datetime) -> tuple[list[str | None], list[str]]:
-    grid: list[str | None] = [None] * DAY_SLOTS
-    unplaced: list[str] = []
-
-    for task in tasks:
-        es = task.earliest_start_utc or base
-        es = quantize(es, up=True)
-        start_idx = max(_to_index(es, base=base), 0)
-        need = task.duration_min // SLOT_MIN
-        idx = _find_slot(slot_map, start_idx, need)
-        if idx is None:
-            unplaced.append(task.id)
-            continue
-        for i in range(idx, idx + need):
-            slot_map[i] = True
-            grid[i] = task.id
-    return grid, unplaced
-
-
-def _compact_grid(grid: list[str | None]) -> list[str | None]:
-    # simple placeholder: no-op compaction
-    return grid
-
-
-def generate(
+def generate_schedule(
+    target_date: date,
     *,
-    date_utc: datetime,
-    tasks: list[Task],
-    events: list[Event],
-    blocks: list[Block],
-    algorithm: Literal["greedy", "compact"] = "greedy",
-) -> list[str | None]:
-    """Generate a 10 minute schedule for the given day."""
-    base = _day_start(date_utc)
-    slot_map = _init_slot_map(base, events, blocks)
-    sorted_tasks = _sort_tasks(tasks, day_start=date_utc)
-    grid, _unplaced = _place_tasks(slot_map, sorted_tasks, base=base)
-    if algorithm == "compact":
-        grid = _compact_grid(grid)
-    return grid
-
-
-def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
-    """Return a simple JSON friendly schedule for ``date``.
-
-    Parameters
-    ----------
-    date:
-        Target day in UTC.
-    algo:
-        Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
-        currently supported.
-    """
-
-    from schedule_app.api.tasks import TASKS
-    from schedule_app.api.blocks import BLOCKS
-
-    base = datetime.combine(date, datetime.min.time(), tzinfo=timezone.utc)
-
-    tasks = list(TASKS.values())
-    blocks = list(BLOCKS.values())
-
-    grid = generate(
-        date_utc=base,
-        tasks=tasks,
-        events=[],
-        blocks=blocks,
-        algorithm=algo,
-    )
-
-    busy_map = _init_slot_map(base, [], blocks)
-
-    slots: list[int] = []
-    for idx, cell in enumerate(grid):
-        if cell is None:
-            slots.append(1 if busy_map[idx] else 0)
-        else:
-            slots.append(2)
-
-    placed_ids = {t_id for t_id in grid if t_id is not None}
-    unplaced = [t.id for t in tasks if t.id not in placed_ids]
+    algo: Literal["greedy", "compact"] = "greedy",
+) -> ScheduleGrid:
+    """Return a blank schedule grid for ``target_date``."""
 
     return {
-        "date": date.isoformat(),
+        "date": target_date.isoformat(),
         "algo": algo,
-        "slots": slots,
-        "unplaced": unplaced,
+        "slots": [0] * NUM_SLOTS,
+        "unplaced": [],
     }
+
