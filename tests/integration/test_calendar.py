@@ -11,6 +11,7 @@ from flask import Flask
 from schedule_app import create_app
 from schedule_app.api.calendar import HttpError, RefreshError
 from schedule_app.models import Event
+from schedule_app.services.google_client import GoogleClient
 
 
 class DummyGClient:
@@ -96,3 +97,14 @@ def test_calendar_forbidden(app: Flask, client) -> None:
     assert resp.status_code == 403
     data = json.loads(resp.data)
     _assert_problem_details(data)
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_stub_events(app: Flask, client) -> None:
+    app.extensions["gclient"] = GoogleClient(credentials=None)
+    resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+

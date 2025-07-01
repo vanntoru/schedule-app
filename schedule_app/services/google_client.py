@@ -13,6 +13,8 @@ from urllib import parse, request
 import json
 from datetime import datetime, timedelta, timezone
 
+from schedule_app.models import Event
+
 
 # OAuth scopes required for accessing Google APIs
 
@@ -26,7 +28,12 @@ SCOPES = [
 
 
 class GoogleClient:
-    """Lightweight wrapper around Google service clients."""
+    """Lightweight wrapper around Google service clients.
+
+    When *credentials* is falsy the instance operates in stub mode and
+    :meth:`list_events` returns two predefined :class:`~schedule_app.models.Event`
+    objects.
+    """
 
     def __init__(self, credentials: Any) -> None:
         """Initialize the client with OAuth2 *credentials*."""
@@ -66,7 +73,7 @@ class GoogleClient:
             data = json.loads(resp.read().decode())
         return data.get("items", [])
 
-    def list_events(self, *, date: datetime) -> list[dict]:
+    def list_events(self, *, date: datetime) -> list[Event]:
         """Return events for the 24-hour period starting at UTC midnight.
 
         Parameters
@@ -83,7 +90,46 @@ class GoogleClient:
         start = datetime.combine(date.date(), datetime.min.time(), tzinfo=timezone.utc)
         end = start + timedelta(days=1)
 
-        return self.fetch_calendar_events(
+        # Stub mode: return dummy events when credentials are absent
+        if not self.credentials:
+            return [
+                Event(
+                    id="dummy-1",
+                    start_utc=start + timedelta(hours=9),
+                    end_utc=start + timedelta(hours=10),
+                    title="Dummy Event 1",
+                ),
+                Event(
+                    id="dummy-2",
+                    start_utc=start + timedelta(hours=13),
+                    end_utc=start + timedelta(hours=14),
+                    title="Dummy Event 2",
+                ),
+            ]
+
+        raw = self.fetch_calendar_events(
             time_min=start.isoformat().replace("+00:00", "Z"),
             time_max=end.isoformat().replace("+00:00", "Z"),
         )
+
+        events: list[Event] = []
+        for item in raw:
+            start_str = item.get("start", {}).get("dateTime")
+            end_str = item.get("end", {}).get("dateTime")
+            if not start_str or not end_str:
+                continue
+            start_dt = datetime.fromisoformat(start_str.replace("Z", "+00:00")).astimezone(
+                timezone.utc
+            )
+            end_dt = datetime.fromisoformat(end_str.replace("Z", "+00:00")).astimezone(
+                timezone.utc
+            )
+            events.append(
+                Event(
+                    id=item.get("id", ""),
+                    start_utc=start_dt,
+                    end_utc=end_dt,
+                    title=item.get("summary", ""),
+                )
+            )
+        return events
