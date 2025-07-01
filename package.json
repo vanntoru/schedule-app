@@ -1,0 +1,25 @@
+{
+  "name": "schedule-app",
+  "version": "1.0.0",
+  "description": "A Flask-based web application that generates a printable one-day schedule by merging Google Calendar events, user tasks and blocked time slots.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanntoru/schedule-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vanntoru/schedule-app/issues"
+  },
+  "homepage": "https://github.com/vanntoru/schedule-app#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.8"
+  }
+}

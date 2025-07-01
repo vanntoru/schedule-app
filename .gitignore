@@ -21,3 +21,9 @@ build/
 # --- OS / ユーティリティ -----------------------------------
 .DS_Store
 Thumbs.db
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
