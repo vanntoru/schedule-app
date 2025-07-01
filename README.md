@@ -26,10 +26,11 @@ The `requirements.dev.txt` file includes **freezegun**, which the tests rely on.
 
 ## Running Tests
 
-Install the development requirements and then execute the unit tests with:
+The tests rely on the `freezegun` library to control time. Make sure it is
+installed from `requirements.dev.txt` before invoking `pytest`:
 
 ```bash
-pip install -r requirements.dev.txt
+pip install -r requirements.dev.txt  # includes freezegun
 pytest -q
 ```
 
