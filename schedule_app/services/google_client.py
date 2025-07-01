@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 from urllib import parse, request
+from urllib.error import HTTPError, URLError
 import json
 from datetime import datetime, timedelta, timezone
 
@@ -25,6 +26,12 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
     "https://www.googleapis.com/auth/spreadsheets.readonly",
 ]
+
+
+class APIError(Exception):
+    """Raised when the Google API request fails."""
+
+    pass
 
 
 class GoogleClient:
@@ -64,8 +71,11 @@ class GoogleClient:
             "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
         )
         req = request.Request(url)
-        with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
-            data = json.loads(resp.read().decode())
+        try:
+            with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
+                data = json.loads(resp.read().decode())
+        except (HTTPError, URLError) as exc:  # pragma: no cover - network stubbed
+            raise APIError(str(exc)) from exc
         return data.get("items", [])
 
     def _parse_dt(self, value: str) -> datetime:

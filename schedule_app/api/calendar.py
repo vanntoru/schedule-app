@@ -7,7 +7,7 @@ from flask import Blueprint, abort, current_app, jsonify, request
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
 
-from schedule_app.services.google_client import GoogleClient
+from schedule_app.services.google_client import GoogleClient, APIError
 
 
 bp = Blueprint("calendar_bp", __name__)
@@ -41,6 +41,8 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
 
     try:
         events = client.list_events(date=date_obj)
+    except APIError as exc:
+        abort(502, description=str(exc))
     except RefreshError:
         abort(401)
     except HttpError as exc:
