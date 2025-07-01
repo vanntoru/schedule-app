@@ -12,53 +12,61 @@ concurrency:
 jobs:
   python-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
           cache-dependency-path: requirements.dev.txt
-      - run: python -m pip install -r requirements.dev.txt
+
+      - name: Install Python deps (wheel‑pref)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --prefer-binary --no-compile -r requirements.dev.txt
+
       - run: ruff check .
-      - run: pytest -n auto
+
+      - name: Run pytest (parallel)
+        run: pytest -n auto --dist loadscope
 
   playwright-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      # ---------- Node ----------
+      # -------- Node --------
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - run: npm ci
 
-      # ---------- Python (最小) ----------
+      - name: Install npm deps (offline)
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      # -------- Python (runtime only) --------
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: requirements.txt   # ★ runtime だけ
+          cache-dependency-path: requirements.txt
 
-      # Flask だけ入れば OK（速度優先）
-      - run: |
-          python -m pip install --upgrade pip
-          python -m pip install flask==2.3.* itsdangerous==2.* \
-            click==8.* werkzeug==3.* \
-            # もし依存が多い場合は:
-            # python -m pip install -r requirements.txt
+      - name: Install Flask runtime
+        run: python -m pip install --prefer-binary --no-compile -r requirements.txt
 
-      # ---------- Playwright ブラウザをキャッシュ ----------
-      - name: Cache Playwright Browsers
+      # -------- Playwright browsers cache --------
+      - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-pw-chromium-${{ hashFiles('package-lock.json') }}
 
-      - run: npx playwright install --with-deps
+      - name: Install Chromium only
+        run: npx playwright install --with-deps chromium
 
-      # ---------- E2E テスト ----------
-      - run: npx playwright test
+      - name: Run Playwright tests
+        run: npx playwright test
