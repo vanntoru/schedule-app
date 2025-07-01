@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from freezegun import freeze_time
 from flask import Flask
 
 from schedule_app import create_app
-from schedule_app.exceptions import APIError
-from schedule_app.api.calendar import HttpError, RefreshError
+from schedule_app.services.google_client import APIError
 from schedule_app.models import Event
 
 
@@ -45,16 +45,16 @@ def _assert_problem_details(data: Any) -> None:
 
 
 def test_calendar_missing_date(app: Flask, client) -> None:
-    app.extensions["gclient"] = DummyGClient()
-    resp = client.get("/api/calendar")
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient()):
+        resp = client.get("/api/calendar")
     assert resp.status_code == 400
     data = json.loads(resp.data)
     _assert_problem_details(data)
 
 
 def test_calendar_invalid_date(app: Flask, client) -> None:
-    app.extensions["gclient"] = DummyGClient()
-    resp = client.get("/api/calendar?date=2025/01/01")
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient()):
+        resp = client.get("/api/calendar?date=2025/01/01")
     assert resp.status_code == 400
     data = json.loads(resp.data)
     _assert_problem_details(data)
@@ -68,8 +68,10 @@ def test_calendar_success(app: Flask, client) -> None:
         end_utc=datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc),
         title="Demo",
     )
-    app.extensions["gclient"] = DummyGClient(events=[event])
-    resp = client.get("/api/calendar?date=2025-01-01")
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(events=[event])):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok", "expiry": None}
+        resp = client.get("/api/calendar?date=2025-01-01")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, list)
@@ -79,30 +81,32 @@ def test_calendar_success(app: Flask, client) -> None:
 
 @freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_unauthorized(app: Flask, client) -> None:
-    app.extensions["gclient"] = DummyGClient(raise_exc=RefreshError("unauthorized"))
-    resp = client.get("/api/calendar?date=2025-01-01")
-    assert resp.status_code == 401
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(raise_exc=APIError("unauthorized"))):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok", "expiry": None}
+        resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 502
     data = json.loads(resp.data)
     _assert_problem_details(data)
 
 
 @freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_forbidden(app: Flask, client) -> None:
-    class FakeResp:
-        status = 403
-        reason = "Forbidden"
-
-    app.extensions["gclient"] = DummyGClient(raise_exc=HttpError(FakeResp(), b""))
-    resp = client.get("/api/calendar?date=2025-01-01")
-    assert resp.status_code == 403
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(raise_exc=APIError("forbidden"))):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok", "expiry": None}
+        resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 502
     data = json.loads(resp.data)
     _assert_problem_details(data)
 
 
 @freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_api_error(app: Flask, client) -> None:
-    app.extensions["gclient"] = DummyGClient(raise_exc=APIError("boom"))
-    resp = client.get("/api/calendar?date=2025-01-01")
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(raise_exc=APIError("boom"))):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok", "expiry": None}
+        resp = client.get("/api/calendar?date=2025-01-01")
     assert resp.status_code == 502
     data = json.loads(resp.data)
     _assert_problem_details(data)

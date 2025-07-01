@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 from urllib.parse import parse_qs, urlparse
 from unittest.mock import MagicMock, patch
@@ -74,7 +73,8 @@ def test_login_redirects_to_google(mock_flow_cls, client):
 def test_callback_exchanges_code_and_stores_creds(mock_flow_cls, client):
     """GET /callback exchanges code→token, stores creds, and redirects home."""
     dummy_creds = MagicMock()
-    dummy_creds.to_json.return_value = json.dumps({"access_token": "ya29.test-token"})
+    dummy_creds.token = "ya29.test-token"
+    dummy_creds.expiry = None
 
     dummy_flow = MagicMock()
     dummy_flow.fetch_token.return_value = None
@@ -90,6 +90,7 @@ def test_callback_exchanges_code_and_stores_creds(mock_flow_cls, client):
     assert resp.headers["Location"].endswith("/")
 
     with client.session_transaction() as sess:
-        assert "google_creds" in sess
-        creds = json.loads(sess["google_creds"])
-        assert creds["access_token"].startswith("ya29.")
+        assert sess.get("credentials") == {
+            "access_token": "ya29.test-token",
+            "expiry": None,
+        }

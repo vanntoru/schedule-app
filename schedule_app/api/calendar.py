@@ -1,65 +1,48 @@
 from __future__ import annotations
 
+from datetime import datetime
 from dataclasses import asdict
-from datetime import datetime, timezone
 
-from flask import Blueprint, abort, current_app, jsonify, request
-from google.auth.exceptions import RefreshError
-from googleapiclient.errors import HttpError
+from schedule_app.models import Event
 
-from schedule_app.services.google_client import GoogleClient
+from flask import Blueprint, request, session, abort, jsonify
+
+from schedule_app.services.google_client import GoogleClient, APIError
 
 
 bp = Blueprint("calendar_bp", __name__)
 calendar_bp = bp
 
 
+def _event_to_dict(ev: Event) -> dict:
+    d = asdict(ev)
+    d["start_utc"] = ev.start_utc.isoformat().replace("+00:00", "Z")
+    d["end_utc"] = ev.end_utc.isoformat().replace("+00:00", "Z")
+    return d
+
+
 @bp.get("/api/calendar")
-def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
+def get_calendar():
     date_str = request.args.get("date")
     if not date_str:
-        abort(400, description="date parameter required")
-
-    # If '+' was decoded to ' ', restore it
-    if " " in date_str and "+" not in date_str:
-        date_str = date_str.replace(" ", "+")
-
-    if date_str.endswith("Z"):
-        date_str = date_str[:-1] + "+00:00"
+        abort(400, "missing date")
 
     try:
         date_obj = datetime.fromisoformat(date_str)
     except ValueError:
-        abort(400, description="invalid date format")
+        abort(400, "invalid date")
 
-    if date_obj.tzinfo is None:
-        date_obj = date_obj.replace(tzinfo=timezone.utc)
-    else:
-        date_obj = date_obj.astimezone(timezone.utc)
+    creds = session.get("credentials")
+    if not creds:
+        abort(401)
 
-    client: GoogleClient = current_app.extensions["gclient"]
-
+    client = GoogleClient(creds)
     try:
         events = client.list_events(date=date_obj)
-    except RefreshError:
-        abort(401)
-    except HttpError as exc:
-        status = getattr(exc, "status_code", None)
-        if status is None:
-            status = getattr(getattr(exc, "resp", None), "status", None)
-        if status == 403:
-            abort(403)
-        if status == 401:
-            abort(401)
-        raise
+    except APIError as e:
+        abort(502, f"google_api: {e}")
 
-    def _serialize(ev):
-        data = asdict(ev)
-        data["start_utc"] = ev.start_utc.astimezone(timezone.utc).isoformat()
-        data["end_utc"] = ev.end_utc.astimezone(timezone.utc).isoformat()
-        return data
-
-    return jsonify([_serialize(ev) for ev in events]), 200
+    return jsonify([_event_to_dict(e) for e in events]), 200
 
 
 __all__ = ["calendar_bp"]

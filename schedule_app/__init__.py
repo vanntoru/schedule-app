@@ -143,7 +143,11 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
         flow.code_verifier = session.get("pkce_verifier")
         flow.fetch_token(code=code)
 
-        session["google_creds"] = flow.credentials.to_json()
+        creds = flow.credentials
+        session["credentials"] = {
+            "access_token": creds.token,
+            "expiry": creds.expiry.isoformat() if creds.expiry else None,
+        }
         return redirect(url_for("index"))
 
     @app.errorhandler(HTTPException)
