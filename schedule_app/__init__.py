@@ -10,6 +10,8 @@ from __future__ import annotations
 import os
 from werkzeug.exceptions import HTTPException
 
+from schedule_app.services.google_client import GoogleClient
+
 try:  # Flask may be absent in some test environments
     from flask import Flask  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
@@ -78,6 +80,9 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
 
     app = Flask(__name__)
     app.secret_key = "dev-secret-key"
+
+    # Lightweight Google API client stub
+    app.extensions["gclient"] = GoogleClient(credentials=None)
 
     if testing:
         app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
