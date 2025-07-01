@@ -1,11 +1,15 @@
 name: CI
 
 on:
-  push: { branches: [ main ] }
+  push:
+    branches: [ main ]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # PythonのLint/テストを実行するジョブ
   python-test:
     runs-on: ubuntu-latest
     steps:
@@ -15,12 +19,10 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
           cache-dependency-path: requirements.dev.txt
-
       - run: python -m pip install -r requirements.dev.txt
       - run: ruff check .
-      - run: pytest
+      - run: pytest -n auto
 
-  # Playwrightのテストを並列で実行するジョブ
   playwright-test:
     runs-on: ubuntu-latest
     steps:
@@ -29,11 +31,10 @@ jobs:
         with:
           node-version: lts/*
           cache: 'npm'
-
+          cache-dependency-path: package-lock.json
       - run: npm ci
 
-      # Playwrightブラウザをキャッシュ（高速化）
-      - name: Cache Playwright browsers
+      - name: Cache Playwright Browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
