@@ -5,40 +5,39 @@ on:
   pull_request:
 
 jobs:
-  test:
+  # PythonのLint/テストを実行するジョブ
+  python-test:
     runs-on: ubuntu-latest
     steps:
-      # ソースコードのチェックアウト
       - uses: actions/checkout@v4
-
-      # Python環境セットアップ
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: |
-            requirements.dev.txt
+          cache-dependency-path: requirements.dev.txt
 
-      # Node.js環境セットアップ
+      - run: python -m pip install -r requirements.dev.txt
+      - run: ruff check .
+      - run: pytest
+
+  # Playwrightのテストを並列で実行するジョブ
+  playwright-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'npm'  # npmのキャッシュを有効化
+          cache: 'npm'
 
-      # npm パッケージインストール
       - run: npm ci
 
-      # Playwrightブラウザインストール
+      # Playwrightブラウザをキャッシュ（高速化）
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
       - run: npx playwright install --with-deps
-
-      # Python パッケージインストール
-      - run: python -m pip install -r requirements.dev.txt
-
-      # Lintチェック（ruff）
-      - run: ruff check .
-
-      # Python テスト実行（pytest）
-      - run: pytest
-
-      # Playwrightテスト実行
       - run: npx playwright test
