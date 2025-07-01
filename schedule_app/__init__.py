@@ -11,6 +11,7 @@ import os
 from werkzeug.exceptions import HTTPException
 
 from schedule_app.services.google_client import GoogleClient
+from schedule_app.exceptions import APIError
 
 try:  # Flask may be absent in some test environments
     from flask import Flask  # type: ignore
@@ -159,6 +160,20 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
         }
         response = jsonify(payload)
         response.status_code = status
+        response.mimetype = "application/problem+json"
+        return response
+
+    @app.errorhandler(APIError)
+    def handle_api_error(exc: APIError):
+        payload = {
+            "type": "https://schedule.app/errors/bad-gateway",
+            "title": "Bad Gateway",
+            "status": 502,
+            "detail": getattr(exc, "description", str(exc)),
+            "instance": request.path,
+        }
+        response = jsonify(payload)
+        response.status_code = 502
         response.mimetype = "application/problem+json"
         return response
 
