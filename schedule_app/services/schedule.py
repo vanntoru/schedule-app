@@ -47,10 +47,14 @@ def _init_slot_map(date_utc: datetime, events: list[Event], blocks: list[Block])
     return slot_map
 
 
-def _sort_tasks(tasks: list[Task]) -> list[Task]:
+def _sort_tasks(tasks: list[Task], *, day_start: datetime) -> list[Task]:
+    """Return *tasks* sorted by priority, start time and duration."""
+
     def key(t: Task) -> tuple[int, datetime, int]:
         prio = 0 if t.priority == "A" else 1
-        es = t.earliest_start_utc or datetime.min.replace(tzinfo=timezone.utc)
+        es = t.earliest_start_utc or day_start
+        if es < day_start:
+            es = day_start
         es = quantize(es, up=True)
         return (prio, es, -t.duration_min)
 
@@ -99,7 +103,7 @@ def generate(
     """Generate a 10 minute schedule for the given day."""
     base = _day_start(date_utc)
     slot_map = _init_slot_map(base, events, blocks)
-    sorted_tasks = _sort_tasks(tasks)
+    sorted_tasks = _sort_tasks(tasks, day_start=date_utc)
     grid, _unplaced = _place_tasks(slot_map, sorted_tasks, base=base)
     if algorithm == "compact":
         grid = _compact_grid(grid)
