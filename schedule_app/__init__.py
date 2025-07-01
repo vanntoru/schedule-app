@@ -82,7 +82,7 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     if testing:
         app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 
-    from schedule_app.api import calendar_bp, tasks_bp
+    from schedule_app.api import calendar_bp, tasks_bp, schedule_bp
     from schedule_app.api.blocks import init_blocks_api
 
     if calendar_bp is not None:
@@ -90,6 +90,9 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
 
     if tasks_bp is not None:
         app.register_blueprint(tasks_bp)
+
+    if schedule_bp is not None:
+        app.register_blueprint(schedule_bp)
 
     # blocks API
     init_blocks_api(app)
