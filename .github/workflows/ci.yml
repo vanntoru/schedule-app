@@ -26,3 +26,5 @@ jobs:
       - run: ruff check .
       - run: pytest
         # addopts で --cov と閾値が自動付加される
+      - run: npx playwright install --with-deps
+      - run: npx playwright test
