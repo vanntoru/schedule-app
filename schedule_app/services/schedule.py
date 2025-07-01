@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Literal
 
 from schedule_app.models import Block, Event, Task
 from schedule_app.services.rounding import quantize
 
-__all__ = ["generate"]
+__all__ = ["generate", "generate_schedule"]
 
 SLOT_MIN = 10
 DAY_SLOTS = 144
@@ -108,3 +108,51 @@ def generate(
     if algorithm == "compact":
         grid = _compact_grid(grid)
     return grid
+
+
+def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
+    """Return a simple JSON friendly schedule for ``date``.
+
+    Parameters
+    ----------
+    date:
+        Target day in UTC.
+    algo:
+        Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
+        currently supported.
+    """
+
+    from schedule_app.api.tasks import TASKS
+    from schedule_app.api.blocks import BLOCKS
+
+    base = datetime.combine(date, datetime.min.time(), tzinfo=timezone.utc)
+
+    tasks = list(TASKS.values())
+    blocks = list(BLOCKS.values())
+
+    grid = generate(
+        date_utc=base,
+        tasks=tasks,
+        events=[],
+        blocks=blocks,
+        algorithm=algo,
+    )
+
+    busy_map = _init_slot_map(base, [], blocks)
+
+    slots: list[int] = []
+    for idx, cell in enumerate(grid):
+        if cell is None:
+            slots.append(1 if busy_map[idx] else 0)
+        else:
+            slots.append(2)
+
+    placed_ids = {t_id for t_id in grid if t_id is not None}
+    unplaced = [t.id for t in tasks if t.id not in placed_ids]
+
+    return {
+        "date": date.isoformat(),
+        "algo": algo,
+        "slots": slots,
+        "unplaced": unplaced,
+    }
