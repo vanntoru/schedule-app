@@ -104,6 +104,46 @@ export const openDb = (() => {
 // Kick off immediately so the DB appears in DevTools without user action
 window.dbReady = openDb();
 
+/* ─────────────────── 既存コードの下 (DnD 即上あたり) ────────────────── */
+//////////////////////////////////////////////////////////////////////
+//  SECTION: Task loading / rendering
+//////////////////////////////////////////////////////////////////////
+
+async function loadAndRenderTasks() {
+  try {
+    const res   = await fetch('/api/tasks');
+    const tasks = await res.json();          // [{id,title,…}, …]
+
+    const pane       = document.getElementById('task-pane');
+    const emptyLabel = document.getElementById('task-empty');
+    pane.querySelectorAll('.task-card').forEach((n) => n.remove());
+
+    if (!tasks.length) {
+      emptyLabel.classList.remove('hidden');
+      return;
+    }
+    emptyLabel.classList.add('hidden');
+
+    for (const t of tasks) {
+      const card = document.createElement('div');
+      card.className =
+        'task-card p-2 bg-white rounded shadow border ' +
+        'cursor-grab select-none hover:bg-gray-50';
+      card.setAttribute('draggable', 'true');
+      card.dataset.taskId = t.id;
+      card.textContent    = `${t.title} (${t.duration_min}m)`;
+      pane.appendChild(card);
+    }
+  } catch (err) {
+    console.error('[tasks] failed to load', err);
+  }
+}
+
+/* DOMContentLoaded → まずタスクを描画 */
+document.addEventListener('DOMContentLoaded', () => {
+  loadAndRenderTasks();
+});
+
 /* ────────────────────────────────────────────────────────────────
  *  Drag & Drop support for task cards ⇄ time‑grid slots
  *  Spec §8.1  “.dragging → opacity:0.5”  /  drop target ring‑blue‑400
