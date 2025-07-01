@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, abort, current_app, jsonify, request
 from google.auth.exceptions import RefreshError
@@ -21,9 +21,16 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
         abort(400, description="date parameter required")
 
     try:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        if date_str.endswith("Z"):
+            date_str = date_str[:-1] + "+00:00"
+        date_obj = datetime.fromisoformat(date_str)
     except ValueError:
         abort(400, description="invalid date format")
+
+    if date_obj.tzinfo is None:
+        date_obj = date_obj.replace(tzinfo=timezone.utc)
+    else:
+        date_obj = date_obj.astimezone(timezone.utc)
 
     client: GoogleClient = current_app.extensions["gclient"]
 
