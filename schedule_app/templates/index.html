@@ -4,13 +4,22 @@
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 </head>
 <body>
-<main class="p-4">
-  <h1>Hello</h1>
+<main class="p-4 flex gap-4">
+  <!-- ── task side-pane ───────────────────────────────────────────── -->
+  <aside id="task-pane"
+         class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto"
+         aria-label="Tasks list">
+    <!-- JS がここに .task-card を挿入 -->
+    <p id="task-empty" class="text-gray-500 text-sm">タスクがありません</p>
+  </aside>
+
+  <!-- ── time grid ─────────────────────────────────────────────────── -->
+  <h1 class="sr-only">Day schedule</h1>
   <div id="events"></div>
   <section id="time-grid"
            role="list"
            aria-label="24-hour schedule grid"
-           class="grid border border-gray-300 grid-cols-[70px_1fr]">
+           class="grid border border-gray-300 grid-cols-[70px_1fr] flex-1">
     {% for i in range(144) %}
       {% set ts = (i * 10) %}
       {% set h = '{:02d}'.format(ts // 60) %}
