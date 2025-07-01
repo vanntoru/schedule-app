@@ -110,7 +110,7 @@ class Block:
 
 | Method | Path                                                            | 成功           | 失敗                          |
 | ------ | --------------------------------------------------------------- | ------------ | --------------------------- |
-| GET    | `/api/calendar?date={2025-01-01T09:00:00+09:00\|YYYY‑MM‑DD}`                        | 200 Event\[] | 400 / 401 / 403 / 404 / 500 / 502 |
+| GET    | `/api/calendar?date={2025-01-01T09:00:00+09:00\|YYYY‑MM‑DD}`    | 200 Event\[] | 400 / 401 / 403 / 404 / 500 / 502 |
 | GET    | `/api/tasks`                                                    | 200 Task\[]  | –                           |
 | POST   | `/api/tasks`                                                    | 201 Task     | 422 invalid‑field           |
 | PUT    | `/api/tasks/{id}`                                               | 200 Task     | 404 / 422                   |
@@ -122,7 +122,7 @@ class Block:
 | POST   | `/api/schedule/generate?date=YYYY‑MM‑DD&algo={greedy\|compact}` | 200 Grid     | 400 / 422                   |
 
 *`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付け、値は `list_events` 呼び出し前に UTC へ正規化される。*
-*Upstream failures are surfaced as 502 Bad Gateway.*
+*Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
 *Problem Details 例*
 
 ```json
