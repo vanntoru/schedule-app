@@ -9,6 +9,7 @@ from freezegun import freeze_time
 from flask import Flask
 
 from schedule_app import create_app
+from schedule_app.exceptions import APIError
 from schedule_app.api.calendar import HttpError, RefreshError
 from schedule_app.models import Event
 
@@ -94,5 +95,14 @@ def test_calendar_forbidden(app: Flask, client) -> None:
     app.extensions["gclient"] = DummyGClient(raise_exc=HttpError(FakeResp(), b""))
     resp = client.get("/api/calendar?date=2025-01-01")
     assert resp.status_code == 403
+    data = json.loads(resp.data)
+    _assert_problem_details(data)
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_api_error(app: Flask, client) -> None:
+    app.extensions["gclient"] = DummyGClient(raise_exc=APIError("boom"))
+    resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 502
     data = json.loads(resp.data)
     _assert_problem_details(data)
