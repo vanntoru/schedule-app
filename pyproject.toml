@@ -1,0 +1,3 @@
+[tool.pytest.ini_options]
+addopts = "-q --cov=schedule_app --cov-report=term-missing --cov-fail-under=80"
+testpaths = ["tests"]
