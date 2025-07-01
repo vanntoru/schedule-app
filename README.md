@@ -73,3 +73,12 @@ On success, the endpoint returns `200 OK` with a **ScheduleGrid** object:
 Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
 event or block data returns a `422` problem response.
 
+
+## Google Calendar Stub
+
+```python
+from schedule_app.services.google_client import GoogleClient
+
+app.extensions["gclient"] = GoogleClient(credentials=None)
+```
+
