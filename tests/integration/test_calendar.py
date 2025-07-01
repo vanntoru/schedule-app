@@ -60,6 +60,23 @@ def test_calendar_invalid_date(app: Flask, client) -> None:
 
 
 @freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_iso8601(app: Flask, client) -> None:
+    event = Event(
+        id="1",
+        start_utc=datetime(2025, 1, 1, 1, 0, tzinfo=timezone.utc),
+        end_utc=datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc),
+        title="Demo",
+    )
+    app.extensions["gclient"] = DummyGClient(events=[event])
+    resp = client.get("/api/calendar?date=2025-01-01T09:00:00+09:00")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["title"] == "Demo"
+
+
+@freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_success(app: Flask, client) -> None:
     event = Event(
         id="1",
