@@ -20,4 +20,5 @@ jobs:
 
       - run: python -m pip install -r requirements.dev.txt
       - run: ruff check .
-      - run: pytest -q
+      - run: pytest
+        # addopts で --cov と閾値が自動付加される
