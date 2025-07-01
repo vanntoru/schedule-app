@@ -53,7 +53,22 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 | ------ | ---- | ----------- |
 | POST | `/api/schedule/generate` | Generate a schedule grid for one day |
 
-`date` is a required query parameter in `YYYY-MM-DD` format. `algo` is optional and may be `greedy` (default) or `compact`.
+`date` is a required query parameter in `YYYY-MM-DD` format. `algo` is optional
+and may be `greedy` (default) or `compact`.
 
-On success, the endpoint returns `200 OK` with JSON like `{"slots": [...]}` containing 144 ten-minute entries. Missing or malformed query parameters yield `400 Bad Request`. Invalid task, event or block data returns a `422` problem response.
+On success, the endpoint returns `200 OK` with a **ScheduleGrid** object:
+
+```json
+{
+  "date": "2025-01-01",
+  "algo": "greedy",
+  "slots": [0, 1, 2, ...],
+  "unplaced": ["task-id"]
+}
+```
+
+`slots` is an array of 144 ten-minute entries where `0` means free, `1` busy and
+`2` occupied by a task. `unplaced` lists task IDs that could not be scheduled.
+Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
+event or block data returns a `422` problem response.
 
