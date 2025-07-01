@@ -17,22 +17,10 @@ def client(app: Flask):
 
 
 def test_generate_simple(client) -> None:
-    payload = {
-        "tasks": [
-            {
-                "id": "t1",
-                "title": "T1",
-                "category": "gen",
-                "duration_min": 10,
-                "duration_raw_min": 10,
-                "priority": "A",
-            }
-        ],
-        "events": [],
-        "blocks": [],
-    }
-    resp = client.post("/api/schedule/generate?date=2025-01-01", json=payload)
+    resp = client.post("/api/schedule/generate?date=2025-01-01")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)
-    assert len(data.get("slots", [])) == 144
+    assert set(data.keys()) == {"date", "algo", "slots", "unplaced"}
+    assert data["date"] == "2025-01-01"
+    assert len(data["slots"]) == 144
