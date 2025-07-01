@@ -77,6 +77,32 @@ def test_calendar_success(app: Flask, client) -> None:
 
 
 @freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_stub_events(app: Flask, client) -> None:
+    events = [
+        Event(
+            id="stub1",
+            start_utc=datetime(2025, 1, 1, 9, 0, tzinfo=timezone.utc),
+            end_utc=datetime(2025, 1, 1, 10, 0, tzinfo=timezone.utc),
+            title="Dummy Event 1",
+        ),
+        Event(
+            id="stub2",
+            start_utc=datetime(2025, 1, 1, 11, 0, tzinfo=timezone.utc),
+            end_utc=datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc),
+            title="Dummy Event 2",
+        ),
+    ]
+    app.extensions["gclient"] = DummyGClient(events=events)
+    resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+    assert data[0]["title"] == "Dummy Event 1"
+    assert data[0]["start_utc"] == "2025-01-01T09:00:00+00:00"
+
+
+@freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_unauthorized(app: Flask, client) -> None:
     app.extensions["gclient"] = DummyGClient(raise_exc=RefreshError("unauthorized"))
     resp = client.get("/api/calendar?date=2025-01-01")
