@@ -103,3 +103,112 @@ export const openDb = (() => {
 
 // Kick off immediately so the DB appears in DevTools without user action
 window.dbReady = openDb();
+
+/* ────────────────────────────────────────────────────────────────
+ *  Drag & Drop support for task cards ⇄ time‑grid slots
+ *  Spec §8.1  “.dragging → opacity:0.5”  /  drop target ring‑blue‑400
+ * ────────────────────────────────────────────────────────────────
+ *
+ *  1. すでに fetch / IndexedDB 初期化コードがある部分の **末尾** に
+ *     以下の DnD 追加実装を貼り付けてください。
+ *
+ *  2.   DOM 依存
+ *      - タスクカード   : <div class="task-card" draggable="true" data-task-id="…">
+ *      - グリッドセル   : <div class="slot" data-slot-index="0"> … </div>
+ *        （テンプレートや JS 生成時に `data-slot-index` を付与済み）
+ *
+ *  3.  状態操作
+ *      - slotOccupied(index)          ▶︎ Boolean
+ *      - markSlot(index, taskId)      ▶︎ DOM ＆ IndexedDB を更新
+ *      - unmarkSlot(index)            ▶︎ 〃
+ *      ※ これらヘルパは既存 schedule モジュールに stub がある想定。
+ *        未実装ならファイル末尾にシンプルな Map ベースで実装して構いません。
+ * ----------------------------------------------------------------*/
+
+(() => {
+  /* current dragging element & origin slot */
+  let draggingCard = null;
+  let originIndex  = null;
+
+  /* helper — true if e.target is a grid slot */
+  const asSlot = (el) => el?.closest?.('[data-slot-index]');
+
+  /* ---------- dragstart ------------------------------------------------ */
+  document.addEventListener('dragstart', (e) => {
+    const card = e.target.closest('.task-card');
+    if (!card) return;
+
+    draggingCard = card;
+    originIndex  = parseInt(card.dataset.slotIndex ?? '-1', 10) || null;
+
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.dataset.taskId);
+    card.classList.add('dragging');          // opacity‑50  (Tailwind)
+  });
+
+  /* ---------- dragover / dragenter ------------------------------------- */
+  document.addEventListener('dragover', (e) => {
+    const slot = asSlot(e.target);
+    if (!slot) return;
+
+    const idx = parseInt(slot.dataset.slotIndex, 10);
+    if (!slotOccupied(idx)) {
+      e.preventDefault();                    // enable drop
+      slot.classList.add('ring-2', 'ring-blue-400');
+    }
+  });
+
+  document.addEventListener('dragleave', (e) => {
+    const slot = asSlot(e.target);
+    slot?.classList.remove('ring-2', 'ring-blue-400');
+  });
+
+  /* ---------- drop ----------------------------------------------------- */
+  document.addEventListener('drop', (e) => {
+    const slot = asSlot(e.target);
+    if (!slot) return;
+
+    const idx = parseInt(slot.dataset.slotIndex, 10);
+    if (slotOccupied(idx)) return;           // safety, should not happen
+
+    e.preventDefault();
+
+    /* move card into new slot */
+    slot.appendChild(draggingCard);
+    draggingCard.dataset.slotIndex = idx;
+
+    /* update state */
+    markSlot(idx, draggingCard.dataset.taskId);
+    if (originIndex !== null) unmarkSlot(originIndex);
+
+    /* visual cleanup */
+    slot.classList.remove('ring-2', 'ring-blue-400');
+  });
+
+  /* ---------- dragend -------------------------------------------------- */
+  document.addEventListener('dragend', () => {
+    draggingCard?.classList.remove('dragging');
+    draggingCard = null;
+    originIndex  = null;
+
+    /* clear any stray highlights */
+    document
+      .querySelectorAll('.slot.ring-blue-400')
+      .forEach((el) => el.classList.remove('ring-2', 'ring-blue-400'));
+  });
+
+  /* ---------- minimal fallback impl. ----------------------------------- */
+  /* 既成ヘルパが無い場合の簡易実装（Map ベース）——重複登録にも強い */
+  const gridState = new Map();   // key: slotIndex, value: taskId
+
+  function slotOccupied(i) {
+    return gridState.has(i);
+  }
+  function markSlot(i, tid) {
+    gridState.set(i, tid);
+    /* TODO: IndexedDB schedule save (phase‑1) */
+  }
+  function unmarkSlot(i) {
+    gridState.delete(i);
+  }
+})();
