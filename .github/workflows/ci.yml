@@ -8,26 +8,37 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      # ソースコードのチェックアウト
       - uses: actions/checkout@v4
 
+      # Python環境セットアップ
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-          # 👇 依存ファイルを明示（複数行 OK）
           cache-dependency-path: |
             requirements.dev.txt
 
+      # Node.js環境セットアップ
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-        - run: npm ci
+          cache: 'npm'  # npmのキャッシュを有効化
 
+      # npm パッケージインストール
       - run: npm ci
+
+      # Playwrightブラウザインストール
       - run: npx playwright install --with-deps
 
+      # Python パッケージインストール
       - run: python -m pip install -r requirements.dev.txt
+
+      # Lintチェック（ruff）
       - run: ruff check .
+
+      # Python テスト実行（pytest）
       - run: pytest
-        # addopts で --cov と閾値が自動付加される
+
+      # Playwrightテスト実行
       - run: npx playwright test
