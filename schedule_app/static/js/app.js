@@ -43,3 +43,63 @@
     console.error(err);
   }
 })();
+
+/* ──────────────────────────────────────────────────────────────
+ * IndexedDB initialisation — schedule_app (version 2)
+ * 仕様書 §3（IndexedDB schedule_app, ver 2）および
+ * ステップ 21 の要件に対応
+ * ────────────────────────────────────────────────────────── */
+
+const DB_NAME   = 'schedule_app';
+const DB_VERSION = 2;
+
+/**
+ * Open (or upgrade) the IndexedDB database and expose a Promise
+ *   window.dbReady → Promise<IDBDatabase>
+ *
+ * Object stores — created only when they don’t exist:
+ *   • tasks    (keyPath: 'id')
+ *   • blocks   (keyPath: 'id')
+ *   • schedule (keyPath: 'date')
+ */
+export const openDb = (() => {
+  let _promise = null;
+
+  return function openDb() {
+    if (_promise) return _promise;
+
+    _promise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+      req.onupgradeneeded = (event) => {
+        /** @type {IDBDatabase} */
+        const db = req.result;
+
+        // version‑aware migration
+        switch (event.oldVersion) {
+          case 0: {             // fresh install
+            db.createObjectStore('tasks',    { keyPath: 'id'   });
+            db.createObjectStore('blocks',   { keyPath: 'id'   });
+            db.createObjectStore('schedule', { keyPath: 'date' });
+            break;
+          }
+          case 1: {             // ← ver 1 → ver 2 migration例
+            if (!db.objectStoreNames.contains('schedule')) {
+              db.createObjectStore('schedule', { keyPath: 'date' });
+            }
+            break;
+          }
+          // future migrations: fall through
+        }
+      };
+
+      req.onsuccess = () => resolve(req.result);
+      req.onerror   = () => reject(req.error);
+    });
+
+    return _promise;
+  };
+})();
+
+// Kick off immediately so the DB appears in DevTools without user action
+window.dbReady = openDb();
