@@ -5,9 +5,9 @@ Block CRUD REST API  (/api/blocks …)
     - schedule_app.models.Block  (UTC 保持の dataclass)
     - Flask 2.3
 設置:
-    from schedule_app.api.blocks import init_app
+    from schedule_app.api.blocks import init_blocks_api
     app = Flask(__name__)
-    init_app(app)
+    init_blocks_api(app)
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from schedule_app.models import Block
 
-__all__ = ["blocks_bp", "init_app"]
+__all__ = ["blocks_bp", "init_blocks_api"]
 
 
 # --------------------------------------------------------------------------- #
@@ -139,6 +139,6 @@ def delete_block(id_: str) -> Response:
 # --------------------------------------------------------------------------- #
 # blueprint 登録用ファサード
 # --------------------------------------------------------------------------- #
-def init_app(app) -> None:  # noqa: ANN001
+def init_blocks_api(app) -> None:  # noqa: ANN001
     """Factory Pattern で呼ばれる。アプリに Blueprint を取り付ける。"""
     app.register_blueprint(blocks_bp)
