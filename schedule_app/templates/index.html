@@ -4,8 +4,27 @@
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 </head>
 <body>
-<h1>Hello</h1>
-<div id="events"></div>
+<main class="p-4">
+  <h1>Hello</h1>
+  <div id="events"></div>
+  <section id="time-grid"
+           role="list"
+           aria-label="24-hour schedule grid"
+           class="grid border border-gray-300 grid-cols-[70px_1fr]">
+    {% for i in range(144) %}
+      {% set ts = (i * 10) %}
+      {% set h = '{:02d}'.format(ts // 60) %}
+      {% set m = '{:02d}'.format(ts % 60) %}
+      <div class="hour-label p-1 text-right text-xs font-mono
+                  {% if m != '00' %}opacity-0{% endif %}">
+        {{ h }}:{{ m }}
+      </div>
+      <div class="slot border-b border-gray-200 hover:bg-blue-50
+                  cursor-pointer"
+           data-slot="{{ i }}"></div>
+    {% endfor %}
+  </section>
+</main>
 <script type="module" src="/static/js/app.js"></script>
 </body>
 </html>
