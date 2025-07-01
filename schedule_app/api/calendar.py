@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, abort, current_app, jsonify, request
 from google.auth.exceptions import RefreshError
@@ -41,7 +41,13 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
             abort(401)
         raise
 
-    return jsonify([asdict(ev) for ev in events]), 200
+    def _serialize(ev):
+        data = asdict(ev)
+        data["start_utc"] = ev.start_utc.astimezone(timezone.utc).isoformat()
+        data["end_utc"] = ev.end_utc.astimezone(timezone.utc).isoformat()
+        return data
+
+    return jsonify([_serialize(ev) for ev in events]), 200
 
 
 __all__ = ["calendar_bp"]
