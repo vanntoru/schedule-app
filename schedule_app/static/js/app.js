@@ -142,6 +142,10 @@ async function loadAndRenderTasks() {
 /* DOMContentLoaded → まずタスクを描画 */
 document.addEventListener('DOMContentLoaded', () => {
   loadAndRenderTasks();
+  const { undo, redo } = generateUndoRedoHandlers();
+  document.getElementById('undo-btn')?.addEventListener('click', undo);
+  document.getElementById('redo-btn')?.addEventListener('click', redo);
+  updateUndoRedoButtons();
 });
 
 /* ────────────────────────────────────────────────────────────────
@@ -218,8 +222,20 @@ document.addEventListener('DOMContentLoaded', () => {
     draggingCard.dataset.slotIndex = idx;
 
     /* update state */
-    markSlot(idx, draggingCard.dataset.taskId);
+    const tid = draggingCard.dataset.taskId;
+    markSlot(idx, tid);
     if (originIndex !== null) unmarkSlot(originIndex);
+    pushCommand({
+      apply() {
+        markSlot(idx, tid);
+        if (originIndex !== null) unmarkSlot(originIndex);
+      },
+      revert() {
+        if (originIndex !== null) markSlot(originIndex, tid);
+        unmarkSlot(idx);
+      },
+    });
+    saveState();
 
     /* visual cleanup */
     slot.classList.remove('ring-2', 'ring-blue-400');
@@ -237,18 +253,112 @@ document.addEventListener('DOMContentLoaded', () => {
       .forEach((el) => el.classList.remove('ring-2', 'ring-blue-400'));
   });
 
-  /* ---------- minimal fallback impl. ----------------------------------- */
-  /* 既成ヘルパが無い場合の簡易実装（Map ベース）——重複登録にも強い */
-  const gridState = new Map();   // key: slotIndex, value: taskId
-
-  function slotOccupied(i) {
-    return gridState.has(i);
-  }
-  function markSlot(i, tid) {
-    gridState.set(i, tid);
-    /* TODO: IndexedDB schedule save (phase‑1) */
-  }
-  function unmarkSlot(i) {
-    gridState.delete(i);
-  }
 })();
+
+/* ---------- minimal fallback impl. ----------------------------------- */
+/* 既成ヘルパが無い場合の簡易実装（Map ベース）——重複登録にも強い */
+export const gridState = new Map();   // key: slotIndex, value: taskId
+
+export function slotOccupied(i) {
+  return gridState.has(i);
+}
+export function markSlot(i, tid) {
+  gridState.set(i, tid);
+}
+export function unmarkSlot(i) {
+  gridState.delete(i);
+}
+
+/* ------------------------------------------------------------------
+ * Undo / Redo infrastructure (Command Pattern)
+ * ---------------------------------------------------------------- */
+export const undoStack = [];
+export const redoStack = [];
+export const HISTORY_LIMIT = 20;
+
+function updateUndoRedoButtons() {
+  document.getElementById('undo-btn')?.toggleAttribute('disabled', undoStack.length === 0);
+  document.getElementById('redo-btn')?.toggleAttribute('disabled', redoStack.length === 0);
+}
+
+export function pushCommand(cmd) {
+  undoStack.push(cmd);
+  if (undoStack.length > HISTORY_LIMIT) {
+    undoStack.shift();
+  }
+  redoStack.length = 0;
+  updateUndoRedoButtons();
+}
+
+export function renderGrid() {
+  const pane = document.getElementById('task-pane');
+  const slots = document.querySelectorAll('[data-slot-index]');
+  // reset
+  for (const slot of slots) {
+    slot.innerHTML = '';
+  }
+  const cards = new Map();
+  pane.querySelectorAll('.task-card').forEach((c) => {
+    cards.set(c.dataset.taskId, c);
+  });
+  for (const [idx, tid] of gridState.entries()) {
+    const card = cards.get(tid);
+    const slot = document.querySelector(`[data-slot-index="${idx}"]`);
+    if (card && slot) {
+      slot.appendChild(card);
+      card.dataset.slotIndex = idx;
+      cards.delete(tid);
+    }
+  }
+  for (const c of cards.values()) {
+    c.removeAttribute('data-slot-index');
+  }
+}
+
+export async function saveState() {
+  try {
+    const db = await openDb();
+    const tx = db.transaction('schedule', 'readwrite');
+    const store = tx.objectStore('schedule');
+    const data = { date: todayUtcISO(), grid: Array.from(gridState.entries()) };
+    store.put(data);
+  } catch (err) {
+    console.error('saveState failed', err);
+  }
+}
+
+export function doUndo() {
+  const cmd = undoStack.pop();
+  if (!cmd) return;
+  cmd.revert();
+  redoStack.push(cmd);
+  renderGrid();
+  saveState();
+  updateUndoRedoButtons();
+}
+
+export function doRedo() {
+  const cmd = redoStack.pop();
+  if (!cmd) return;
+  cmd.apply();
+  undoStack.push(cmd);
+  renderGrid();
+  saveState();
+  updateUndoRedoButtons();
+}
+
+export function generateUndoRedoHandlers() {
+  return { undo: doUndo, redo: doRedo };
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    doUndo();
+  } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+    e.preventDefault();
+    doRedo();
+  }
+});
+
+

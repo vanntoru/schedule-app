@@ -4,6 +4,10 @@
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 </head>
 <body>
+<header class="sticky top-0 bg-gray-100 p-2 flex gap-2">
+  <button id="undo-btn" class="px-2 py-1 border rounded bg-white disabled:opacity-50" type="button">Undo</button>
+  <button id="redo-btn" class="px-2 py-1 border rounded bg-white disabled:opacity-50" type="button">Redo</button>
+</header>
 <main class="p-4 flex gap-4">
   <!-- ── task side-pane ───────────────────────────────────────────── -->
   <aside id="task-pane"
