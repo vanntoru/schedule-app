@@ -22,3 +22,16 @@ jobs:
       - run: ruff check .
       - run: pytest
         # addopts で --cov と閾値が自動付加される
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
