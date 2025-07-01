@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, abort, current_app, jsonify, request
 from google.auth.exceptions import RefreshError
-from googleapiclient.errors import HttpError
+from schedule_app.exceptions import APIError
 
 from schedule_app.services.google_client import GoogleClient
 
@@ -43,14 +43,7 @@ def get_calendar() -> tuple[list[dict], int] | tuple[dict, int]:
         events = client.list_events(date=date_obj)
     except RefreshError:
         abort(401)
-    except HttpError as exc:
-        status = getattr(exc, "status_code", None)
-        if status is None:
-            status = getattr(getattr(exc, "resp", None), "status", None)
-        if status == 403:
-            abort(403)
-        if status == 401:
-            abort(401)
+    except APIError:
         raise
 
     def _serialize(ev):
