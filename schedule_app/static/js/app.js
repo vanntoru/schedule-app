@@ -160,6 +160,46 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndRenderTasks();
 });
 
+// Ensure a time grid exists for tests or pages missing it
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.querySelector('#time-grid')) return;
+
+  const grid = document.createElement('section');
+  grid.id = 'time-grid';
+  grid.setAttribute('role', 'list');
+  grid.setAttribute('aria-label', '24-hour schedule grid');
+  grid.className = 'grid border border-gray-300 grid-cols-[70px_1fr] flex-1';
+
+  for (let i = 0; i < 144; i++) {
+    const ts = i * 10;
+    const h = String(Math.floor(ts / 60)).padStart(2, '0');
+    const m = String(ts % 60).padStart(2, '0');
+
+    const label = document.createElement('div');
+    label.className = 'hour-label p-1 text-right text-xs font-mono';
+    if (m !== '00') label.classList.add('opacity-0');
+    label.textContent = `${h}:${m}`;
+
+    const slot = document.createElement('div');
+    slot.className =
+      'slot border-b border-gray-200 hover:bg-blue-50 cursor-pointer ' +
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
+    slot.setAttribute('role', 'listitem');
+    slot.setAttribute('tabindex', '0');
+    slot.dataset.slotIndex = String(i);
+
+    grid.appendChild(label);
+    grid.appendChild(slot);
+  }
+
+  const eventsEl = document.getElementById('events');
+  if (eventsEl && eventsEl.parentNode) {
+    eventsEl.insertAdjacentElement('afterend', grid);
+  } else {
+    document.body.appendChild(grid);
+  }
+});
+
 /* ────────────────────────────────────────────────────────────────
  *  Drag & Drop support for task cards ⇄ time‑grid slots
  *  Spec §8.1  “.dragging → opacity:0.5”  /  drop target ring‑blue‑400
