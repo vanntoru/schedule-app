@@ -18,6 +18,13 @@ from schedule_app.models import Event
 from schedule_app.exceptions import APIError
 
 
+class GoogleAPIUnauthorized(APIError):
+    """Raised when Google API calls are unauthorized."""
+
+    def __init__(self, description: str = "unauthorized") -> None:
+        super().__init__(description)
+
+
 # OAuth scopes required for accessing Google APIs
 
 SCOPES = [
@@ -140,4 +147,4 @@ class GoogleClient:
         return [self._to_event(item) for item in items]
 
 
-__all__ = ["GoogleClient", "APIError", "SCOPES"]
+__all__ = ["GoogleClient", "GoogleAPIUnauthorized", "APIError", "SCOPES"]
