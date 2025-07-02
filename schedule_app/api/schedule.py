@@ -26,7 +26,8 @@ def generate_schedule():  # noqa: D401 - simple endpoint
         abort(400, description="invalid algo")
 
     result = schedule.generate_schedule(date_obj.date(), algo=algo)
-    return jsonify(result["slots"]), 200
+    result.pop("algo", None)
+    return jsonify(result), 200
 
 
 __all__ = ["bp", "schedule_bp"]
