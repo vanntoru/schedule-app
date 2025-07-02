@@ -340,7 +340,7 @@ function pushCommand(cmd) {
   _history.push(cmd);
   if (_history.length > HISTORY_LIMIT) _history.shift();
   _ptr = _history.length - 1;
-  window.__refreshUndoRedoButtons?.();
+  updateUndoRedoButtons();
 }
 
 /** Undo the last command. */
@@ -351,6 +351,7 @@ function doUndo() {
   cmd.revert();
   renderGrid();
   saveState();
+  updateUndoRedoButtons();
 }
 
 /** Redo the next command. */
@@ -361,6 +362,7 @@ function doRedo() {
   cmd.apply();
   renderGrid();
   saveState();
+  updateUndoRedoButtons();
 }
 
 /** Generate schedule and record undo information. */
@@ -377,28 +379,39 @@ async function generateSchedule(date) {
 window.doUndo = doUndo;
 window.doRedo = doRedo;
 
-function initUndoRedoUI() {
-  // ❶ キーボードショートカット
-  document.addEventListener('keydown', (e) => {
-    const k = e.key.toLowerCase();
-    if (!e.ctrlKey) return;
-    if (k === 'z') { e.preventDefault(); window.doUndo(); }
-    if (k === 'y') { e.preventDefault(); window.doRedo(); }
-  });
+// ❶ キーボードショートカット
+document.addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (!e.ctrlKey) return;
+  if (k === 'z') { e.preventDefault(); doUndo(); updateUndoRedoButtons(); }
+  if (k === 'y') { e.preventDefault(); doRedo(); updateUndoRedoButtons(); }
+});
 
-  // ❷ ヘッダー ← / → ボタン（id=btn-undo / btn-redo）
-  const btnUndo = document.getElementById('btn-undo');
-  const btnRedo = document.getElementById('btn-redo');
-  function refresh() {
-    btnUndo.disabled = (_ptr < 0);
-    btnRedo.disabled = (_ptr + 1 >= _history.length);
-  }
-  btnUndo?.addEventListener('click', () => { doUndo(); refresh(); });
-  btnRedo?.addEventListener('click', () => { doRedo(); refresh(); });
+// ❷ ヘッダー ← / → ボタン（id=undo-btn / redo-btn）
+const undoBtn = document.getElementById('undo-btn');
+const redoBtn = document.getElementById('redo-btn');
 
-  // 履歴 push 後に毎回呼べるよう export
-  window.__refreshUndoRedoButtons = refresh;
-  refresh();
+undoBtn?.addEventListener('click', () => { doUndo(); updateUndoRedoButtons(); });
+redoBtn?.addEventListener('click', () => { doRedo(); updateUndoRedoButtons(); });
+
+export function updateUndoRedoButtons() {
+  const undoActive = _ptr >= 0;
+  const redoActive = _ptr + 1 < _history.length;
+  undoBtn.disabled = !undoActive;
+  redoBtn.disabled = !redoActive;
+
+  const toggle = (btn, active) => {
+    btn.classList.toggle('text-gray-400', !active);
+    btn.classList.toggle('border-gray-300', !active);
+    btn.classList.toggle('cursor-not-allowed', !active);
+    btn.classList.toggle('opacity-50', !active);
+
+    btn.classList.toggle('text-black', active);
+    btn.classList.toggle('border-black', active);
+  };
+  toggle(undoBtn, undoActive);
+  toggle(redoBtn, redoActive);
 }
-document.addEventListener('DOMContentLoaded', initUndoRedoUI);
+
+document.addEventListener('DOMContentLoaded', updateUndoRedoButtons);
 
