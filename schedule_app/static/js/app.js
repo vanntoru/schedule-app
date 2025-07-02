@@ -291,3 +291,94 @@ document.addEventListener('DOMContentLoaded', () => {
     gridState.delete(i);
   }
 })();
+
+// ---------------------------------------------------------------------------
+// Schedule grid loading and history (Undo / Redo)
+// ---------------------------------------------------------------------------
+
+let scheduleGrid = new Array(144).fill(0); // current grid state
+
+const HISTORY_LIMIT = 20;
+const _history = [];
+let _ptr = -1; // points to last applied command
+
+/** Render the grid based on `scheduleGrid` values. */
+function renderGrid() {
+  document.querySelectorAll('.slot[data-slot-index]').forEach((el) => {
+    const idx = parseInt(el.dataset.slotIndex, 10);
+    const val = scheduleGrid[idx] ?? 0;
+    el.classList.remove('bg-gray-200', 'bg-green-200');
+    if (val === 1) {
+      el.classList.add('bg-gray-200'); // busy
+    } else if (val === 2) {
+      el.classList.add('bg-green-200'); // task
+    }
+  });
+}
+
+/** Persist the current grid. Placeholder for IndexedDB integration. */
+function saveState() {
+  // TODO: implement persistence
+}
+
+/** Load grid data from the server for the given `date`. */
+async function loadGridFromServer(date) {
+  const res = await fetch(`/api/schedule/generate?date=${date}`, { method: 'POST' });
+  if (!res.ok) {
+    throw new Error(`Schedule API failed: ${res.status}`);
+  }
+  const data = await res.json();
+  scheduleGrid = data.slots.slice();
+  renderGrid();
+  saveState();
+  return scheduleGrid;
+}
+
+/** Restore the grid from a saved array. */
+function restoreGrid(prev) {
+  scheduleGrid = prev.slice();
+  renderGrid();
+  saveState();
+}
+
+/** Push a command object onto the history stack. */
+function pushCommand(cmd) {
+  _history.splice(_ptr + 1); // drop redo history
+  _history.push(cmd);
+  if (_history.length > HISTORY_LIMIT) {
+    _history.shift();
+  } else {
+    _ptr++;
+  }
+}
+
+/** Undo the last command. */
+function doUndo() {
+  if (_ptr < 0) return;
+  const cmd = _history[_ptr];
+  _ptr--;
+  cmd.revert();
+  renderGrid();
+  saveState();
+}
+
+/** Redo the next command. */
+function doRedo() {
+  if (_ptr + 1 >= _history.length) return;
+  _ptr++;
+  const cmd = _history[_ptr];
+  cmd.apply();
+  renderGrid();
+  saveState();
+}
+
+/** Generate schedule and record undo information. */
+async function generateSchedule(date) {
+  const previousGrid = scheduleGrid.slice();
+  await loadGridFromServer(date);
+  pushCommand({
+    apply: () => loadGridFromServer(date),
+    revert: () => restoreGrid(previousGrid),
+  });
+}
+
