@@ -415,3 +415,53 @@ export function updateUndoRedoButtons() {
 
 document.addEventListener('DOMContentLoaded', updateUndoRedoButtons);
 
+// ---------------------------------------------------------------------------
+// Schedule Generate button handler
+// Spec §6, §7 で定義した <div id="time-grid">…</div> を更新する
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const btnGenerate =
+    document.querySelector('#btn-generate') ||
+    document.querySelector('#generate-btn');
+  const inputDate = document.querySelector('#input-date');
+  const grid = document.querySelector('#time-grid');
+
+  if (!btnGenerate || !inputDate || !grid) return;
+
+  btnGenerate.addEventListener('click', async () => {
+    const ymd = inputDate.value;
+    if (!ymd) {
+      alert('日付を選択してください');
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/schedule/generate?date=${ymd}&algo=greedy`,
+        { method: 'POST' }
+      );
+
+      if (!res.ok) {
+        const pd = await res.json();
+        throw new Error(pd.detail ?? res.statusText);
+      }
+
+      const gridData = await res.json();
+
+      grid.querySelectorAll('[data-slot-index]').forEach((el) => {
+        el.classList.remove('bg-blue-500');
+      });
+
+      gridData.forEach((slot, idx) => {
+        if (slot.busy) {
+          const cell = grid.querySelector(`[data-slot-index="${idx}"]`);
+          if (cell) cell.classList.add('bg-blue-500');
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      alert(`スケジュール生成に失敗しました\n${err}`);
+    }
+  });
+});
+
