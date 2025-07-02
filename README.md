@@ -73,6 +73,15 @@ On success, the endpoint returns `200 OK` with a **ScheduleGrid** object:
 Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
 event or block data returns a `422` problem response.
 
+## Calendar API
+
+`GET /api/calendar` returns Google events for the given day. When stored
+credentials have expired, the endpoint responds with **401 Unauthorized** and
+provides instructions in the JSON body to re-authenticate via `/login`.
+
+The front-end will automatically build the `#time-grid` element at page load if
+it is missing.
+
 
 ## Google Calendar Stub
 
