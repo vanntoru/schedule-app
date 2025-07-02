@@ -245,6 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
           card.dataset.slotIndex = originIndex;
           markSlot(originIndex, card.dataset.taskId);
         } else {
+          // 元は side‑pane にあったカード
+          document.getElementById('task-pane').appendChild(card);
           card.removeAttribute('data-slot-index');
         }
         unmarkSlot(nextIdx);
@@ -338,6 +340,7 @@ function pushCommand(cmd) {
   _history.push(cmd);
   if (_history.length > HISTORY_LIMIT) _history.shift();
   _ptr = _history.length - 1;
+  window.__refreshUndoRedoButtons?.();
 }
 
 /** Undo the last command. */
@@ -373,4 +376,29 @@ async function generateSchedule(date) {
 // Expose undo/redo for keyboard handlers or UI buttons
 window.doUndo = doUndo;
 window.doRedo = doRedo;
+
+function initUndoRedoUI() {
+  // ❶ キーボードショートカット
+  document.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (!e.ctrlKey) return;
+    if (k === 'z') { e.preventDefault(); window.doUndo(); }
+    if (k === 'y') { e.preventDefault(); window.doRedo(); }
+  });
+
+  // ❷ ヘッダー ← / → ボタン（id=btn-undo / btn-redo）
+  const btnUndo = document.getElementById('btn-undo');
+  const btnRedo = document.getElementById('btn-redo');
+  function refresh() {
+    btnUndo.disabled = (_ptr < 0);
+    btnRedo.disabled = (_ptr + 1 >= _history.length);
+  }
+  btnUndo?.addEventListener('click', () => { doUndo(); refresh(); });
+  btnRedo?.addEventListener('click', () => { doRedo(); refresh(); });
+
+  // 履歴 push 後に毎回呼べるよう export
+  window.__refreshUndoRedoButtons = refresh;
+  refresh();
+}
+document.addEventListener('DOMContentLoaded', initUndoRedoUI);
 
