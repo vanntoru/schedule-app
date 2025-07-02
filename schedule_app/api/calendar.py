@@ -8,7 +8,11 @@ from schedule_app.models import Event
 
 from flask import Blueprint, request, session, jsonify
 
-from schedule_app.services.google_client import GoogleClient, APIError
+from schedule_app.services.google_client import (
+    GoogleClient,
+    APIError,
+    GoogleAPIUnauthorized,
+)
 
 
 bp = Blueprint("calendar_bp", __name__)
@@ -60,6 +64,8 @@ def get_calendar():
     client = GoogleClient(creds)
     try:
         events = client.list_events(date=date_obj)
+    except GoogleAPIUnauthorized:
+        abort(401)
     except APIError as e:
         return _problem(502, "bad-gateway", f"google_api: {e}")
 
