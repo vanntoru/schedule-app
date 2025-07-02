@@ -7,9 +7,23 @@
  *   ─ 今日の日付を UTC で計算し、/api/calendar から予定一覧を取得。
  *   ─ <div id="events"> にチップ（青ラベル）で描画。
  */
+
+/* ──────────────  Utilities (shared) ────────────── */
+/**
+ * 今日の日付を **UTC 基準** の YYYY-MM-DD 文字列で返す。
+ * <input type="date"> の value にそのまま渡せる。
+ */
+export function todayUtcISO() {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 (async () => {
   /** YYYY-MM-DD (UTC) を返す */
-  function todayUtcISO() {
+  function todayUtcISO() { // DEPRECATED: moved to module scope
     const d = new Date();
     const y = d.getUTCFullYear();
     const m = String(d.getUTCMonth() + 1).padStart(2, "0");
