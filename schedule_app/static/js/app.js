@@ -481,21 +481,6 @@ function doRedo() {
   updateUndoRedoButtons();
 }
 
-/** Display a temporary toast message. */
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.className =
-    'fixed top-4 right-4 bg-gray-800 text-white px-3 py-2 rounded shadow transition-opacity opacity-0';
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.classList.remove('opacity-0');
-  });
-  setTimeout(() => {
-    toast.classList.add('opacity-0');
-    setTimeout(() => toast.remove(), 500);
-  }, 4000);
-}
 
 /** Highlight unplaced tasks and show toast messages. */
 function showUnplacedTasks(unplacedIds) {
@@ -604,4 +589,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+/**
+ * 画面中央下に 4 秒間表示する Toast
+ * @param {string} message
+ */
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.className =
+    'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ' +
+    'bg-red-600 text-white px-4 py-2 rounded shadow-lg ' +
+    'opacity-0 transition-opacity duration-300';
+
+  document.body.appendChild(toast);
+
+  /* フェードイン */
+  requestAnimationFrame(() => toast.classList.remove('opacity-0'));
+
+  /* 4 秒後フェードアウト → 削除 */
+  setTimeout(() => {
+    toast.classList.add('opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
 
