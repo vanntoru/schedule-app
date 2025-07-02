@@ -61,6 +61,15 @@ def test_calendar_invalid_date(app: Flask, client) -> None:
 
 
 @freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_missing_credentials(app: Flask, client) -> None:
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient()):
+        resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 401
+    data = json.loads(resp.data)
+    _assert_problem_details(data)
+
+
+@freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_success(app: Flask, client) -> None:
     event = Event(
         id="1",
