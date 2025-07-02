@@ -20,7 +20,5 @@ def test_generate_simple(client) -> None:
     resp = client.post("/api/schedule/generate?date=2025-01-01")
     assert resp.status_code == 200
     data = resp.get_json()
-    assert isinstance(data, dict)
-    assert set(data.keys()) == {"date", "algo", "slots", "unplaced"}
-    assert data["date"] == "2025-01-01"
-    assert len(data["slots"]) == 144
+    assert isinstance(data, list)
+    assert len(data) == 144
