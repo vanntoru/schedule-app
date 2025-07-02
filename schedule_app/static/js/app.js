@@ -177,34 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* helper — true if e.target is a grid slot */
   const asSlot = (el) => el?.closest?.('[data-slot-index]');
 
-  const HISTORY_LIMIT = 20;
-  const history = [];
-  let historyIndex = -1;
-
-  function pushCommand(cmd) {
-    history.splice(historyIndex + 1);
-    history.push(cmd);
-    if (history.length > HISTORY_LIMIT) {
-      history.shift();
-    }
-    historyIndex = history.length - 1;
-    cmd.apply();
-  }
-
-  function undo() {
-    if (historyIndex < 0) return;
-    history[historyIndex].revert();
-    historyIndex--;
-  }
-
-  function redo() {
-    if (historyIndex + 1 >= history.length) return;
-    historyIndex++;
-    history[historyIndex].apply();
-  }
-
-  window.undo = undo;
-  window.redo = redo;
+  // History is managed globally via _history / _ptr
 
   /* ---------- dragstart ------------------------------------------------ */
   document.addEventListener('dragstart', (e) => {
@@ -241,30 +214,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const slot = asSlot(e.target);
     if (!slot) return;
 
-    const idx = parseInt(slot.dataset.slotIndex, 10);
-    if (slotOccupied(idx)) return;           // safety, should not happen
+    const nextIdx = parseInt(slot.dataset.slotIndex, 10);
+    if (slotOccupied(nextIdx)) return;
 
     e.preventDefault();
 
-    /* move card into new slot */
-    slot.appendChild(draggingCard);
-    draggingCard.dataset.slotIndex = idx;
+    // ----- state snapshot -----
+    const card = draggingCard;
+    const prevSlot = originIndex !== null
+      ? document.querySelector(`[data-slot-index="${originIndex}"]`)
+      : null;
 
-    const tid = draggingCard.dataset.taskId;
-    const prevIndex = originIndex;
-    const nextIndex = idx;
+    // ----- perform move -----
+    slot.appendChild(card);
+    card.dataset.slotIndex = nextIdx;
+    markSlot(nextIdx, card.dataset.taskId);
+    if (originIndex !== null) unmarkSlot(originIndex);
+
+    // ----- record command -----
     pushCommand({
-      apply: () => {
-        markSlot(nextIndex, tid);
-        if (prevIndex !== null) unmarkSlot(prevIndex);
+      apply() {              // Redo
+        slot.appendChild(card);
+        card.dataset.slotIndex = nextIdx;
+        markSlot(nextIdx, card.dataset.taskId);
+        if (prevSlot) unmarkSlot(parseInt(prevSlot.dataset.slotIndex, 10));
       },
-      revert: () => {
-        if (prevIndex !== null) markSlot(prevIndex, tid);
-        unmarkSlot(nextIndex);
+      revert() {             // Undo
+        if (prevSlot) {
+          prevSlot.appendChild(card);
+          card.dataset.slotIndex = originIndex;
+          markSlot(originIndex, card.dataset.taskId);
+        } else {
+          card.removeAttribute('data-slot-index');
+        }
+        unmarkSlot(nextIdx);
       },
     });
 
-    /* visual cleanup */
+    // ----- visual cleanup -----
     slot.classList.remove('ring-2', 'ring-blue-400');
   });
 
@@ -349,11 +336,8 @@ function restoreGrid(prev) {
 function pushCommand(cmd) {
   _history.splice(_ptr + 1); // drop redo history
   _history.push(cmd);
-  if (_history.length > HISTORY_LIMIT) {
-    _history.shift();
-  } else {
-    _ptr++;
-  }
+  if (_history.length > HISTORY_LIMIT) _history.shift();
+  _ptr = _history.length - 1;
 }
 
 /** Undo the last command. */
@@ -385,4 +369,8 @@ async function generateSchedule(date) {
     revert: () => restoreGrid(previousGrid),
   });
 }
+
+// Expose undo/redo for keyboard handlers or UI buttons
+window.doUndo = doUndo;
+window.doRedo = doRedo;
 
