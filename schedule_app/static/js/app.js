@@ -364,13 +364,21 @@ let _ptr = -1; // points to last applied command
 /** Render the grid based on `scheduleGrid` values. */
 function renderGrid() {
   document.querySelectorAll('.slot[data-slot-index]').forEach((el) => {
-    const idx = parseInt(el.dataset.slotIndex, 10);
-    const val = scheduleGrid[idx] ?? 0;
-    el.classList.remove('bg-gray-200', 'bg-green-200');
-    if (val === 1) {
-      el.classList.add('bg-gray-200'); // busy
-    } else if (val === 2) {
-      el.classList.add('bg-green-200'); // task
+    const idx = Number(el.dataset.slotIndex);
+    const raw = scheduleGrid[idx] ?? 0;
+    const val = typeof raw === 'object'
+      ? raw.task ? 2 : raw.busy ? 1 : 0
+      : raw;
+
+    el.classList.remove('bg-gray-200', 'bg-green-200', 'bg-blue-500');
+    switch (val) {
+      case 1:
+        el.classList.add('bg-gray-200');
+        break;
+      case 2:
+        el.classList.add('bg-green-200');
+        break;
+      default:
     }
   });
 }
@@ -382,12 +390,31 @@ function saveState() {
 
 /** Load grid data from the server for the given `date`. */
 async function loadGridFromServer(date) {
-  const res = await fetch(`/api/schedule/generate?date=${date}`, { method: 'POST' });
+  const res = await fetch(
+    `/api/schedule/generate?date=${date}`,
+    { method: 'POST' },
+  );
+
   if (!res.ok) {
     throw new Error(`Schedule API failed: ${res.status}`);
   }
-  const data = await res.json();
-  scheduleGrid = data.slots.slice();
+
+  const raw = await res.json();
+  const slots = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw.slots)
+      ? raw.slots
+      : Array.isArray(raw.grid)
+        ? raw.grid
+        : (() => { throw new Error('Malformed Grid'); })();
+
+  scheduleGrid = slots.map((s) => {
+    if (typeof s === 'number') return s;
+    if (s.busy === true) return 1;
+    if (s.task === true) return 2;
+    return 0;
+  });
+
   renderGrid();
   saveState();
   return scheduleGrid;
@@ -490,7 +517,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#btn-generate') ||
     document.querySelector('#generate-btn');
   const inputDate  = document.querySelector('#input-date');
-  const grid       = document.querySelector('#time-grid');
 
   /* ★ 追加 ① — ピッカーがあれば初期値を今日 (UTC) に設定 */
   if (inputDate && !inputDate.value) {
@@ -507,31 +533,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = await fetch(
-        `/api/schedule/generate?date=${ymd}&algo=greedy`,
-        { method: 'POST' }
-      );
-
-      if (!res.ok) {
-        const pd = await res.json();
-        throw new Error(pd.detail ?? res.statusText);
-      }
-
-      const gridData = await res.json();
-
-      grid.querySelectorAll('[data-slot-index]').forEach((el) => {
-        el.classList.remove('bg-blue-500');
-      });
-
-      gridData.forEach((slot, idx) => {
-        if (slot.busy) {
-          const cell = grid.querySelector(`[data-slot-index="${idx}"]`);
-          if (cell) cell.classList.add('bg-blue-500');
-        }
-      });
+      await generateSchedule(ymd);
     } catch (err) {
       console.error(err);
-      alert(`スケジュール生成に失敗しました\n${err}`);
+      alert(`スケジュール生成に失敗しました\n${err.message ?? err}`);
     }
   });
 });
