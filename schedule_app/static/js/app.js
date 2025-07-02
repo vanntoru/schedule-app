@@ -161,6 +161,7 @@ async function loadAndRenderTasks() {
         'cursor-grab select-none hover:bg-gray-50';
       card.setAttribute('draggable', 'true');
       card.dataset.taskId = t.id;
+      card.dataset.taskTitle = t.title;
       card.textContent    = `${t.title} (${t.duration_min}m)`;
       pane.appendChild(card);
     }
@@ -425,6 +426,7 @@ async function loadGridFromServer(date) {
       : Array.isArray(raw.grid)
         ? raw.grid
         : (() => { throw new Error('Malformed Grid'); })();
+  const unplaced = Array.isArray(raw.unplaced) ? raw.unplaced : [];
 
   const utcGrid = slots.map((s) => {
     if (typeof s === 'number') return s;
@@ -438,7 +440,7 @@ async function loadGridFromServer(date) {
 
   renderGrid();
   saveState();
-  return scheduleGrid;
+  return { grid: scheduleGrid, unplaced };
 }
 
 /** Restore the grid from a saved array. */
@@ -479,13 +481,54 @@ function doRedo() {
   updateUndoRedoButtons();
 }
 
+/** Display a temporary toast message. */
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className =
+    'fixed top-4 right-4 bg-gray-800 text-white px-3 py-2 rounded shadow transition-opacity opacity-0';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.classList.remove('opacity-0');
+  });
+  setTimeout(() => {
+    toast.classList.add('opacity-0');
+    setTimeout(() => toast.remove(), 500);
+  }, 4000);
+}
+
+/** Highlight unplaced tasks and show toast messages. */
+function showUnplacedTasks(unplacedIds) {
+  const pane = document.getElementById('task-pane');
+  if (!pane) return;
+
+  pane.querySelectorAll('.task-card').forEach((card) => {
+    card.classList.remove('bg-red-300', 'ring-2', 'ring-red-500', 'line-through');
+  });
+
+  for (const id of unplacedIds || []) {
+    const card = pane.querySelector(`[data-task-id="${id}"]`);
+    if (!card) continue;
+    card.classList.add('bg-red-300', 'ring-2', 'ring-red-500', 'line-through');
+    const title = card.dataset.taskTitle || card.textContent.trim();
+    showToast('未配置: ' + title);
+  }
+}
+
 /** Generate schedule and record undo information. */
 async function generateSchedule(date) {
   const previousGrid = scheduleGrid.slice();
-  await loadGridFromServer(date);
+  const { unplaced } = await loadGridFromServer(date);
+  showUnplacedTasks(unplaced);
   pushCommand({
-    apply: () => loadGridFromServer(date),
-    revert: () => restoreGrid(previousGrid),
+    apply: async () => {
+      const { unplaced } = await loadGridFromServer(date);
+      showUnplacedTasks(unplaced);
+    },
+    revert: () => {
+      restoreGrid(previousGrid);
+      showUnplacedTasks([]);
+    },
   });
 }
 
