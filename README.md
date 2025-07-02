@@ -57,7 +57,7 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 `date` is a required query parameter in `YYYY-MM-DD` format. `algo` is optional
 and may be `greedy` (default) or `compact`.
 
-On success, the endpoint returns `200 OK` with a **ScheduleGrid** object:
+On success, the endpoint returns `200 OK` with just the `slots` array:
 
 ```json
 {
@@ -71,6 +71,7 @@ the slot is free. The scheduling algorithm used is indicated by the `algo`
 query parameter.
 Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
 event or block data returns a `422` problem response.
+
 
 ## Calendar API
 
