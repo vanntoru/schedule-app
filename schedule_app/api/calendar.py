@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 from dataclasses import asdict
+from zoneinfo import ZoneInfo
 
 from schedule_app.models import Event
 
@@ -17,6 +18,27 @@ from schedule_app.services.google_client import (
 
 bp = Blueprint("calendar_bp", __name__)
 calendar_bp = bp
+
+# Global in-memory cache for Google Calendar events
+EVENTS: dict[str, Event] = {}
+
+
+def to_utc(info: dict) -> datetime:
+    """Return a UTC datetime from a Google Calendar event time dict."""
+    raw = info.get("dateTime") or info.get("date")
+    if not raw:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    tzid = info.get("timeZone")
+    if tzid:
+        tz = ZoneInfo(tzid)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=tz)
+        else:
+            dt = dt.astimezone(tz)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _problem(status: int, code: str, detail: str):
@@ -63,13 +85,18 @@ def get_calendar():
 
     client = GoogleClient(creds)
     try:
-        events = client.list_events(date=date_obj)
+        google_events = client.list_events(date=date_obj)
     except GoogleAPIUnauthorized as e:
         return _problem(401, "unauthorized", str(e))
     except APIError as e:
         return _problem(502, "bad-gateway", f"google_api: {e}")
 
-    return jsonify([_event_to_dict(e) for e in events]), 200
+    day_events: list[Event] = []
+    for ev in google_events:
+        EVENTS[ev.id] = ev
+        day_events.append(ev)
+
+    return jsonify([_event_to_dict(e) for e in day_events]), 200
 
 
 __all__ = ["calendar_bp"]

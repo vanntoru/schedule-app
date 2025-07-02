@@ -125,7 +125,7 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     from schedule_app.api.tasks import TASKS
     from schedule_app.api.blocks import BLOCKS
     try:
-        from schedule_app.api.calendar import EVENTS  # in-memory cache
+        from schedule_app.api.calendar import EVENTS  # calendar.py が EVENTS を保持
     except ImportError:
         EVENTS = {}
 
