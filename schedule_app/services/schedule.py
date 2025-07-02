@@ -110,16 +110,15 @@ def generate(
     return grid
 
 
-def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
+def generate_schedule(date: date) -> dict:
     """Return a simple JSON friendly schedule for ``date``.
 
     Parameters
     ----------
     date:
         Target day in UTC.
-    algo:
-        Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
-        currently supported.
+
+    TODO: allow selecting algorithm (greedy/compact) once implemented.
     """
 
     from schedule_app.api.tasks import TASKS
@@ -135,7 +134,6 @@ def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
         tasks=tasks,
         events=[],
         blocks=blocks,
-        algorithm=algo,
     )
 
     busy_map = _init_slot_map(base, [], blocks)
@@ -152,7 +150,6 @@ def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
 
     return {
         "date": date.isoformat(),
-        "algo": algo,
         "slots": slots,
         "unplaced": unplaced,
     }
