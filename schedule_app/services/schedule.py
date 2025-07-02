@@ -124,8 +124,18 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
 
     from schedule_app.api.tasks import TASKS
     from schedule_app.api.blocks import BLOCKS
+    try:
+        from schedule_app.api.calendar import EVENTS  # in-memory cache
+    except ImportError:
+        EVENTS = {}
 
     base = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
+
+    events = [
+        ev
+        for ev in EVENTS.values()
+        if (ev.start_utc.date() <= target_day <= ev.end_utc.date())
+    ]
 
     tasks = list(TASKS.values())
     blocks = list(BLOCKS.values())
@@ -133,12 +143,12 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     grid = generate(
         date_utc=base,
         tasks=tasks,
-        events=[],
+        events=events,
         blocks=blocks,
         algorithm=algo,
     )
 
-    busy_map = _init_slot_map(base, [], blocks)
+    busy_map = _init_slot_map(base, events, blocks)
 
     slots: list[int] = []
     for idx, cell in enumerate(grid):
