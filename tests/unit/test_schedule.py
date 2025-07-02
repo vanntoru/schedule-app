@@ -38,7 +38,8 @@ def test_priority_order() -> None:
     result = schedule.generate_schedule(date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
-    assert slots[:6] == [2] * 6
+    assert slots[:3] == ["A1"] * 3
+    assert slots[3:6] == ["B1"] * 3
 
 
 @freeze_time("2025-01-01T00:00:00Z")
@@ -61,8 +62,8 @@ def test_busy_slot() -> None:
     result = schedule.generate_schedule(date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
-    assert slots[:6] == [1] * 6
-    assert slots[6:9] == [2] * 3
+    assert slots[:6] == [None] * 6
+    assert slots[6:9] == ["A1"] * 3
 
 
 @freeze_time("2025-01-01T00:00:00Z")
@@ -81,6 +82,6 @@ def test_earliest_start() -> None:
     result = schedule.generate_schedule(date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
-    assert all(s == 0 for s in slots[:72])
-    assert slots[72:75] == [2] * 3
+    assert all(s is None for s in slots[:72])
+    assert slots[72:75] == ["A1"] * 3
 
