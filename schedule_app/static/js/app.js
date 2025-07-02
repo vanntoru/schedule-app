@@ -20,9 +20,21 @@
   /** Event[] を取得 */
   async function fetchEvents(dateStr) {
     const res = await fetch(`/api/calendar?date=${dateStr}`);
+
+    if (res.status === 401) {
+      // Redirect to login for unauthenticated users, except when running
+      // under Playwright where `navigator.webdriver` is true. Playwright
+      // should remain on the current page so tests are not interrupted.
+      if (!navigator.webdriver) {
+        window.location.assign('/login');
+      }
+      throw new Error('Calendar API unauthorized');
+    }
+
     if (!res.ok) {
       throw new Error(`Calendar API failed: ${res.status}`);
     }
+
     return res.json(); // [{ id, title, ... }]
   }
 
