@@ -10,7 +10,7 @@ from freezegun import freeze_time
 from flask import Flask
 
 from schedule_app import create_app
-from schedule_app.services.google_client import APIError
+from schedule_app.services.google_client import APIError, GoogleAPIUnauthorized
 from schedule_app.models import Event
 
 
@@ -81,11 +81,14 @@ def test_calendar_success(app: Flask, client) -> None:
 
 @freeze_time("2025-01-01T00:00:00Z")
 def test_calendar_unauthorized(app: Flask, client) -> None:
-    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(raise_exc=APIError("unauthorized"))):
+    with patch(
+        "schedule_app.api.calendar.GoogleClient",
+        return_value=DummyGClient(raise_exc=GoogleAPIUnauthorized("unauthorized")),
+    ):
         with client.session_transaction() as sess:
             sess["credentials"] = {"access_token": "tok", "expiry": None}
         resp = client.get("/api/calendar?date=2025-01-01")
-    assert resp.status_code == 502
+    assert resp.status_code == 401
     data = json.loads(resp.data)
     _assert_problem_details(data)
 
