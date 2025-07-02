@@ -15,12 +15,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from schedule_app.models import Event
-
-
-class APIError(Exception):
-    """Raised when token is missing or unauthorized."""
-
-
+from schedule_app.exceptions import APIError
 
 
 # OAuth scopes required for accessing Google APIs
