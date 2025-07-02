@@ -1,4 +1,8 @@
 /**
+ * @typedef {{ apply: () => void, revert: () => void }} Command
+ */
+
+/**
  * static/js/app.js
  *   ─ 今日の日付を UTC で計算し、/api/calendar から予定一覧を取得。
  *   ─ <div id="events"> にチップ（青ラベル）で描画。
