@@ -355,6 +355,24 @@ document.addEventListener('DOMContentLoaded', () => {
 // Schedule grid loading and history (Undo / Redo)
 // ---------------------------------------------------------------------------
 
+/* ===== Utility: rotate grid by N slots (positive = right) ============ */
+function rotate(grid, shift) {
+  const n = grid.length;
+  const g = new Array(n);
+  for (let i = 0; i < n; i++) {
+    g[(i + shift + n) % n] = grid[i];
+  }
+  return g;
+}
+
+/* ===== New: convert UTC‑grid → Local‑grid ============================ */
+function shiftGridToLocalTZ(grid) {
+  // 例) JST (UTC+9) なら getTimezoneOffset() = -540 → offsetMin = +540
+  const offsetMin  = -new Date().getTimezoneOffset();   // (+) if east of UTC
+  const offsetSlot = Math.round(offsetMin / 10);        // 10 分 = 1 slot
+  return rotate(grid, offsetSlot);
+}
+
 let scheduleGrid = new Array(144).fill(0); // current grid state
 
 const HISTORY_LIMIT = 20;
@@ -408,12 +426,15 @@ async function loadGridFromServer(date) {
         ? raw.grid
         : (() => { throw new Error('Malformed Grid'); })();
 
-  scheduleGrid = slots.map((s) => {
+  const utcGrid = slots.map((s) => {
     if (typeof s === 'number') return s;
     if (s.busy === true) return 1;
     if (s.task === true) return 2;
     return 0;
   });
+
+  /** ★ ここでローカルタイム位置へシフト ★ */
+  scheduleGrid = shiftGridToLocalTZ(utcGrid);
 
   renderGrid();
   saveState();
