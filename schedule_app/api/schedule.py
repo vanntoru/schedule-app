@@ -25,7 +25,7 @@ def generate_schedule():  # noqa: D401 - simple endpoint
     if algo not in {"greedy", "compact"}:
         abort(400, description="invalid algo")
 
-    result = schedule.generate_schedule(date_obj.date(), algo=algo)
+    result = schedule.generate_schedule_dict(date_obj.date(), algo=algo)
     return jsonify(result), 200
 
 

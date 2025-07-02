@@ -8,7 +8,7 @@ from typing import Literal
 from schedule_app.models import Block, Event, Task
 from schedule_app.services.rounding import quantize
 
-__all__ = ["generate", "generate_schedule"]
+__all__ = ["generate", "generate_schedule", "generate_schedule_dict"]
 
 SLOT_MIN = 10
 DAY_SLOTS = 144
@@ -110,7 +110,7 @@ def generate(
     return grid
 
 
-def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
+def generate_schedule_dict(date: date, *, algo: str = "greedy") -> dict:
     """Return a simple JSON friendly schedule for ``date``.
 
     Parameters
@@ -156,3 +156,44 @@ def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
         "slots": slots,
         "unplaced": unplaced,
     }
+
+
+def generate_schedule(
+    *,
+    target_day: date,
+    algo: str = "greedy",
+    events: list[Event] | None = None,
+) -> list[int]:
+    """Return a busy/free grid for ``target_day`` based on ``events``."""
+
+    if events is None:
+        events = []
+
+    # --- UTC midnight of target_day (safe tz-aware) -----------------
+    day_start = datetime(
+        target_day.year,
+        target_day.month,
+        target_day.day,
+        tzinfo=timezone.utc,
+    )
+
+    # --- ∆秒 / 600 で slot -------------------------------------------
+    def _idx(dt: datetime) -> int:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        dt_utc = dt.astimezone(timezone.utc)
+        delta = (dt_utc - day_start).total_seconds()
+        return max(0, min(143, int(delta // 600)))
+
+    grid: list[int] = [0] * DAY_SLOTS
+
+    for ev in events:
+        s = _idx(ev.start_utc)
+        e = _idx(ev.end_utc)
+        if e < s:
+            s, e = e, s
+        for i in range(s, min(e, DAY_SLOTS)):
+            if 0 <= i < DAY_SLOTS:
+                grid[i] = 1
+
+    return grid
