@@ -20,9 +20,12 @@
   /** Event[] を取得 */
   async function fetchEvents(dateStr) {
     const res = await fetch(`/api/calendar?date=${dateStr}`);
-    if (!res.ok) {
-      throw new Error(`Calendar API failed: ${res.status}`);
+    if (res.status === 401) {
+      // 資格情報失効。サインイン画面へ遷移
+      window.location.href = '/login';
+      return [];
     }
+    if (!res.ok) throw new Error(`Calendar API failed: ${res.status}`);
     return res.json(); // [{ id, title, ... }]
   }
 

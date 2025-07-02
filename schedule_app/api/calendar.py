@@ -5,9 +5,15 @@ from dataclasses import asdict
 
 from schedule_app.models import Event
 
-from flask import Blueprint, request, session, abort, jsonify
+from flask import Blueprint, request, session, abort, jsonify, Response
 
-from schedule_app.services.google_client import GoogleClient, APIError
+from http import HTTPStatus
+
+from schedule_app.services.google_client import (
+    GoogleAPITransient,
+    GoogleAPIUnauthorized,
+    GoogleClient,
+)
 
 
 bp = Blueprint("calendar_bp", __name__)
@@ -19,6 +25,27 @@ def _event_to_dict(ev: Event) -> dict:
     d["start_utc"] = ev.start_utc.isoformat().replace("+00:00", "Z")
     d["end_utc"] = ev.end_utc.isoformat().replace("+00:00", "Z")
     return d
+
+
+def _problem(
+    *,
+    status: int,
+    detail: str,
+    instance: str,
+    title: str | None = None,
+    type: str | None = None,
+) -> Response:
+    payload = {
+        "type": type or f"https://schedule.app/errors/{HTTPStatus(status).phrase.lower().replace(' ', '-')}",
+        "title": title or HTTPStatus(status).phrase,
+        "status": status,
+        "detail": detail,
+        "instance": instance,
+    }
+    resp = jsonify(payload)
+    resp.status_code = status
+    resp.mimetype = "application/problem+json"
+    return resp
 
 
 @bp.get("/api/calendar")
@@ -39,8 +66,20 @@ def get_calendar():
     client = GoogleClient(creds)
     try:
         events = client.list_events(date=date_obj)
-    except APIError as e:
-        abort(502, f"google_api: {e}")
+    except GoogleAPIUnauthorized:
+        return _problem(
+            status=HTTPStatus.UNAUTHORIZED,
+            detail="Google OAuth token expired or access revoked. Re-authenticate.",
+            instance=request.path,
+        )
+    except GoogleAPITransient:
+        return _problem(
+            status=HTTPStatus.BAD_GATEWAY,
+            title="Bad Gateway",
+            type="https://schedule.app/errors/bad-gateway",
+            detail="Temporary error while contacting Google API.",
+            instance=request.path,
+        )
 
     return jsonify([_event_to_dict(e) for e in events]), 200
 
