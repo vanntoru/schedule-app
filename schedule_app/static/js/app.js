@@ -173,6 +173,35 @@ document.addEventListener('DOMContentLoaded', () => {
   /* helper — true if e.target is a grid slot */
   const asSlot = (el) => el?.closest?.('[data-slot-index]');
 
+  const HISTORY_LIMIT = 20;
+  const history = [];
+  let historyIndex = -1;
+
+  function pushCommand(cmd) {
+    history.splice(historyIndex + 1);
+    history.push(cmd);
+    if (history.length > HISTORY_LIMIT) {
+      history.shift();
+    }
+    historyIndex = history.length - 1;
+    cmd.apply();
+  }
+
+  function undo() {
+    if (historyIndex < 0) return;
+    history[historyIndex].revert();
+    historyIndex--;
+  }
+
+  function redo() {
+    if (historyIndex + 1 >= history.length) return;
+    historyIndex++;
+    history[historyIndex].apply();
+  }
+
+  window.undo = undo;
+  window.redo = redo;
+
   /* ---------- dragstart ------------------------------------------------ */
   document.addEventListener('dragstart', (e) => {
     const card = e.target.closest('.task-card');
@@ -217,9 +246,19 @@ document.addEventListener('DOMContentLoaded', () => {
     slot.appendChild(draggingCard);
     draggingCard.dataset.slotIndex = idx;
 
-    /* update state */
-    markSlot(idx, draggingCard.dataset.taskId);
-    if (originIndex !== null) unmarkSlot(originIndex);
+    const tid = draggingCard.dataset.taskId;
+    const prevIndex = originIndex;
+    const nextIndex = idx;
+    pushCommand({
+      apply: () => {
+        markSlot(nextIndex, tid);
+        if (prevIndex !== null) unmarkSlot(prevIndex);
+      },
+      revert: () => {
+        if (prevIndex !== null) markSlot(prevIndex, tid);
+        unmarkSlot(nextIndex);
+      },
+    });
 
     /* visual cleanup */
     slot.classList.remove('ring-2', 'ring-blue-400');
