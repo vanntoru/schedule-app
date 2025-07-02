@@ -60,15 +60,18 @@ and may be `greedy` (default) or `compact`.
 On success, the endpoint returns `200 OK` with just the `slots` array:
 
 ```json
-[0, 1, 2, ...]
+{
+  "date": "2025-01-01",
+  "slots": ["task-id", null, ...]
+}
 ```
 
-`slots` is an array of 144 ten-minute entries where `0` means free, `1` busy and
-`2` occupied by a task. The underlying `schedule.generate_schedule()` service
-function still returns a dictionary with `date`, `algo`, `slots` and `unplaced`
-for use in other parts of the application. Missing or malformed query
-parameters yield `400 Bad Request`. Invalid task, event or block data returns a
-`422` problem response.
+`slots` is an array of 144 ten-minute entries containing task IDs or `null` if
+the slot is free. The scheduling algorithm used is indicated by the `algo`
+query parameter.
+Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
+event or block data returns a `422` problem response.
+
 
 ## Calendar API
 

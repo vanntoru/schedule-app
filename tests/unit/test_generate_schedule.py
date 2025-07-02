@@ -11,5 +11,4 @@ def test_generate_schedule_empty() -> None:
     result = generate_schedule(date(2025, 1, 1), algo="greedy")
     assert result["date"] == "2025-01-01"
     assert len(result["slots"]) == 144
-    assert result["slots"] == [0] * 144
-    assert result["unplaced"] == []
+    assert result["slots"] == [None] * 144
