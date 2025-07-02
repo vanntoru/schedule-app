@@ -475,13 +475,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnGenerate =
     document.querySelector('#btn-generate') ||
     document.querySelector('#generate-btn');
-  const inputDate = document.querySelector('#input-date');
-  const grid = document.querySelector('#time-grid');
+  const inputDate  = document.querySelector('#input-date');
+  const grid       = document.querySelector('#time-grid');
 
-  if (!btnGenerate || !inputDate || !grid) return;
+  /* ★ 追加 ① — ピッカーがあれば初期値を今日 (UTC) に設定 */
+  if (inputDate && !inputDate.value) {
+    inputDate.value = todayUtcISO();
+  }
 
-  btnGenerate.addEventListener('click', async () => {
-    const ymd = inputDate.value;
+  /* ★ 追加 ② — API 叩く際、ピッカーが無い場合は todayUtcISO() を使う */
+  btnGenerate?.addEventListener('click', async () => {
+    const ymd = inputDate ? inputDate.value : todayUtcISO();
+
     if (!ymd) {
       alert('日付を選択してください');
       return;

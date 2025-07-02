@@ -4,9 +4,31 @@
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 </head>
 <body>
-<header class="sticky top-0 bg-white p-2 shadow flex items-center gap-3">
+<header
+  class="sticky top-0 z-10 flex items-center gap-2
+         bg-white border-b border-gray-200 px-4 py-2">
+  <!-- 日付ピッカー -->
+  <input
+    id="input-date"
+    type="date"
+    class="border rounded px-2 py-1 text-sm"
+    aria-label="Schedule date" />
+
+  <!-- Generate ▶ ボタン -->
+  <button
+    id="btn-generate"
+    type="button"
+    class="inline-flex items-center gap-1 border rounded px-3 py-1
+           bg-blue-600 text-white text-sm hover:bg-blue-700 active:translate-y-0.5">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+         fill="currentColor"><path fill-rule="evenodd"
+         d="M3 5a1 1 0 011-1h1a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V5zm3.5 5l8-5v10l-8-5z"
+         clip-rule="evenodd" /></svg>
+    Generate
+  </button>
+
   <!-- Undo / Redo Buttons -->
-  <div id="history-buttons" class="inline-flex items-center gap-1 mr-2">
+  <div id="history-buttons" class="inline-flex items-center gap-1 ml-2">
     <button
       id="undo-btn"
       title="元に戻す (Ctrl+Z)"
@@ -20,7 +42,6 @@
       disabled
     >→</button>
   </div>
-  <button id="generate-btn" class="px-3 py-1 rounded border border-blue-600 bg-blue-600 text-white">Generate ▶</button>
 </header>
 <main class="p-4 flex gap-4">
   <!-- ── task side-pane ───────────────────────────────────────────── -->
