@@ -8,7 +8,7 @@ from schedule_app.api.blocks import BLOCKS
 def test_generate_schedule_empty() -> None:
     TASKS.clear()
     BLOCKS.clear()
-    result = generate_schedule(date(2025, 1, 1), algo="greedy")
+    result = generate_schedule(date(2025, 1, 1))
     assert result["date"] == "2025-01-01"
     assert len(result["slots"]) == 144
     assert result["slots"] == [0] * 144
