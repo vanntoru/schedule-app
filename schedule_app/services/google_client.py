@@ -140,4 +140,4 @@ class GoogleClient:
         return [self._to_event(item) for item in items]
 
 
-__all__ = ["GoogleClient", "APIError", "SCOPES"]
+__all__ = ["GoogleClient", "APIError", "SCOPES", "GoogleAPIUnauthorized"]
