@@ -119,7 +119,7 @@ class Block:
 | POST   | `/api/blocks`                                                   | 201 Block    | 422                         |
 | PUT    | `/api/blocks/{id}`                                              | 200 Block    | 404 / 422                   |
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
-| POST   | `/api/schedule/generate?date=YYYY‑MM‑DD&algo={greedy\|compact}` | 200 Slot[]   | 400 / 422                   |
+| POST   | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Slot[]   | 400 / 422                   |
 
 *`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付け、値は `list_events` 呼び出し前に UTC へ正規化される。*
 *Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
