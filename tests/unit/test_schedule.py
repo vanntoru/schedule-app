@@ -35,7 +35,7 @@ def test_priority_order() -> None:
         priority="B",
     )
 
-    result = schedule.generate_schedule(date(2025, 1, 1))
+    result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
     assert slots[:6] == [2] * 6
@@ -58,7 +58,7 @@ def test_busy_slot() -> None:
         duration_raw_min=30,
         priority="A",
     )
-    result = schedule.generate_schedule(date(2025, 1, 1))
+    result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
     assert slots[:6] == [1] * 6
@@ -78,7 +78,7 @@ def test_earliest_start() -> None:
         priority="A",
         earliest_start_utc=_dt("2025-01-01T12:00:00Z"),
     )
-    result = schedule.generate_schedule(date(2025, 1, 1))
+    result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
     assert all(s == 0 for s in slots[:72])

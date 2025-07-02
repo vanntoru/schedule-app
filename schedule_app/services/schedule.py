@@ -110,12 +110,12 @@ def generate(
     return grid
 
 
-def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
-    """Return a simple JSON friendly schedule for ``date``.
+def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
+    """Return a simple JSON friendly schedule for ``target_day``.
 
     Parameters
     ----------
-    date:
+    target_day:
         Target day in UTC.
     algo:
         Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
@@ -125,7 +125,7 @@ def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
     from schedule_app.api.tasks import TASKS
     from schedule_app.api.blocks import BLOCKS
 
-    base = datetime.combine(date, datetime.min.time(), tzinfo=timezone.utc)
+    base = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
 
     tasks = list(TASKS.values())
     blocks = list(BLOCKS.values())
@@ -151,7 +151,7 @@ def generate_schedule(date: date, *, algo: str = "greedy") -> dict:
     unplaced = [t.id for t in tasks if t.id not in placed_ids]
 
     return {
-        "date": date.isoformat(),
+        "date": target_day.isoformat(),
         "algo": algo,
         "slots": slots,
         "unplaced": unplaced,
