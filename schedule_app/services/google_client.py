@@ -11,6 +11,9 @@ from __future__ import annotations
 from typing import Any
 from urllib import parse, request
 from urllib.error import HTTPError
+
+from flask import current_app as app
+from googleapiclient.errors import HttpError
 import json
 from datetime import datetime, timedelta, timezone
 
@@ -19,6 +22,14 @@ from schedule_app.models import Event
 
 class APIError(Exception):
     """Raised when token is missing or unauthorized."""
+
+
+class GoogleAPIUnauthorized(RuntimeError):
+    """401 / 403 が返った場合に送出して、上位で Problem Details 化する"""
+
+
+class GoogleAPITransient(RuntimeError):
+    """500 系など一時的な失敗。リトライするか空配列で握りつぶすかは呼び出し側次第."""
 
 
 
@@ -86,10 +97,27 @@ class GoogleClient:
         try:
             with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
                 data = json.loads(resp.read().decode())
+        except HttpError as exc:  # pragma: no cover - network stubbed
+            status = exc.resp.status
+            if status in (401, 403):
+                raise GoogleAPIUnauthorized from exc
+            if 500 <= status < 600:
+                raise GoogleAPITransient from exc
+
+            app.logger.warning(
+                "Google API error (non-blocking): %s", exc, exc_info=True
+            )
+            return []
         except HTTPError as e:  # pragma: no cover - network stubbed
             if e.code in (401, 403):
-                raise APIError("unauthorized") from e
-            raise
+                raise GoogleAPIUnauthorized from e
+            if 500 <= e.code < 600:
+                raise GoogleAPITransient from e
+
+            app.logger.warning(
+                "Google API error (non-blocking): %s", e, exc_info=True
+            )
+            return []
         return data.get("items", [])
 
     def _parse_dt(self, value: str) -> datetime:
@@ -145,4 +173,10 @@ class GoogleClient:
         return [self._to_event(item) for item in items]
 
 
-__all__ = ["GoogleClient", "APIError", "SCOPES"]
+__all__ = [
+    "GoogleClient",
+    "APIError",
+    "SCOPES",
+    "GoogleAPIUnauthorized",
+    "GoogleAPITransient",
+]
