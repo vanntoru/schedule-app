@@ -90,7 +90,7 @@ class GoogleClient:
                 data = json.loads(resp.read().decode())
         except HTTPError as e:  # pragma: no cover - network stubbed
             if e.code in (401, 403):
-                raise APIError("unauthorized") from e
+                raise GoogleAPIUnauthorized() from e
             raise
         return data.get("items", [])
 

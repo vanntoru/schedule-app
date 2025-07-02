@@ -75,8 +75,8 @@ event or block data returns a `422` problem response.
 
 ## Calendar API
 
-`GET /api/calendar` returns Google events for the given day. When stored
-credentials have expired, the endpoint responds with **401 Unauthorized** and
+`GET /api/calendar` returns Google events for the given day. If credentials are
+missing, expired or revoked, the endpoint responds with **401 Unauthorized** and
 provides instructions in the JSON body to re-authenticate via `/login`.
 
 The front-end will automatically build the `#time-grid` element at page load if
