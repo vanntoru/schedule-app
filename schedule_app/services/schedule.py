@@ -159,10 +159,12 @@ def generate_schedule_dict(date: date, *, algo: str = "greedy") -> dict:
 
 
 def generate_schedule(
-    *,
     target_day: date,
+    *,
     algo: str = "greedy",
     events: list[Event] | None = None,
+    tasks: list[Task] | None = None,
+    blocks: list[Block] | None = None,
 ) -> list[int]:
     """Return a busy/free grid for ``target_day`` based on ``events``."""
 
