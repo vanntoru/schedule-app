@@ -348,10 +348,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function markSlot(i, tid) {
     gridState.set(i, tid);
+    document
+      .querySelector(`[data-slot-index="${i}"]`)
+      ?.classList.add('grid-slot--busy');
     /* TODO: IndexedDB schedule save (phase‑1) */
   }
   function unmarkSlot(i) {
     gridState.delete(i);
+    document
+      .querySelector(`[data-slot-index="${i}"]`)
+      ?.classList.remove('grid-slot--busy');
   }
 })();
 
@@ -392,13 +398,21 @@ function renderGrid() {
       ? raw.task ? 2 : raw.busy ? 1 : 0
       : raw;
 
-    el.classList.remove('bg-gray-200', 'bg-green-200', 'bg-blue-500');
+    /* ---- 背景色と busy クラスをリセット ---- */
+    el.classList.remove(
+      'bg-gray-200',
+      'bg-green-200',
+      'bg-blue-500',
+      'grid-slot--busy',
+    );
     switch (val) {
       case 1:
         el.classList.add('bg-gray-200');
+        el.classList.add('grid-slot--busy');
         break;
       case 2:
         el.classList.add('bg-green-200');
+        el.classList.add('grid-slot--busy');
         break;
       default:
     }
