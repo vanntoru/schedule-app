@@ -1,3 +1,27 @@
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+@media print {
+  header,
+  #app-header,
+  #side-pane,
+  .toolbar,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  html {
+    font-size: 85%;
+  }
+
+  #time-grid {
+    --row-h: 6px;
+  }
+}
+
 /* ───────────── 印刷時はストライプを表示しない ───────────── */
 @media print {
   /* 斜ストライプを付ける疑似要素を無効化 */
