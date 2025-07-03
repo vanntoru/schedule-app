@@ -1,20 +1,17 @@
-/* ───────────── 印刷時に背景色・ストライプを確実に出力 ───────────── */
+/* ───────────── 印刷時はストライプを表示しない ───────────── */
 @media print {
-  /* 予定セル & タスクカード */
+  /* 斜ストライプを付ける疑似要素を無効化 */
+  .grid-slot--busy::after,
+  .task-card::after {
+    display: none !important;
+  }
+
+  /* 以前に付けたストライプ用 background を上書きして消す */
   .grid-slot--busy,
   .task-card {
-    /* 背景を絶対に変更させない ― MDN 推奨 */
-    -webkit-print-color-adjust: exact;   /* Chrome / Safari */
-    print-color-adjust: exact;           /* 標準プロパティ */
-
-    /* ストライプをやや濃いグレーにしてモノクロ印刷でも視認性確保 */
-    background-image: repeating-linear-gradient(
-      135deg,
-      rgba(0, 0, 0, 0.12) 0,
-      rgba(0, 0, 0, 0.12) 4px,
-      transparent 4px,
-      transparent 8px
-    );
+    background-image: none !important;          /* ← ここで完全に無効化 */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;                  /* 背景色だけは印刷可 */
   }
 }
 
