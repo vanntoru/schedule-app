@@ -1,0 +1,20 @@
+/* ───────────── 印刷時に背景色・ストライプを確実に出力 ───────────── */
+@media print {
+  /* 予定セル & タスクカード */
+  .grid-slot--busy,
+  .task-card {
+    /* 背景を絶対に変更させない ― MDN 推奨 */
+    -webkit-print-color-adjust: exact;   /* Chrome / Safari */
+    print-color-adjust: exact;           /* 標準プロパティ */
+
+    /* ストライプをやや濃いグレーにしてモノクロ印刷でも視認性確保 */
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.12) 0,
+      rgba(0, 0, 0, 0.12) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+}
+
