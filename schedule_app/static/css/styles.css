@@ -56,3 +56,32 @@
   mix-blend-mode: overlay;      /* 下地色とブレンド */
   z-index: 1;                   /* 本体より前面、ドラッグ時は JS 側で上げる */
 }
+
+/* 色覚バリアフリー ― Reduced contrast 専用オーバーライド  */
+@media (prefers-contrast: less) {
+  .task-card::after,
+  .grid-slot--busy::after {
+    /* ブレンドをやめて必ず描く */
+    mix-blend-mode: normal;
+
+    /* 濃度を上げ、背景色に依存しない暗色ストライプ */
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.22) 0 4px,
+      transparent          4px 8px
+    );
+  }
+}
+
+/* Windows High‑Contrast (forced‑colors) も念のため */
+@media (forced-colors: active) {
+  .task-card::after,
+  .grid-slot--busy::after {
+    background-image: repeating-linear-gradient(
+      135deg,
+      CanvasText 0 4px,
+      transparent 4px 8px
+    );
+    mix-blend-mode: normal;
+  }
+}
