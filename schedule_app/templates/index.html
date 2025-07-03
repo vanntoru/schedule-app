@@ -44,6 +44,28 @@
     >→</button>
   </div>
 </header>
+<!-- ─────────── All-day timeline ─────────── -->
+<section
+  id="all-day-wrap"
+  class="sticky top-14 z-20 bg-white border-b border-gray-200"
+  aria-label="All-day events"
+>
+  <ul
+    id="all-day-timeline"
+    role="list"
+    class="flex flex-nowrap gap-2 overflow-x-auto py-2 px-4 scrollbar-thin focus-visible:outline-none"
+  ></ul>
+
+  <!-- クライアント側 JS から clone して使うテンプレート -->
+  <template id="tpl-all-day-chip">
+    <li
+      role="listitem"
+      tabindex="0"
+      class="inline-flex items-center rounded-full bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-blue-400"
+    ></li>
+  </template>
+</section>
+<!-- ───── End All-day timeline ───── -->
 <main class="p-4 flex gap-4">
   <!-- ── task side-pane ───────────────────────────────────────────── -->
   <aside id="task-pane"
@@ -74,6 +96,21 @@
     {% endfor %}
   </section>
 </main>
-<script type="module" src="/static/js/app.js"></script>
+  <script>
+    // ページロード後、IndexedDB もしくは /api/calendar の完了を待って
+    // window.renderAllDay(events) が呼ばれる前提。
+    // ここでは JS が未実装でもテスト用に global stub を提供しておく。
+    window.renderAllDay ??= (events) => {
+      const ul = document.getElementById('all-day-timeline');
+      const tmpl = document.getElementById('tpl-all-day-chip');
+      ul.innerHTML = '';
+      events.forEach(ev => {
+        const li = tmpl.content.firstElementChild.cloneNode(true);
+        li.textContent = ev.title;
+        ul.appendChild(li);
+      });
+    };
+  </script>
+  <script type="module" src="/static/js/app.js"></script>
 </body>
 </html>
