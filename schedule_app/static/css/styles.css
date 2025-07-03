@@ -9,3 +9,50 @@
     outline-color: CanvasText;
   }
 }
+
+/* ──────────────────────────────────────────────────────────
+   色覚バリアフリー対応 ― 斜ストライプオーバーレイ
+   ----------------------------------------------------------
+   仕様書 §8.1「色覚対応: 塗り＋ストライプパターン」に基づき、
+   予定ブロック（タスクリストカード／グリッドセル）が
+   単色表示だけでなく模様でも識別できるようにする。
+
+   既存 JS で task / event に付与しているクラス
+     ・.task-card         … サイドパネル内カード
+     ・.grid-slot--busy   … グリッド内に配置済みセル
+   の両方へ同じオーバーレイをかける。
+   （クラス名が異なる場合は該当クラスを追記するだけで OK）
+
+   ポイント
+   - mix‑blend‑mode を overlay にすることで
+     下地の Tailwind 背景色を維持しつつ模様だけ上書き。
+   - 透明度 0.35 程度なら印刷 / ダークモードでも視認性を確保。
+   - position:relative でレイアウト崩れを防ぐ。
+   ────────────────────────────────────────────────────────── */
+
+.task-card,
+.grid-slot--busy {
+  position: relative;           /* 疑似要素の絶対配置用 */
+  isolation: isolate;           /* Safari 対応で z-index 独立 */
+}
+
+/* 疑似要素でストライプを重ねる */
+.task-card::after,
+.grid-slot--busy::after {
+  content: '';
+  position: absolute;
+  inset: 0;                     /* Four‑way full overlay */
+  pointer-events: none;         /* マウス操作に影響させない */
+
+  /* 4 px 幅・45° 斜めストライプ */
+  background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.35) 0,
+      rgba(255, 255, 255, 0.35) 4px,
+      transparent 4px,
+      transparent 8px
+  );
+  background-size: 8px 8px;     /* Hi‑DPI でも粗さを抑える */
+  mix-blend-mode: overlay;      /* 下地色とブレンド */
+  z-index: 1;                   /* 本体より前面、ドラッグ時は JS 側で上げる */
+}
