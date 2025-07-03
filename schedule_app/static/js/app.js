@@ -562,9 +562,7 @@ document.addEventListener('DOMContentLoaded', updateUndoRedoButtons);
 // Spec §6, §7 で定義した <div id="time-grid">…</div> を更新する
 // ---------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  const btnGenerate =
-    document.querySelector('#btn-generate') ||
-    document.querySelector('#generate-btn');
+  const btnGenerate = document.querySelector('#btn-generate');
   const inputDate  = document.querySelector('#input-date');
 
   /* ★ 追加 ① — ピッカーがあれば初期値を今日 (UTC) に設定 */
