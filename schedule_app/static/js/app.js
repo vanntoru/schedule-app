@@ -168,6 +168,7 @@ async function loadAndRenderTasks() {
       card.textContent    = `${t.title} (${t.duration_min}m)`;
       pane.appendChild(card);
     }
+    applyContrastClasses();
   } catch (err) {
     console.error('[tasks] failed to load', err);
   }
@@ -216,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     document.body.appendChild(grid);
   }
+  applyContrastClasses();
 });
 
 /* ────────────────────────────────────────────────────────────────
@@ -351,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.add('grid-slot--busy');
+    applyContrastClasses();   // ★ 追加
     /* TODO: IndexedDB schedule save (phase‑1) */
   }
   function unmarkSlot(i) {
@@ -417,6 +420,8 @@ function renderGrid() {
       default:
     }
   });
+  /* Reduced-contrast ON なら新セルにも busy-strong を再付与 */
+  applyContrastClasses();
 }
 
 /** Persist the current grid. Placeholder for IndexedDB integration. */
@@ -631,18 +636,19 @@ function showToast(message) {
 
 
 /* === Reduced-contrast 検知 → busy-strong クラス切替 =============== */
-(() => {
-  const mq = window.matchMedia('(prefers-contrast: less)');
+const mqReduced = window.matchMedia('(prefers-contrast: less)');
 
-  function toggleContrast(e) {
-    const elems = document.querySelectorAll('.grid-slot--busy, .task-card');
-    elems.forEach((el) =>
-      e.matches ? el.classList.add('busy-strong')
-                : el.classList.remove('busy-strong'),
+/** busy / task 要素に busy-strong を付け外しする */
+function applyContrastClasses() {
+  const strong = mqReduced.matches;
+  document
+    .querySelectorAll('.grid-slot--busy, .task-card')
+    .forEach((el) =>
+      el.classList.toggle('busy-strong', strong),
     );
-  }
+}
 
-  mq.addEventListener('change', toggleContrast);
-  toggleContrast(mq);           // ページ初期表示時に 1 回実行
-})();
+/* 初期化 & OS 設定変更に追随 */
+mqReduced.addEventListener('change', applyContrastClasses);
+document.addEventListener('DOMContentLoaded', applyContrastClasses);   // ← グリッド生成後
 
