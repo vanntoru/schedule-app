@@ -85,3 +85,15 @@
     mix-blend-mode: normal;
   }
 }
+
+/* === Reduced-contrast 用に濃いストライプだけを切替で適用 === */
+.busy-strong::after {
+  /* 通常モード用ストライプは .task-card::after / .grid-slot--busy::after が既に定義済み */
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(0, 0, 0, .24) 0 4px,   /* 黒 24 %：Reduced contrast 時でも消えない */
+    transparent        4px 8px
+  );
+  mix-blend-mode: normal;       /* 背景色に影響されず確実に表示 */
+}
+

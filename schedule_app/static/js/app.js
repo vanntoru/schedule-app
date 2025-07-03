@@ -629,3 +629,20 @@ function showToast(message) {
   }, 4000);
 }
 
+
+/* === Reduced-contrast 検知 → busy-strong クラス切替 =============== */
+(() => {
+  const mq = window.matchMedia('(prefers-contrast: less)');
+
+  function toggleContrast(e) {
+    const elems = document.querySelectorAll('.grid-slot--busy, .task-card');
+    elems.forEach((el) =>
+      e.matches ? el.classList.add('busy-strong')
+                : el.classList.remove('busy-strong'),
+    );
+  }
+
+  mq.addEventListener('change', toggleContrast);
+  toggleContrast(mq);           // ページ初期表示時に 1 回実行
+})();
+
