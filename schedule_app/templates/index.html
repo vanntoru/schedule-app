@@ -74,16 +74,21 @@
   <!-- ── task side-pane ───────────────────────────────────────────── -->
   <aside id="task-pane"
          class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto"
-         aria-label="Tasks list">
+         aria-label="Tasks list"
+         role="list">
     <!-- JS がここに .task-card を挿入 -->
     <p id="task-empty" class="text-gray-500 text-sm">タスクがありません</p>
+    <template id="task-card-template">
+      <div class="task-card p-2 bg-white rounded shadow border cursor-grab select-none hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+           role="listitem" tabindex="0" draggable="true"></div>
+    </template>
   </aside>
 
   <!-- ── time grid ─────────────────────────────────────────────────── -->
   <h1 class="sr-only">Day schedule</h1>
   <div id="events"></div>
   <section id="time-grid"
-           role="list"
+           role="grid"
            aria-label="24-hour schedule grid"
            class="grid border border-gray-300 grid-cols-[70px_1fr] flex-1">
     {% for i in range(144) %}
@@ -96,7 +101,7 @@
       </div>
           <div class="slot border-b border-gray-200 hover:bg-blue-50 cursor-pointer
                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-           role="listitem" tabindex="0" data-slot-index="{{ i }}"></div>
+           role="gridcell" tabindex="0" data-slot-index="{{ i }}"></div>
     {% endfor %}
   </section>
 </main>

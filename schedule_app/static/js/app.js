@@ -158,8 +158,11 @@ async function loadAndRenderTasks() {
       const card = document.createElement('div');
       card.className =
         'task-card p-2 bg-white rounded shadow border ' +
-        'cursor-grab select-none hover:bg-gray-50';
+        'cursor-grab select-none hover:bg-gray-50 ' +
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
       card.setAttribute('draggable', 'true');
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('tabindex', '0');
       card.dataset.taskId = t.id;
       card.dataset.taskTitle = t.title;
       card.textContent    = `${t.title} (${t.duration_min}m)`;
@@ -181,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const grid = document.createElement('section');
   grid.id = 'time-grid';
-  grid.setAttribute('role', 'list');
+  grid.setAttribute('role', 'grid');
   grid.setAttribute('aria-label', '24-hour schedule grid');
   grid.className = 'grid border border-gray-300 grid-cols-[70px_1fr] flex-1';
 
@@ -199,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     slot.className =
       'slot border-b border-gray-200 hover:bg-blue-50 cursor-pointer ' +
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
-    slot.setAttribute('role', 'listitem');
+    slot.setAttribute('role', 'gridcell');
     slot.setAttribute('tabindex', '0');
     slot.dataset.slotIndex = String(i);
 
