@@ -1,11 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://localhost:5173';   // テスト用サーバ
-
 test('unplaced task shows red highlight & toast', async ({ page, request }) => {
   /* ------- 1. 24 h を越えるタスクを 2 件投入して容量オーバーにする ------- */
   for (const i of [1, 2]) {
-    await request.post(`${BASE}/api/tasks`, {
+    await request.post('/api/tasks', {
       data: {
         title: `TooLong${i}`,
         category: 'e2e',
@@ -17,7 +15,7 @@ test('unplaced task shows red highlight & toast', async ({ page, request }) => {
   }
 
   /* ------- 2. 画面を開き Generate ▶ をクリック ------- */
-  await page.goto(BASE);
+  await page.goto('/');
   await page.getByTestId('generate-btn').click();
 
   /* ------- 3. Toast が表示される ------- */

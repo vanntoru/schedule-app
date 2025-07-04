@@ -8,7 +8,7 @@ test('Undo/Redo 動作確認', async ({ page }) => {
     r.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   );
 
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
 
   /* === 1) 前回残りタスクを全削除 ========================== */
   await page.evaluate(async () => {
