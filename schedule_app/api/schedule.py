@@ -49,7 +49,7 @@ def generate_schedule():  # noqa: D401 - simple endpoint
     if algo not in {"greedy", "compact"}:
         abort(400, description="invalid algo")
 
-    result = schedule.generate_schedule(target_day=target_day_utc.date(), algo=algo)
+    result = schedule.generate_schedule(target_day=local_day, algo=algo)
     result.pop("algo", None)
     result["date"] = local_day.isoformat()
 
