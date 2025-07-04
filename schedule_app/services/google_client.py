@@ -130,12 +130,15 @@ class GoogleClient:
         )
 
     def list_events(self, *, date: datetime) -> list[Event]:
-        """Return events for the 24-hour period starting at UTC midnight.
+        """Return events for the 24-hour period starting at midnight in the configured timezone.
+
+        The timezone comes from ``cfg.TIMEZONE`` and may be overridden with
+        the ``TIMEZONE`` environment variable.
 
         Parameters
         ----------
         date : datetime
-            Target day in JST. Naive values are treated as JST.
+            Target day in the configured zone. Naive values are interpreted using ``cfg.TIMEZONE``.
         """
 
         # -------------------------------

@@ -36,10 +36,6 @@ class _Config:
     # --- OAuth ---
     GOOGLE_CLIENT_ID: str = os.environ["GOOGLE_CLIENT_ID"]
     GOOGLE_CLIENT_SECRET: str | None = os.getenv("GOOGLE_CLIENT_SECRET")  # PKCEでは不要
-    OAUTH_REDIRECT_URI: str = os.getenv(
-        "OAUTH_REDIRECT_URI",
-        "http://localhost:5173/oauth2callback",
-    )
 
     # --- App Settings ---
     TIMEZONE: str = os.getenv("TIMEZONE", "Asia/Tokyo")
