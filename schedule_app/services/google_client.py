@@ -11,10 +11,15 @@ from __future__ import annotations
 from typing import Any
 from urllib import parse, request
 from urllib.error import HTTPError
+import os
+
+try:
+    import schedule_app.config as config_module
+except Exception:  # pragma: no cover - missing env vars in some test runs
+    config_module = None
 import json
 from datetime import datetime, time, timedelta, timezone
 import pytz
-import schedule_app.config as config_module
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
@@ -137,7 +142,12 @@ class GoogleClient:
         # UI は JST 日付を渡してくる前提。
         # JST 00:00 を UTC に変換して 24 h 範囲を取得する。
         # -------------------------------
-        tz = pytz.timezone(config_module.cfg.TIMEZONE)
+        if config_module is not None:
+            tz_name = config_module.cfg.TIMEZONE
+        else:
+            tz_name = os.getenv("TIMEZONE", "Asia/Tokyo")
+
+        tz = pytz.timezone(tz_name)
 
         if date.tzinfo is None:
             # naïve → JST
