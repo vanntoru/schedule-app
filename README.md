@@ -56,8 +56,8 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 
 `date` is a required query parameter in `YYYY-MM-DD` format.
 <!-- TODO: support selecting different scheduling algorithms -->
-
 On success, the endpoint returns `200 OK` with a JSON object:
+
 
 ```json
 {
@@ -71,6 +71,7 @@ On success, the endpoint returns `200 OK` with a JSON object:
 `2` occupied by a task. Missing or malformed query parameters yield
 `400 Bad Request`. Invalid task, event or block data returns a `422` problem
 response.
+
 
 ## Calendar API
 
