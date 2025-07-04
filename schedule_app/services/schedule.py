@@ -133,7 +133,7 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     Parameters
     ----------
     target_day:
-        Target day in UTC.
+        Target day in the application's timezone.
     algo:
         Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
         currently supported.
@@ -146,7 +146,14 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     except ImportError:
         EVENTS = {}
 
-    start_utc = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
+    tz_name = getattr(cfg, "TIMEZONE", "Asia/Tokyo")
+    try:
+        tz = ZoneInfo(tz_name)
+        local_midnight = datetime.combine(target_day, datetime.min.time(), tz)
+    except ZoneInfoNotFoundError:
+        tz = pytz.timezone(tz_name)
+        local_midnight = tz.localize(datetime.combine(target_day, datetime.min.time()))
+    base = local_midnight.astimezone(timezone.utc)
 
     events = [
         ev

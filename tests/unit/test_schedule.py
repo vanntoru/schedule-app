@@ -47,8 +47,8 @@ def test_busy_slot() -> None:
     BLOCKS.clear()
     BLOCKS["b1"] = Block(
         id="b1",
-        start_utc=_dt("2025-01-01T00:00:00Z"),
-        end_utc=_dt("2025-01-01T01:00:00Z"),
+        start_utc=_dt("2024-12-31T15:00:00Z"),
+        end_utc=_dt("2024-12-31T16:00:00Z"),
     )
     TASKS["A1"] = Task(
         id="A1",
@@ -81,6 +81,6 @@ def test_earliest_start() -> None:
     result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
-    assert all(s == 0 for s in slots[:72])
-    assert slots[72:75] == [2] * 3
+    assert all(s == 0 for s in slots[:126])
+    assert slots[126:129] == [2] * 3
 
