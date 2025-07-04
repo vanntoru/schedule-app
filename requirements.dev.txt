@@ -13,3 +13,4 @@ google-auth-oauthlib>=1.2.0
 pytest-cov>=5.0
 pytest-xdist>=3.5
 pytz>=2023.3
+tzdata>=2024.1

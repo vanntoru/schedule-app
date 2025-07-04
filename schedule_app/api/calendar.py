@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import pytz
 from http import HTTPStatus
 from dataclasses import asdict
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import pytz
 
 from schedule_app.models import Event
 from schedule_app.config import cfg
@@ -33,7 +33,10 @@ def to_utc(info: dict) -> datetime:
     dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
     tzid = info.get("timeZone")
     if tzid:
-        tz = ZoneInfo(tzid)
+        try:
+            tz = ZoneInfo(tzid)
+        except ZoneInfoNotFoundError:
+            tz = pytz.timezone(tzid)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=tz)
         else:

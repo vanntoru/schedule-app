@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, time, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import pytz
 from flask import Blueprint, abort, jsonify, request
 
 from schedule_app.services import schedule
@@ -18,7 +19,11 @@ def generate_schedule():  # noqa: D401 - simple endpoint
     if not date_str:
         abort(400, description="date parameter required")
 
-    tz = ZoneInfo(getattr(cfg, "TIMEZONE", "Asia/Tokyo"))
+    TZ_NAME = getattr(cfg, "TIMEZONE", "Asia/Tokyo")
+    try:
+        tz = ZoneInfo(TZ_NAME)
+    except ZoneInfoNotFoundError:
+        tz = pytz.timezone(TZ_NAME)
 
     if "T" in date_str:
         try:
@@ -37,7 +42,7 @@ def generate_schedule():  # noqa: D401 - simple endpoint
             abort(400, description="invalid date format")
 
     target_day_utc = (
-        datetime.combine(local_day, time.min, tzinfo=tz).astimezone(timezone.utc)
+        datetime.combine(local_day, datetime.min.time(), tzinfo=tz).astimezone(timezone.utc)
     )
 
     algo = request.args.get("algo", "greedy")
