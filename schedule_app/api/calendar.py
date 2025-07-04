@@ -7,6 +7,7 @@ from dataclasses import asdict
 from zoneinfo import ZoneInfo
 
 from schedule_app.models import Event
+from schedule_app.config import cfg
 
 from flask import Blueprint, request, session, jsonify
 
@@ -87,7 +88,7 @@ def get_calendar():
         return _problem(400, "bad-request", "invalid date")
 
     if date_obj.tzinfo is None:
-        date_obj = pytz.timezone("Asia/Tokyo").localize(date_obj)
+        date_obj = pytz.timezone(cfg.TIMEZONE).localize(date_obj)
 
     creds = session.get("credentials")
     if not creds:
