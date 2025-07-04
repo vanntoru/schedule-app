@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, time, timedelta
+from zoneinfo import ZoneInfo
 from typing import Literal
 
 from schedule_app.models import Block, Event, Task
 from schedule_app.services.rounding import quantize
+from schedule_app.config import cfg
 
 __all__ = ["generate", "generate_schedule"]
 
@@ -116,7 +118,7 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     Parameters
     ----------
     target_day:
-        Target day in UTC.
+        Target day in JST.
     algo:
         Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
         currently supported.
@@ -129,26 +131,30 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     except ImportError:
         EVENTS = {}
 
-    base = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
+    JST = ZoneInfo(cfg.TIMEZONE)
+    start_utc = (
+        datetime.combine(target_day, time.min, tzinfo=JST).astimezone(timezone.utc)
+    )
+    end_utc = start_utc + timedelta(days=1)
 
     events = [
         ev
         for ev in EVENTS.values()
-        if (ev.start_utc.date() <= target_day <= ev.end_utc.date())
+        if not (ev.end_utc <= start_utc or ev.start_utc >= end_utc)
     ]
 
     tasks = list(TASKS.values())
     blocks = list(BLOCKS.values())
 
     grid = generate(
-        date_utc=base,
+        date_utc=start_utc,
         tasks=tasks,
         events=events,
         blocks=blocks,
         algorithm=algo,
     )
 
-    busy_map = _init_slot_map(base, events, blocks)
+    busy_map = _init_slot_map(start_utc, events, blocks)
 
     slots: list[int] = []
     for idx, cell in enumerate(grid):

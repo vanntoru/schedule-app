@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, time
+from zoneinfo import ZoneInfo
+from schedule_app.config import cfg
 
 from freezegun import freeze_time
 
@@ -61,8 +63,13 @@ def test_busy_slot() -> None:
     result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
-    assert slots[:6] == [1] * 6
-    assert slots[6:9] == [2] * 3
+    jst = ZoneInfo(cfg.TIMEZONE)
+    start_utc = (
+        datetime.combine(date(2025, 1, 1), time.min, tzinfo=jst).astimezone(timezone.utc)
+    )
+    idx = int((_dt("2025-01-01T00:00:00Z") - start_utc).total_seconds() // 600)
+    assert slots[0:3] == [2] * 3
+    assert slots[idx:idx + 6] == [1] * 6
 
 
 @freeze_time("2025-01-01T00:00:00Z")
@@ -81,6 +88,11 @@ def test_earliest_start() -> None:
     result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
     assert len(slots) == 144
-    assert all(s == 0 for s in slots[:72])
-    assert slots[72:75] == [2] * 3
+    jst = ZoneInfo(cfg.TIMEZONE)
+    start_utc = (
+        datetime.combine(date(2025, 1, 1), time.min, tzinfo=jst).astimezone(timezone.utc)
+    )
+    idx = int((_dt("2025-01-01T12:00:00Z") - start_utc).total_seconds() // 600)
+    assert all(s == 0 for s in slots[:idx])
+    assert slots[idx:idx + 3] == [2] * 3
 
