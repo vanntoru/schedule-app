@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 from zoneinfo import ZoneInfo
 from flask import Blueprint, abort, jsonify, request
 
 from schedule_app.services import schedule
+from schedule_app.config import cfg
+
+JST = ZoneInfo(cfg.TIMEZONE)
 
 
 bp = Blueprint("schedule", __name__, url_prefix="/api/schedule")
@@ -24,19 +27,17 @@ def generate_schedule():  # noqa: D401 - simple endpoint
         except ValueError:
             abort(400, description="invalid date format")
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        local_day = dt.astimezone(ZoneInfo("Asia/Tokyo")).date()
-        target_day_utc = dt.astimezone(timezone.utc)
+            dt = dt.replace(tzinfo=JST)
+        local_day = dt.astimezone(JST).date()
     else:
         try:
             local_day = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             abort(400, description="invalid date format")
-        tz = ZoneInfo("Asia/Tokyo")
-        target_day_utc = (
-            datetime.combine(local_day, datetime.min.time(), tzinfo=tz)
-            .astimezone(timezone.utc)
-        )
+
+    target_day_utc = (
+        datetime.combine(local_day, time.min, tzinfo=JST).astimezone(timezone.utc)
+    )
 
     algo = request.args.get("algo", "greedy")
     if algo not in {"greedy", "compact"}:
