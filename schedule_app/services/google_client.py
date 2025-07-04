@@ -17,6 +17,7 @@ import pytz
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
+from schedule_app.config import cfg
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -133,10 +134,10 @@ class GoogleClient:
         """
 
         # -------------------------------
-        # UI は JST 日付を渡してくる前提。
-        # JST 00:00 を UTC に変換して 24 h 範囲を取得する。
+        # UI は動作時のタイムゾーン(cfg.TIMEZONE)で日付を測定する前提。
+        # ローカル時間の 00:00 を UTC に変換して 24‟h 範囲を取得する。
         # -------------------------------
-        JST = pytz.timezone("Asia/Tokyo")
+        JST = pytz.timezone(cfg.TIMEZONE)
 
         if date.tzinfo is None:
             # naïve → JST
