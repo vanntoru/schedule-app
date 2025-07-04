@@ -14,6 +14,7 @@ from urllib.error import HTTPError
 import json
 from datetime import datetime, time, timedelta, timezone
 import pytz
+import schedule_app.config as config_module
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
@@ -136,15 +137,15 @@ class GoogleClient:
         # UI は JST 日付を渡してくる前提。
         # JST 00:00 を UTC に変換して 24 h 範囲を取得する。
         # -------------------------------
-        JST = pytz.timezone("Asia/Tokyo")
+        tz = pytz.timezone(config_module.cfg.TIMEZONE)
 
         if date.tzinfo is None:
             # naïve → JST
-            local_start = JST.localize(datetime.combine(date.date(), time.min))
+            local_start = tz.localize(datetime.combine(date.date(), time.min))
         else:
             # すでに aware なら JST に合わせる
             local_start = (
-                date.astimezone(JST).replace(hour=0, minute=0, second=0, microsecond=0)
+                date.astimezone(tz).replace(hour=0, minute=0, second=0, microsecond=0)
             )
 
         start = local_start.astimezone(timezone.utc)
