@@ -24,6 +24,13 @@ flask --app schedule_app run --debug --port 5173
 
 The `requirements.dev.txt` file includes **freezegun**, which the tests rely on.
 
+## Configuration
+
+The application reads settings from environment variables. `TIMEZONE` defines
+the default IANA zone used when parsing API dates that lack timezone
+information. It defaults to `"Asia/Tokyo"` but may be changed to any valid zone
+identifier.
+
 ## Running Tests
 
 The tests rely on the `freezegun` library to control time. Make sure it is
@@ -56,8 +63,8 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 
 `date` is a required query parameter that accepts an ISO‑8601 datetime
 (e.g. `2025-01-01T09:00:00+09:00`) or `YYYY-MM-DD`. When the value lacks a
-timezone, it is interpreted using `cfg.TIMEZONE` before being normalized to
-UTC.
+timezone, it is interpreted using `cfg.TIMEZONE` (default `"Asia/Tokyo"`) before
+being normalized to UTC.
 <!-- TODO: support selecting different scheduling algorithms -->
 On success, the endpoint returns `200 OK` with a JSON object:
 
@@ -82,8 +89,9 @@ response.
 missing, expired or revoked, the endpoint responds with **401 Unauthorized** and
 provides instructions in the JSON body to re-authenticate via `/login`.
 The required `date` query parameter accepts an ISO 8601 datetime or
-`YYYY-MM-DD`. When no timezone is included, the value is interpreted as
-Asia/Tokyo and normalized to UTC before calling the Google API.
+`YYYY-MM-DD`. When no timezone is included, the value is interpreted using
+`cfg.TIMEZONE` (default `"Asia/Tokyo"`) and normalized to UTC before calling the
+Google API.
 
 The front-end will automatically build the `#time-grid` element at page load if
 it is missing.
