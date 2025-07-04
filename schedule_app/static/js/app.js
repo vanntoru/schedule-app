@@ -325,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- minimal fallback impl. ----------------------------------- */
   /* 既成ヘルパが無い場合の簡易実装（Map ベース）——重複登録にも強い */
   const gridState = new Map();   // key: slotIndex, value: taskId
+  window.gridState = gridState;  // expose for resets
 
   function slotOccupied(i) {
     return gridState.has(i);
@@ -343,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.remove('grid-slot--busy');
   }
+  window.unmarkSlot = unmarkSlot;   // expose for resets
 })();
 
 // ---------------------------------------------------------------------------
@@ -505,19 +507,30 @@ function showUnplacedTasks(unplacedIds) {
 
 /** Generate schedule and record undo information. */
 async function generateSchedule(date) {
-  const previousGrid = scheduleGrid.slice();
+  // ----- reset current state -----
+  scheduleGrid = new Array(144).fill(0);
+  if (window.gridState) window.gridState.clear();
+  document.querySelectorAll('.slot').forEach((slot) => {
+    slot.classList.remove(
+      'grid-slot--busy',
+      'bg-gray-200',
+      'bg-green-200',
+      'bg-blue-500',
+    );
+    const card = slot.querySelector('.task-card');
+    if (card) {
+      document.getElementById('task-pane')?.appendChild(card);
+      card.removeAttribute('data-slot-index');
+    }
+  });
+  _history.length = 0;
+  _ptr = -1;
+  updateUndoRedoButtons();
+  renderGrid();
+
+  // ----- load new schedule -----
   const { unplaced } = await loadGridFromServer(date);
   showUnplacedTasks(unplaced);
-  pushCommand({
-    apply: async () => {
-      const { unplaced } = await loadGridFromServer(date);
-      showUnplacedTasks(unplaced);
-    },
-    revert: () => {
-      restoreGrid(previousGrid);
-      showUnplacedTasks([]);
-    },
-  });
 }
 
 // Expose undo/redo for keyboard handlers or UI buttons
