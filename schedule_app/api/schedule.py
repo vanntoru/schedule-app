@@ -16,17 +16,27 @@ def generate_schedule():  # noqa: D401 - simple endpoint
     date_str = request.args.get("date")
     if not date_str:
         abort(400, description="date parameter required")
+
+    # accept plain dates or datetimes with optional trailing 'Z'
+    if date_str.endswith("Z"):
+        date_str = date_str[:-1] + "+00:00"
     try:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        dt = datetime.fromisoformat(date_str)
     except ValueError:
         abort(400, description="invalid date format")
+
+    local_day = dt.date()
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    date_utc = dt.astimezone(timezone.utc)
 
     algo = request.args.get("algo", "greedy")
     if algo not in {"greedy", "compact"}:
         abort(400, description="invalid algo")
 
-    result = schedule.generate_schedule(target_day=date_obj.date(), algo=algo)
+    result = schedule.generate_schedule(target_day=date_utc.date(), algo=algo)
     result.pop("algo", None)
+    result["date"] = local_day.isoformat()
     return jsonify(result)
 
 
