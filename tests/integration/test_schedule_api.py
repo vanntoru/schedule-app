@@ -31,3 +31,11 @@ def test_generate_simple(client) -> None:
     assert set(data.keys()) == {"date", "slots", "unplaced"}
     assert data["date"] == "2025-01-01"
     assert len(data["slots"]) == 144
+
+
+def test_generate_accepts_z_datetime(client) -> None:
+    resp = client.post("/api/schedule/generate?date=2025-01-01T00:00:00Z")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, dict)
+    assert data["date"] == "2025-01-01"
