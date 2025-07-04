@@ -33,11 +33,11 @@ identifier.
 
 ## Running Tests
 
-The tests rely on the `freezegun` library to control time. Make sure it is
-installed from `requirements.dev.txt` before invoking `pytest`:
+The test suite depends on the `freezegun` library to control time. Tests will
+not run until it has been installed from `requirements.dev.txt`:
 
 ```bash
-pip install -r requirements.dev.txt  # includes freezegun
+pip install -r requirements.dev.txt
 pytest -q
 ```
 
