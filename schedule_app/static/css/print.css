@@ -20,6 +20,12 @@
   #time-grid {
     --row-h: 6px;
   }
+
+  /* -- Task side-pane も確実に隠す ------------------------ */
+  #task-pane,
+  [id="task-pane"] {
+    display: none !important;
+  }
 }
 
 /* ───────────── 印刷時はストライプを表示しない ───────────── */
