@@ -47,3 +47,11 @@ def test_generate_accepts_naive_datetime(client) -> None:
     data = resp.get_json()
     assert isinstance(data, dict)
     assert data["date"] == "2025-01-01"
+
+
+def test_generate_naive_datetime_midday(client) -> None:
+    resp = client.post("/api/schedule/generate?date=2025-07-05T15:00:00")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, dict)
+    assert data["date"] == "2025-07-05"
