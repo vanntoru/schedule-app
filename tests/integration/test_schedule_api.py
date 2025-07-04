@@ -4,17 +4,16 @@ import os
 import pytest
 from flask import Flask
 
-from schedule_app import create_app
-
 # ---------------------------------------------------------------------------
 # Prep dummy env vars so create_app() works without real GCP creds
 # ---------------------------------------------------------------------------
 os.environ.setdefault("GCP_PROJECT", "dummy-project")
 os.environ.setdefault("GOOGLE_CLIENT_ID", "dummy-client-id")
 
-
 @pytest.fixture()
 def app() -> Flask:
+    from schedule_app import create_app
+
     return create_app(testing=True)
 
 
