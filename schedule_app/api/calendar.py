@@ -15,6 +15,7 @@ from schedule_app.services.google_client import (
     APIError,
     GoogleAPIUnauthorized,
 )
+from schedule_app.config import cfg
 
 
 bp = Blueprint("calendar_bp", __name__)
@@ -74,8 +75,8 @@ def get_calendar():
     """Return events for the given day.
 
     The required ``date`` query parameter accepts an ISO 8601 datetime or
-    ``YYYY-MM-DD``. Naive values are interpreted as Asia/Tokyo before being
-    normalized to UTC.
+    ``YYYY-MM-DD``. Naive values are interpreted in the configured timezone
+    (``cfg.TIMEZONE``) before being normalized to UTC.
     """
     date_str = request.args.get("date")
     if not date_str:
@@ -87,7 +88,7 @@ def get_calendar():
         return _problem(400, "bad-request", "invalid date")
 
     if date_obj.tzinfo is None:
-        date_obj = pytz.timezone("Asia/Tokyo").localize(date_obj)
+        date_obj = pytz.timezone(cfg.TIMEZONE).localize(date_obj)
 
     creds = session.get("credentials")
     if not creds:
