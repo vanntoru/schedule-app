@@ -614,12 +614,19 @@ document.addEventListener('DOMContentLoaded', () => {
  * @param {string} message
  */
 function showToast(message) {
+  // Remove any existing toast so only one is visible at a time
+  document
+    .querySelectorAll('.schedule-toast')
+    .forEach((el) => el.remove());
+
   const toast = document.createElement('div');
   toast.textContent = message;
   toast.className =
-    'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ' +
+    'schedule-toast fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ' +
     'bg-red-600 text-white px-4 py-2 rounded shadow-lg ' +
     'opacity-0 transition-opacity duration-300';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
 
   document.body.appendChild(toast);
 
