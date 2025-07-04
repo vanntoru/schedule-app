@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import pytz
 from flask import Blueprint, abort, jsonify, request
@@ -41,15 +41,11 @@ def generate_schedule():  # noqa: D401 - simple endpoint
         except ValueError:
             abort(400, description="invalid date format")
 
-    target_day_utc = (
-        datetime.combine(local_day, datetime.min.time(), tzinfo=tz).astimezone(timezone.utc)
-    )
-
     algo = request.args.get("algo", "greedy")
     if algo not in {"greedy", "compact"}:
         abort(400, description="invalid algo")
 
-    result = schedule.generate_schedule(target_day=target_day_utc.date(), algo=algo)
+    result = schedule.generate_schedule(target_day=local_day, algo=algo)
     result.pop("algo", None)
     result["date"] = local_day.isoformat()
 
