@@ -57,17 +57,20 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 `date` is a required query parameter in `YYYY-MM-DD` format.
 <!-- TODO: support selecting different scheduling algorithms -->
 
-On success, the endpoint returns `200 OK` with just the `slots` array:
+On success, the endpoint returns `200 OK` and a JSON object containing
+`date`, `slots` and `unplaced`:
 
 ```json
-[0, 1, 2, ...]
+{
+  "date": "2025-01-01",
+  "slots": [0, 1, 2, ...],
+  "unplaced": []
+}
 ```
 
 `slots` is an array of 144 ten-minute entries where `0` means free, `1` busy and
-`2` occupied by a task. The underlying `schedule.generate_schedule()` service
-function still returns a dictionary with `date`, `slots` and `unplaced`
-for use in other parts of the application. Missing or malformed query
-parameters yield `400 Bad Request`. Invalid task, event or block data returns a
+`2` occupied by a task. `unplaced` lists task IDs that could not be scheduled.
+Missing or malformed query parameters yield `400 Bad Request`. Invalid task, event or block data returns a
 `422` problem response.
 
 ## Calendar API
