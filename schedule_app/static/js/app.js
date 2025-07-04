@@ -573,6 +573,20 @@ document.addEventListener('DOMContentLoaded', () => {
     inputDate.value = todayUtcISO();
   }
 
+  /* ★★ 追加 ② — ピッカー変更時に All‑day 予定を再取得 ★★ */
+  inputDate?.addEventListener('change', async () => {
+    const ymd = inputDate.value;
+    if (!ymd) return;
+    try {
+      const events = await fetch(`/api/calendar?date=${ymd}`).then((r) =>
+        r.json(),
+      );
+      window.renderAllDay(events);
+    } catch (err) {
+      console.error('[calendar] reload failed', err);
+    }
+  });
+
   /* ★ 追加 ② — API 叩く際、ピッカーが無い場合は todayUtcISO() を使う */
   btnGenerate?.addEventListener('click', async () => {
     const ymd = inputDate ? inputDate.value : todayUtcISO();
@@ -581,9 +595,13 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('日付を選択してください');
       return;
     }
-
     try {
+      /* 1) スケジュール生成（/api/schedule/generate） */
       await generateSchedule(ymd);
+
+      /* 2) All-day 予定も最新化 */
+      const events = await fetch(`/api/calendar?date=${ymd}`).then((r) => r.json());
+      window.renderAllDay(events);
     } catch (err) {
       console.error(err);
       alert(`スケジュール生成に失敗しました\n${err.message ?? err}`);
