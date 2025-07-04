@@ -21,8 +21,14 @@ test('unplaced task shows red highlight & toast', async ({ page, request }) => {
   await page.getByTestId('generate-btn').click();
 
   /* ------- 3. Toast が表示される ------- */
-  const toast = page.locator('text=/未配置: TooLong[12]/');   // どちらか 1 件を許容
-  await expect(toast).toBeVisible({ timeout: 5000 });
+  const toastText = page.locator('text=/未配置: TooLong[12]/');   // どちらか 1 件を許容
+  await expect(toastText).toBeVisible({ timeout: 5000 });
+
+  // Toast should be unique and have proper ARIA attributes
+  const toast = page.locator('.schedule-toast');
+  await expect(toast).toHaveCount(1);
+  await expect(toast).toHaveAttribute('role', 'status');
+  await expect(toast).toHaveAttribute('aria-live', 'polite');
 
   /* ------- 4. サイドパネルのカードに赤クラスが付く ------- */
   const card = page.locator('[data-task-id]').filter({ hasText: 'TooLong2' });
