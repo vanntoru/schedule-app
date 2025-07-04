@@ -75,6 +75,9 @@ parameters yield `400 Bad Request`. Invalid task, event or block data returns a
 `GET /api/calendar` returns Google events for the given day. If credentials are
 missing, expired or revoked, the endpoint responds with **401 Unauthorized** and
 provides instructions in the JSON body to re-authenticate via `/login`.
+The required `date` query parameter accepts an ISO 8601 datetime or
+`YYYY-MM-DD`. When no timezone is included, the value is interpreted as
+Asia/Tokyo and normalized to UTC before calling the Google API.
 
 The front-end will automatically build the `#time-grid` element at page load if
 it is missing.
