@@ -1,10 +1,21 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import pytest
 from flask import Flask
 
 from schedule_app import create_app
+from schedule_app.config import cfg
+
+expected = (
+    datetime.strptime("2025-01-01", "%Y-%m-%d")
+    .replace(tzinfo=ZoneInfo(cfg.TIMEZONE))
+    .astimezone(timezone.utc)
+    .date()
+    .isoformat()
+)
 
 # ---------------------------------------------------------------------------
 # Prep dummy env vars so create_app() works without real GCP creds
@@ -29,7 +40,7 @@ def test_generate_simple(client) -> None:
     data = resp.get_json()
     assert isinstance(data, dict)
     assert set(data.keys()) == {"date", "slots", "unplaced"}
-    assert data["date"] == "2025-01-01"
+    assert data["date"] == expected
     assert len(data["slots"]) == 144
 
 
@@ -38,4 +49,4 @@ def test_generate_accepts_z_datetime(client) -> None:
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)
-    assert data["date"] == "2025-01-01"
+    assert data["date"] == expected
