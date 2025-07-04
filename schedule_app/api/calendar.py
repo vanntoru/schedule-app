@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import pytz
+
+from schedule_app.config import cfg
 from http import HTTPStatus
 from dataclasses import asdict
 from zoneinfo import ZoneInfo
@@ -87,7 +89,7 @@ def get_calendar():
         return _problem(400, "bad-request", "invalid date")
 
     if date_obj.tzinfo is None:
-        date_obj = pytz.timezone("Asia/Tokyo").localize(date_obj)
+        date_obj = pytz.timezone(cfg.TIMEZONE).localize(date_obj)
 
     creds = session.get("credentials")
     if not creds:
