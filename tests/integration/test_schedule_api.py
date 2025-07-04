@@ -10,11 +10,10 @@ from flask import Flask
 os.environ.setdefault("GCP_PROJECT", "dummy-project")
 os.environ.setdefault("GOOGLE_CLIENT_ID", "dummy-client-id")
 
-from schedule_app import create_app
-
-
 @pytest.fixture()
 def app() -> Flask:
+    from schedule_app import create_app
+
     return create_app(testing=True)
 
 
