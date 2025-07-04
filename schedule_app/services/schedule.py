@@ -37,13 +37,13 @@ def _mark_busy(slot_map: list[bool], start: datetime, end: datetime, *, base: da
             slot_map[i] = True
 
 
-def _init_slot_map(date_utc: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
-    start = _day_start(date_utc)
+def _init_slot_map(base: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
+    """Return a slot map initialised with busy periods for *base*."""
     slot_map = [False] * DAY_SLOTS
     for ev in events:
-        _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=start)
+        _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=base)
     for blk in blocks:
-        _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=start)
+        _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=base)
     return slot_map
 
 
@@ -101,9 +101,9 @@ def generate(
     algorithm: Literal["greedy", "compact"] = "greedy",
 ) -> list[str | None]:
     """Generate a 10 minute schedule for the given day."""
-    base = _day_start(date_utc)
+    base = date_utc
     slot_map = _init_slot_map(base, events, blocks)
-    sorted_tasks = _sort_tasks(tasks, day_start=date_utc)
+    sorted_tasks = _sort_tasks(tasks, day_start=base)
     grid, _unplaced = _place_tasks(slot_map, sorted_tasks, base=base)
     if algorithm == "compact":
         grid = _compact_grid(grid)
