@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-import pytz
 from flask import Blueprint, abort, jsonify, request
 
 from schedule_app.services import schedule
-from schedule_app.config import cfg
 
 bp = Blueprint("schedule", __name__, url_prefix="/api/schedule")
 schedule_bp = bp
@@ -19,11 +16,7 @@ def generate_schedule():  # noqa: D401 - simple endpoint
     if not date_str:
         abort(400, description="date parameter required")
 
-    TZ_NAME = getattr(cfg, "TIMEZONE", "Asia/Tokyo")
-    try:
-        tz = ZoneInfo(TZ_NAME)
-    except ZoneInfoNotFoundError:
-        tz = pytz.timezone(TZ_NAME)
+    tz = schedule._jst()
 
     if "T" in date_str:
         try:

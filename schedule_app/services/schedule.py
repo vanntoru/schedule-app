@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import pytz
+
+from schedule_app.config import cfg
 
 from schedule_app.models import Block, Event, Task
 from schedule_app.services.rounding import quantize
@@ -12,6 +16,18 @@ __all__ = ["generate", "generate_schedule"]
 
 SLOT_MIN = 10
 DAY_SLOTS = 144
+
+
+def _jst():
+    """Return the configured timezone.
+
+    Tries :class:`ZoneInfo` first and falls back to :mod:`pytz` if the zone
+    is not available.
+    """
+    try:
+        return ZoneInfo(cfg.TIMEZONE)
+    except ZoneInfoNotFoundError:
+        return pytz.timezone(cfg.TIMEZONE)
 
 
 def _day_start(date_utc: datetime) -> datetime:
