@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import pytz
 from flask import Blueprint, abort, jsonify, request
+
+from schedule_app.config import cfg
 
 from schedule_app.services import schedule
 
@@ -27,7 +30,8 @@ def generate_schedule():  # noqa: D401 - simple endpoint
 
     local_day = dt.date()
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        tz = pytz.timezone(cfg.TIMEZONE)
+        dt = tz.localize(dt)
     date_utc = dt.astimezone(timezone.utc)
 
     algo = request.args.get("algo", "greedy")
