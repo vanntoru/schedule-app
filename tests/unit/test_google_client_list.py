@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 
 from schedule_app.models import Event
-from schedule_app.services.google_client import GoogleClient
 
 
 def test_list_events_range(monkeypatch):
+    from schedule_app.services.google_client import GoogleClient
+
     client = GoogleClient(credentials=None)
 
     captured = {}
@@ -23,6 +24,8 @@ def test_list_events_range(monkeypatch):
 
 
 def test_list_events_dataclass(monkeypatch):
+    from schedule_app.services.google_client import GoogleClient
+
     client = GoogleClient(credentials=None)
 
     sample = {
@@ -45,5 +48,40 @@ def test_list_events_dataclass(monkeypatch):
     assert ev.title == "Demo"
     assert ev.start_utc == datetime(2025, 1, 1, 1, 0, tzinfo=timezone.utc)
     assert ev.end_utc == datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc)
+
+
+def test_list_events_timezone_env(monkeypatch):
+    """Timezone is taken from the environment when modules reload."""
+    import importlib
+    from schedule_app import config
+
+    original = config.cfg.TIMEZONE
+    monkeypatch.setenv("TIMEZONE", "UTC")
+
+    importlib.reload(config)
+    import schedule_app.services.google_client as gmodule
+    importlib.reload(gmodule)
+    GoogleClient = gmodule.GoogleClient
+
+    client = GoogleClient(credentials=None)
+
+    captured: dict[str, str] = {}
+
+    def fake_fetch(*, time_min: str, time_max: str) -> list[dict]:
+        captured["time_min"] = time_min
+        captured["time_max"] = time_max
+        return []
+
+    monkeypatch.setattr(client, "fetch_calendar_events", fake_fetch)
+
+    client.list_events(date=datetime(2025, 1, 1))
+
+    assert captured["time_min"] == "2025-01-01T00:00:00Z"
+    assert captured["time_max"] == "2025-01-02T00:00:00Z"
+
+    monkeypatch.delenv("TIMEZONE", raising=False)
+    importlib.reload(config)
+    importlib.reload(gmodule)
+    assert config.cfg.TIMEZONE == original
 
 

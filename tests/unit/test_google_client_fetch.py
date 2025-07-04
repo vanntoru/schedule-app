@@ -1,11 +1,12 @@
 import pytest
 from urllib.error import HTTPError
 
-from schedule_app.services.google_client import GoogleClient, GoogleAPIUnauthorized
 
 
 @pytest.mark.parametrize("status", [401, 403])
 def test_fetch_unauthorized(monkeypatch, status):
+    from schedule_app.services.google_client import GoogleClient, GoogleAPIUnauthorized
+
     client = GoogleClient(credentials={"access_token": "tok"})
 
     def raise_error(req):  # pragma: no cover - stub
