@@ -121,7 +121,7 @@ class Block:
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
 | POST   | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Schedule | 400 / 422                   |
 
-*`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付ける。タイムゾーンを含まない場合は JST (`Asia/Tokyo`) として解釈され、`list_events` 呼び出し前に UTC へ正規化される。*
+*`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付ける。タイムゾーンを含まない場合は `TIMEZONE` 環境変数で指定されたゾーン（既定 `"Asia/Tokyo"`）として解釈し、`list_events` 呼び出し前に UTC へ正規化される。*
 *Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
 *認証情報が欠如・期限切れ・取り消しの場合は 401 Unauthorized を返す。*
 *サービス層の `generate_schedule()` は `date`・`algo`・`slots`・`unplaced` を含む辞書を返す。*
@@ -186,6 +186,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 | ----- | ------------------------------------------------------------ |
 | 内部    | UTC (RFC 3339) 固定                                            |
 | 表示    | JST (Asia/Tokyo) — `luxon` (front) / `pytz` (back)           |
+| TIMEZONE 環境変数 | タイムゾーン省略時に解釈する既定値。デフォルトは `"Asia/Tokyo"` |
 | TZ 検証 | Google イベントの `event.timeZone` が IANA TZDB 2025‑b 以外 → UTC 扱い |
 | DST   | `pytz` 変換で ±1 h ずれ防止                                         |
 
