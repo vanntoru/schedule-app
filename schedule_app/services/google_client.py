@@ -12,7 +12,8 @@ from typing import Any
 from urllib import parse, request
 from urllib.error import HTTPError
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
+import pytz
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
@@ -128,15 +129,25 @@ class GoogleClient:
         Parameters
         ----------
         date : datetime
-            Target day. Naive values are treated as UTC.
+            Target day in JST. Naive values are treated as JST.
         """
 
-        if date.tzinfo is None:
-            date = date.replace(tzinfo=timezone.utc)
-        else:
-            date = date.astimezone(timezone.utc)
+        # -------------------------------
+        # UI は JST 日付を渡してくる前提。
+        # JST 00:00 を UTC に変換して 24 h 範囲を取得する。
+        # -------------------------------
+        JST = pytz.timezone("Asia/Tokyo")
 
-        start = datetime.combine(date.date(), datetime.min.time(), tzinfo=timezone.utc)
+        if date.tzinfo is None:
+            # naïve → JST
+            local_start = JST.localize(datetime.combine(date.date(), time.min))
+        else:
+            # すでに aware なら JST に合わせる
+            local_start = (
+                date.astimezone(JST).replace(hour=0, minute=0, second=0, microsecond=0)
+            )
+
+        start = local_start.astimezone(timezone.utc)
         end = start + timedelta(days=1)
 
         items = self.fetch_calendar_events(
