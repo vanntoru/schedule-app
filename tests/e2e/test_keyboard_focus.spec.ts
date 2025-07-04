@@ -22,7 +22,7 @@ test('keyboard focus traverses to first task card', async ({ page }) => {
   );
 
   // --- アプリ起動 ---
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
   await page.waitForSelector('.task-card');       // DOM に出るまで待つ
 
   // --- Tab で task-card にフォーカスさせる ---

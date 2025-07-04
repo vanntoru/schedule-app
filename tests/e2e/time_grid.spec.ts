@@ -4,7 +4,7 @@ test.describe('Time Grid rendering', () => {
 
   test('should display exactly 144 time slots', async ({ page }) => {
     // Webアプリを起動しているURLにアクセス
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     // Time Grid が存在することを確認
     const timeGrid = page.locator('#time-grid');
@@ -16,7 +16,7 @@ test.describe('Time Grid rendering', () => {
   });
 
   test('should correctly label each hour', async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('/');
 
     // 各時刻ラベルを取得し確認
     const hourLabels = page.locator('.hour-label:not(.opacity-0)');

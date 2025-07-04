@@ -6,7 +6,7 @@ test('generate button triggers schedule API', async ({ page }) => {
     r.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   );
 
-  await page.goto('http://localhost:5173');
+  await page.goto('/');
 
   const [req] = await Promise.all([
     page.waitForRequest(r => r.url().includes('/api/schedule/generate')),
