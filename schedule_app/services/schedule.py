@@ -15,6 +15,7 @@ DAY_SLOTS = 144
 
 
 def _day_start(date_utc: datetime) -> datetime:
+    """Return ``date_utc`` normalized to the beginning of that UTC day."""
     if date_utc.tzinfo is None:
         date_utc = date_utc.replace(tzinfo=timezone.utc)
     else:
@@ -37,13 +38,13 @@ def _mark_busy(slot_map: list[bool], start: datetime, end: datetime, *, base: da
             slot_map[i] = True
 
 
-def _init_slot_map(base: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
-    """Return a slot map initialised with busy periods for *base*."""
+def _init_slot_map(start_utc: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
+    """Return a slot map initialised with busy periods for ``start_utc``."""
     slot_map = [False] * DAY_SLOTS
     for ev in events:
-        _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=base)
+        _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=start_utc)
     for blk in blocks:
-        _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=base)
+        _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=start_utc)
     return slot_map
 
 
@@ -68,14 +69,14 @@ def _find_slot(slot_map: list[bool], start_idx: int, slots_needed: int) -> int |
     return None
 
 
-def _place_tasks(slot_map: list[bool], tasks: list[Task], *, base: datetime) -> tuple[list[str | None], list[str]]:
+def _place_tasks(slot_map: list[bool], tasks: list[Task], *, start_utc: datetime) -> tuple[list[str | None], list[str]]:
     grid: list[str | None] = [None] * DAY_SLOTS
     unplaced: list[str] = []
 
     for task in tasks:
-        es = task.earliest_start_utc or base
+        es = task.earliest_start_utc or start_utc
         es = quantize(es, up=True)
-        start_idx = max(_to_index(es, base=base), 0)
+        start_idx = max(_to_index(es, base=start_utc), 0)
         need = task.duration_min // SLOT_MIN
         idx = _find_slot(slot_map, start_idx, need)
         if idx is None:
@@ -101,10 +102,10 @@ def generate(
     algorithm: Literal["greedy", "compact"] = "greedy",
 ) -> list[str | None]:
     """Generate a 10 minute schedule for the given day."""
-    base = date_utc
-    slot_map = _init_slot_map(base, events, blocks)
-    sorted_tasks = _sort_tasks(tasks, day_start=base)
-    grid, _unplaced = _place_tasks(slot_map, sorted_tasks, base=base)
+    start_utc = date_utc
+    slot_map = _init_slot_map(start_utc, events, blocks)
+    sorted_tasks = _sort_tasks(tasks, day_start=start_utc)
+    grid, _unplaced = _place_tasks(slot_map, sorted_tasks, start_utc=start_utc)
     if algorithm == "compact":
         grid = _compact_grid(grid)
     return grid
@@ -129,7 +130,7 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     except ImportError:
         EVENTS = {}
 
-    base = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
+    start_utc = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
 
     events = [
         ev
@@ -141,14 +142,14 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     blocks = list(BLOCKS.values())
 
     grid = generate(
-        date_utc=base,
+        date_utc=start_utc,
         tasks=tasks,
         events=events,
         blocks=blocks,
         algorithm=algo,
     )
 
-    busy_map = _init_slot_map(base, events, blocks)
+    busy_map = _init_slot_map(start_utc, events, blocks)
 
     slots: list[int] = []
     for idx, cell in enumerate(grid):
