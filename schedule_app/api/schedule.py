@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from flask import Blueprint, abort, jsonify, request
 
 from schedule_app.services import schedule
@@ -17,24 +18,31 @@ def generate_schedule():  # noqa: D401 - simple endpoint
     if not date_str:
         abort(400, description="date parameter required")
 
-    # accept plain dates or datetimes with optional trailing 'Z'
-    if date_str.endswith("Z"):
-        date_str = date_str[:-1] + "+00:00"
-    try:
-        dt = datetime.fromisoformat(date_str)
-    except ValueError:
-        abort(400, description="invalid date format")
-
-    local_day = dt.date()
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    date_utc = dt.astimezone(timezone.utc)
+    if "T" in date_str:
+        try:
+            dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+        except ValueError:
+            abort(400, description="invalid date format")
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        local_day = dt.astimezone(ZoneInfo("Asia/Tokyo")).date()
+        target_day_utc = dt.astimezone(timezone.utc)
+    else:
+        try:
+            local_day = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            abort(400, description="invalid date format")
+        tz = ZoneInfo("Asia/Tokyo")
+        target_day_utc = (
+            datetime.combine(local_day, datetime.min.time(), tzinfo=tz)
+            .astimezone(timezone.utc)
+        )
 
     algo = request.args.get("algo", "greedy")
     if algo not in {"greedy", "compact"}:
         abort(400, description="invalid algo")
 
-    result = schedule.generate_schedule(target_day=date_utc.date(), algo=algo)
+    result = schedule.generate_schedule(target_day=target_day_utc.date(), algo=algo)
     result.pop("algo", None)
     result["date"] = local_day.isoformat()
     return jsonify(result)
