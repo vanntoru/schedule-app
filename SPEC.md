@@ -119,17 +119,21 @@ class Block:
 | POST   | `/api/blocks`                                                   | 201 Block    | 422                         |
 | PUT    | `/api/blocks/{id}`                                              | 200 Block    | 404 / 422                   |
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
-| POST   | `/api/schedule/generate?date=YYYY‑MM‑DD&algo={greedy\|compact}` | 200 int[144] | 400 / 422                   |
+| POST   | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Schedule | 400 / 422                   |
 
 *`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付ける。タイムゾーンを含まない場合は JST (`Asia/Tokyo`) として解釈され、`list_events` 呼び出し前に UTC へ正規化される。*
 *Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
 *認証情報が欠如・期限切れ・取り消しの場合は 401 Unauthorized を返す。*
 *サービス層の `generate_schedule()` は `date`・`algo`・`slots`・`unplaced` を含む辞書を返す。*
-*エンドポイントはその `slots` 配列のみを返し、長さは 144 で各要素は `0`（空き）・`1`（busy）・`2`（タスク）を表す整数。*
+*エンドポイントはその `date`・`slots`・`unplaced` を返し、`slots` の長さは 144 で各要素は `0`（空き）・`1`（busy）・`2`（タスク）を表す整数。*
 *成功例*
 
 ```json
-[0, 1, 2, ...]
+{
+  "date": "2025-01-01",
+  "slots": [0, 1, 2, ...],
+  "unplaced": []
+}
 ```
 
 *Problem Details 例*
