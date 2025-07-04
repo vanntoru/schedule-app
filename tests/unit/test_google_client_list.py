@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
 
+import importlib
 from schedule_app.models import Event
+from schedule_app.services import google_client as google_client_module
+from schedule_app import config as config_module
 from schedule_app.services.google_client import GoogleClient
 
 
@@ -45,5 +48,32 @@ def test_list_events_dataclass(monkeypatch):
     assert ev.title == "Demo"
     assert ev.start_utc == datetime(2025, 1, 1, 1, 0, tzinfo=timezone.utc)
     assert ev.end_utc == datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc)
+
+
+def test_list_events_custom_timezone(monkeypatch):
+    monkeypatch.setenv("TIMEZONE", "UTC")
+    importlib.reload(config_module)
+    importlib.reload(google_client_module)
+
+    client = google_client_module.GoogleClient(credentials=None)
+
+    captured = {}
+
+    def fake_fetch(*, time_min: str, time_max: str):
+        captured["time_min"] = time_min
+        captured["time_max"] = time_max
+        return []
+
+    monkeypatch.setattr(client, "fetch_calendar_events", fake_fetch)
+
+    client.list_events(date=datetime(2025, 1, 1))
+
+    assert captured["time_min"] == "2025-01-01T00:00:00Z"
+    assert captured["time_max"] == "2025-01-02T00:00:00Z"
+
+    # restore default
+    monkeypatch.delenv("TIMEZONE", raising=False)
+    importlib.reload(config_module)
+    importlib.reload(google_client_module)
 
 

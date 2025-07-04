@@ -17,6 +17,7 @@ import pytz
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
+from schedule_app.config import cfg
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -129,22 +130,23 @@ class GoogleClient:
         Parameters
         ----------
         date : datetime
-            Target day in JST. Naive values are treated as JST.
+            Target day in the configured timezone. Naive values are interpreted
+            using ``cfg.TIMEZONE``.
         """
 
         # -------------------------------
-        # UI は JST 日付を渡してくる前提。
-        # JST 00:00 を UTC に変換して 24 h 範囲を取得する。
+        # UI はローカルタイムゾーンの日付を渡してくる前提。
+        # ローカル 00:00 を UTC に変換して 24 h 範囲を取得する。
         # -------------------------------
-        JST = pytz.timezone("Asia/Tokyo")
+        local_tz = pytz.timezone(cfg.TIMEZONE)
 
         if date.tzinfo is None:
-            # naïve → JST
-            local_start = JST.localize(datetime.combine(date.date(), time.min))
+            # naïve → local timezone
+            local_start = local_tz.localize(datetime.combine(date.date(), time.min))
         else:
-            # すでに aware なら JST に合わせる
+            # すでに aware ならローカルタイムゾーンに合わせる
             local_start = (
-                date.astimezone(JST).replace(hour=0, minute=0, second=0, microsecond=0)
+                date.astimezone(local_tz).replace(hour=0, minute=0, second=0, microsecond=0)
             )
 
         start = local_start.astimezone(timezone.utc)
