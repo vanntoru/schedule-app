@@ -16,6 +16,7 @@ export default defineConfig({
   webServer: {
     command: 'python -m flask --app schedule_app run --port 5173',
     url: 'http://localhost:5173',
+    env: { GCP_PROJECT: 'dummy-project', GOOGLE_CLIENT_ID: 'dummy-client-id' },
     reuseExistingServer: !process.env.CI,
   },
   projects: [
