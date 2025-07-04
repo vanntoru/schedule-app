@@ -54,7 +54,10 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 | ------ | ---- | ----------- |
 | POST | `/api/schedule/generate` | Generate a schedule grid for one day |
 
-`date` is a required query parameter in `YYYY-MM-DD` format.
+`date` is a required query parameter that accepts an ISO‑8601 datetime
+(e.g. `2025-01-01T09:00:00+09:00`) or `YYYY-MM-DD`. When the value lacks a
+timezone, it is interpreted using `cfg.TIMEZONE` before being normalized to
+UTC.
 <!-- TODO: support selecting different scheduling algorithms -->
 On success, the endpoint returns `200 OK` with a JSON object:
 
