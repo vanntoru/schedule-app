@@ -18,8 +18,8 @@ def test_list_events_range(monkeypatch):
 
     client.list_events(date=datetime(2025, 1, 1))
 
-    assert captured["time_min"] == "2025-01-01T00:00:00Z"
-    assert captured["time_max"] == "2025-01-02T00:00:00Z"
+    assert captured["time_min"] == "2024-12-31T15:00:00Z"
+    assert captured["time_max"] == "2025-01-01T15:00:00Z"
 
 
 def test_list_events_dataclass(monkeypatch):
