@@ -74,8 +74,8 @@ def get_calendar():
     """Return events for the given day.
 
     The required ``date`` query parameter accepts an ISO 8601 datetime or
-    ``YYYY-MM-DD``. Naive values are interpreted as Asia/Tokyo before being
-    normalized to UTC.
+    ``YYYY-MM-DD``. Naive values are interpreted using ``cfg.TIMEZONE`` before
+    being normalized to UTC.
     """
     date_str = request.args.get("date")
     if not date_str:
