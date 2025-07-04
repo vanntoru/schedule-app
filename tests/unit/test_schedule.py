@@ -47,8 +47,10 @@ def test_busy_slot() -> None:
     BLOCKS.clear()
     BLOCKS["b1"] = Block(
         id="b1",
-        start_utc=_dt("2025-01-01T00:00:00Z"),
-        end_utc=_dt("2025-01-01T01:00:00Z"),
+        # generate_schedule now interprets the target date as JST so the busy
+        # block must start at midnight JST (15:00 UTC on the previous day).
+        start_utc=_dt("2024-12-31T15:00:00Z"),
+        end_utc=_dt("2024-12-31T16:00:00Z"),
     )
     TASKS["A1"] = Task(
         id="A1",
@@ -76,7 +78,9 @@ def test_earliest_start() -> None:
         duration_min=30,
         duration_raw_min=30,
         priority="A",
-        earliest_start_utc=_dt("2025-01-01T12:00:00Z"),
+        # Earliest start is noon JST which corresponds to 03:00 UTC on the
+        # same day.
+        earliest_start_utc=_dt("2025-01-01T03:00:00Z"),
     )
     result = schedule.generate_schedule(target_day=date(2025, 1, 1))
     slots = result["slots"]
