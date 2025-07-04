@@ -30,7 +30,7 @@ class _Config:
     SECRET_KEY: str = os.getenv("SECRET_KEY", "please-change-me")
 
     # --- Google Cloud ---
-    GCP_PROJECT: str = os.environ["GCP_PROJECT"]
+    GCP_PROJECT: str = os.getenv("GCP_PROJECT", "dummy-project")
     GCP_REGION: str = os.getenv("GCP_REGION", "asia-northeast1")
 
     # --- OAuth ---

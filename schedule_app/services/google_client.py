@@ -17,7 +17,6 @@ import pytz
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
-from schedule_app.config import cfg
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -138,6 +137,7 @@ class GoogleClient:
         # UI はローカルタイムゾーンの日付を渡してくる前提。
         # ローカル 00:00 を UTC に変換して 24 h 範囲を取得する。
         # -------------------------------
+        from schedule_app.config import cfg
         local_tz = pytz.timezone(cfg.TIMEZONE)
 
         if date.tzinfo is None:
