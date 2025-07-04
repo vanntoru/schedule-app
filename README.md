@@ -63,8 +63,8 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 
 `date` is a required query parameter that accepts an ISO‑8601 datetime
 (e.g. `2025-01-01T09:00:00+09:00`) or `YYYY-MM-DD`. When the value lacks a
-timezone, it is interpreted using `cfg.TIMEZONE` before
-being normalized to UTC.
+timezone, it is interpreted using `cfg.TIMEZONE` (JST). The endpoint forwards
+this JST date to the service layer, which converts it to UTC.
 <!-- TODO: support selecting different scheduling algorithms -->
 On success, the endpoint returns `200 OK` with a JSON object:
 
