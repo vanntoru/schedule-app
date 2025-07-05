@@ -30,14 +30,6 @@ def _jst():
         return pytz.timezone(cfg.TIMEZONE)
 
 
-def _day_start(date_utc: datetime) -> datetime:
-    """Return ``date_utc`` normalized to the beginning of that UTC day."""
-    if date_utc.tzinfo is None:
-        date_utc = date_utc.replace(tzinfo=timezone.utc)
-    else:
-        date_utc = date_utc.astimezone(timezone.utc)
-    return datetime.combine(date_utc.date(), datetime.min.time(), tzinfo=timezone.utc)
-
 
 def _to_index(dt: datetime, *, base: datetime) -> int:
     delta = dt - base
