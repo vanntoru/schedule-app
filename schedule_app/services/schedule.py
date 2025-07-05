@@ -133,7 +133,8 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     Parameters
     ----------
     target_day:
-        Target day in UTC.
+        Date in the configured timezone (JST by default). It will be
+        converted to UTC internally.
     algo:
         Scheduling algorithm to use. Only ``"greedy"`` or ``"compact"`` are
         currently supported.
