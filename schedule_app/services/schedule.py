@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import pytz
@@ -140,11 +140,12 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
         EVENTS = {}
 
     start_utc = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc)
+    end_utc = start_utc + timedelta(days=1)
 
     events = [
         ev
         for ev in EVENTS.values()
-        if (ev.start_utc.date() <= target_day <= ev.end_utc.date())
+        if ev.end_utc > start_utc and ev.start_utc < end_utc
     ]
 
     tasks = list(TASKS.values())
