@@ -4,7 +4,7 @@ from datetime import datetime, timezone, date
 
 from freezegun import freeze_time
 
-from schedule_app.models import Task, Block
+from schedule_app.models import Task, Block, Event
 from schedule_app.services import schedule
 from schedule_app.api.tasks import TASKS
 from schedule_app.api.blocks import BLOCKS
@@ -83,4 +83,25 @@ def test_earliest_start() -> None:
     assert len(slots) == 144
     assert all(s == 0 for s in slots[:72])
     assert slots[72:75] == [2] * 3
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_event_spans_midnight() -> None:
+    TASKS.clear()
+    BLOCKS.clear()
+    from schedule_app.api.calendar import EVENTS
+
+    EVENTS.clear()
+    EVENTS["e1"] = Event(
+        id="e1",
+        title="",
+        start_utc=_dt("2024-12-31T23:30:00Z"),
+        end_utc=_dt("2025-01-01T00:30:00Z"),
+    )
+
+    result = schedule.generate_schedule(target_day=date(2025, 1, 1))
+    slots = result["slots"]
+    assert len(slots) == 144
+    assert slots[:3] == [1] * 3
+    assert slots[3] == 0
 
