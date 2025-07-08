@@ -410,11 +410,9 @@ function saveState() {
   // TODO: implement persistence
 }
 
-/** Load grid data from the server for the given `date`. */
+/** Load grid data from the server for the given `date` via GET. */
 async function loadGridFromServer(date) {
-  const res = await fetch(
-    `/api/schedule/generate?date=${date}&algo=greedy`,
-  );
+  const res = await fetch(`/api/schedule/generate?date=${date}&algo=greedy`);
 
   if (!res.ok) {
     throw new Error(`Schedule API failed: ${res.status}`);
