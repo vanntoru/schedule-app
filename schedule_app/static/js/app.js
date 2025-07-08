@@ -658,3 +658,10 @@ function applyContrastClasses() {
 mqReduced.addEventListener('change', applyContrastClasses);
 document.addEventListener('DOMContentLoaded', applyContrastClasses);   // ← グリッド生成後
 
+
+// Service Worker registration
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/js/sw.js", { scope: "/" })
+    .then(reg => console.log("SW registered:", reg.scope))
+    .catch(err => console.error("SW registration failed:", err));
+}
