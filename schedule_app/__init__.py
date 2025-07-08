@@ -85,6 +85,12 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     # Lightweight Google API client stub
     app.extensions["gclient"] = GoogleClient(credentials=None)
 
+    @app.after_request
+    def _allow_service_worker(response):
+        if request.path == "/static/sw.js":
+            response.headers["Service-Worker-Allowed"] = "/"
+        return response
+
     if testing:
         app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 
