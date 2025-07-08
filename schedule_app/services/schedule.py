@@ -171,6 +171,13 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
             "title": ev.title,
             "start_utc": _iso(ev.start_utc),
             "end_utc": _iso(ev.end_utc),
+            "start_slot": max(
+                _to_index(quantize(ev.start_utc, up=False), base=start_utc), 0
+            ),
+            "end_slot": min(
+                _to_index(quantize(ev.end_utc, up=True), base=start_utc) - 1,
+                DAY_SLOTS - 1,
+            ),
             "color": "bg-gray-200",
         }
         for ev in events
@@ -193,6 +200,8 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
             "category": t.category,
             "start_utc": _iso(start) if start else None,
             "end_utc": _iso(end) if end else None,
+            "start_slot": min(idxs) if idxs else None,
+            "end_slot": max(idxs) if idxs else None,
             "color": "bg-green-200",
         }
 
