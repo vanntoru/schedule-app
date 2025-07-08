@@ -295,9 +295,7 @@ jobs:
   "display": "standalone",
   "theme_color": "#2563EB",
   "background_color": "#FFFFFF",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }
-  ]
+  "icons": []
 }
 ```
 
