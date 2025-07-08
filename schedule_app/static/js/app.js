@@ -402,7 +402,30 @@ function renderGrid() {
     }
     if (type === 1 || type === 2) el.classList.add('grid-slot--busy');
     if (meta && meta.title) el.textContent = meta.title;
+    el.classList.remove('border-t-0', 'border-b-0');
   });
+
+  function groupBlocks(metaMap) {
+    Object.values(metaMap || {}).forEach((m) => {
+      const s = Number(m.start_slot);
+      const e = Number(m.end_slot);
+      if (!Number.isInteger(s) || !Number.isInteger(e)) return;
+      for (let i = s; i <= e; i++) {
+        const slot = document.querySelector(`[data-slot-index="${i}"]`);
+        if (!slot) continue;
+        if (i === s) {
+          slot.textContent = m.title || '';
+        } else {
+          slot.textContent = '';
+          slot.classList.add('border-t-0');
+        }
+        if (i < e) slot.classList.add('border-b-0');
+      }
+    });
+  }
+
+  groupBlocks(scheduleMeta.events);
+  groupBlocks(scheduleMeta.tasks);
   /* Reduced-contrast ON なら新セルにも busy-strong を再付与 */
   applyContrastClasses();
 }
