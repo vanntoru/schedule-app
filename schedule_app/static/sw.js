@@ -3,7 +3,7 @@ const CACHE_URLS = [
   '/',
   '/static/css/styles.css',
   '/static/js/app.js',
-  '/static/js/sw.js',
+  '/static/sw.js',
   '/manifest.json',
   '/icon-192.png',
 ];
