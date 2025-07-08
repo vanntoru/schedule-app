@@ -7,7 +7,7 @@ const CACHE_URLS = [
   '/static/css/tailwind.min.css',
   '/static/js/app.js',
   '/static/sw.js',
-  '/manifest.json',
+  '/static/manifest.json',
   '/static/icon-192.png',
 ];
 
