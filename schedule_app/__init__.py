@@ -115,6 +115,15 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
         local_tw = os.getenv("LOCAL_TW") == "1"
         return render_template("index.html", local_tw=local_tw)
 
+    @app.get("/sw.js")
+    def service_worker():
+        """Return the service worker script."""
+        from flask import current_app
+
+        resp = current_app.send_static_file("sw.js")
+        resp.headers["Service-Worker-Allowed"] = "/"
+        return resp
+
     @app.get("/login")
     def login():
         """Begin the OAuth2 PKCE flow and redirect the user."""
