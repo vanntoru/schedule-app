@@ -78,15 +78,21 @@ On success, the endpoint returns `200 OK` with a JSON object:
 ```json
 {
   "date": "2025-01-01",
-  "slots": [0, 1, 2, ...],
+  "slots": [
+    {"busy": true},
+    {"event_id": "abc123"},
+    {"task_id": "t1"},
+    0,
+    ...
+  ],
   "unplaced": []
 }
 ```
 
-`slots` is an array of 144 ten-minute entries where `0` means free, `1` busy and
-`2` occupied by a task. Missing or malformed query parameters yield
-`400 Bad Request`. Invalid task, event or block data returns a `422` problem
-response.
+`slots` is an array of 144 ten-minute entries. `0` indicates free time. An
+object marks busy time and contains either `busy`, `event_id` or `task_id`.
+Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
+event or block data returns a `422` problem response.
 
 
 ## Calendar API
