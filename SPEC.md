@@ -119,7 +119,7 @@ class Block:
 | POST   | `/api/blocks`                                                   | 201 Block    | 422                         |
 | PUT    | `/api/blocks/{id}`                                              | 200 Block    | 404 / 422                   |
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
-| GET    | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Schedule | 400 / 422                   |
+| GET    | `/api/schedule/generate?date=YYYY-MM-DD` | 200 Schedule | 400 / 422                   |
 
 *`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付ける。タイムゾーンを含まない場合は `TIMEZONE` 環境変数で指定されたゾーン（既定 `cfg.TIMEZONE`）として解釈し、エンドポイントはこの JST 日付をサービス層へそのまま渡し、サービス側で UTC へ変換する。*
 *Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
