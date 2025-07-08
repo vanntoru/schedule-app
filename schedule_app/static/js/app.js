@@ -414,7 +414,6 @@ function saveState() {
 async function loadGridFromServer(date) {
   const res = await fetch(
     `/api/schedule/generate?date=${date}&algo=greedy`,
-    { method: 'POST' },
   );
 
   if (!res.ok) {
