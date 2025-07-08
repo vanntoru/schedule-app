@@ -69,6 +69,8 @@ self.addEventListener('fetch', (event) => {
           .match(request)
           .then((cached) => cached || networkResponse);
       })
-      .catch(() => caches.match(request))
+      .catch((err) =>
+        caches.match(request).then((r) => r || Promise.reject(err))
+      )
   );
 });
