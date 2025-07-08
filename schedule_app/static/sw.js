@@ -2,14 +2,19 @@ const CACHE_NAME = 'schedule-app-v1';
 const CACHE_URLS = [
   '/',
   '/static/css/styles.css',
+  '/static/css/a11y.css',
+  '/static/css/print.css',
+  '/static/css/tailwind.min.css',
   '/static/js/app.js',
   '/static/sw.js',
   '/manifest.json',
   '/icon-192.png',
 ];
 
-self.addEventListener('install', () => {
-  // Cache will be populated on-demand during fetch events
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHE_URLS)),
+  );
 });
 
 self.addEventListener('activate', (event) => {
