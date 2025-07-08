@@ -719,7 +719,7 @@ document.addEventListener('DOMContentLoaded', applyContrastClasses);   // â† ã‚
 
 // Service Worker registration
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/static/sw.js", { scope: "/" })
+  navigator.serviceWorker.register("/sw.js", { scope: "/" })
     .then(reg => console.log("SW registered:", reg.scope))
     .catch(err => console.error("SW registration failed:", err));
 }
