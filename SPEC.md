@@ -125,13 +125,19 @@ class Block:
 *Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
 *認証情報が欠如・期限切れ・取り消しの場合は 401 Unauthorized を返す。*
 *サービス層の `generate_schedule()` は `date`・`algo`・`slots`・`unplaced` を含む辞書を返す。*
-*エンドポイントはその `date`・`slots`・`unplaced` を返し、`slots` の長さは 144 で各要素は `0`（空き）・`1`（busy）・`2`（タスク）を表す整数。*
+*エンドポイントはその `date`・`slots`・`unplaced` を返す。 `slots` は長さ 144 の配列で、`0` は空き時間を表し、オブジェクトはビジー状態を示す。 オブジェクトは `busy` / `event_id` / `task_id` のいずれかのフィールドを持つ。*
 *成功例*
 
 ```json
 {
   "date": "2025-01-01",
-  "slots": [0, 1, 2, ...],
+  "slots": [
+    {"busy": true},
+    {"event_id": "abc123"},
+    {"task_id": "t1"},
+    0,
+    ...
+  ],
   "unplaced": []
 }
 ```
