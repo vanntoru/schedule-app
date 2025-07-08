@@ -43,9 +43,9 @@ pytest -q
 
 ### Playwright offline mode
 
-When network access is restricted (e.g. CI), set `LOCAL_TW=1` so the app uses
-`static/css/tailwind.min.css` instead of the CDN script. Playwright will then
-run entirely offline with `npx playwright test`.
+The application ships with Tailwind CSS in `static/css/tailwind.min.css` so
+tests run without network access. Simply execute `npx playwright test` and the
+Service Worker will serve the cached styles when offline.
 
 
 ## Tasks API
