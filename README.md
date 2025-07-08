@@ -65,7 +65,7 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 
 | Method | Path | Description |
 | ------ | ---- | ----------- |
-| POST | `/api/schedule/generate` | Generate a schedule grid for one day |
+| GET | `/api/schedule/generate` | Generate a schedule grid for one day |
 
 `date` is a required query parameter that accepts an ISO‑8601 datetime
 (e.g. `2025-01-01T09:00:00+09:00`) or `YYYY-MM-DD`. When the value lacks a
