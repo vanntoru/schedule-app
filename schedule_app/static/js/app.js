@@ -485,6 +485,25 @@ async function loadGridFromServer(date) {
       if (rec && rec.grid) {
         scheduleMeta = rec.meta || { tasks: {}, events: {} };
         scheduleGrid = rec.grid.slice();
+
+        // ───── reconstruct missing event metadata ─────
+        if (!scheduleMeta.events || Object.keys(scheduleMeta.events).length === 0) {
+          const events = {};
+          for (let i = 0; i < scheduleGrid.length; i++) {
+            const cell = scheduleGrid[i];
+            if (typeof cell === 'object' && cell.event_id) {
+              const id = cell.event_id;
+              if (!events[id]) {
+                events[id] = { id, start_slot: i, end_slot: i, color: 'bg-gray-200' };
+              } else {
+                events[id].end_slot = i;
+              }
+            }
+          }
+          scheduleMeta.events = events;
+          saveState();
+        }
+
         renderGrid();
         return { grid: scheduleGrid, unplaced: [] };
       }
