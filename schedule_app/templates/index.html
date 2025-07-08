@@ -1,7 +1,11 @@
 <!doctype html>
 <html>
 <head>
+{% if local_tw %}
+<link rel="stylesheet" href="/static/css/tailwind.min.css">
+{% else %}
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+{% endif %}
 <link rel="stylesheet" href="/static/css/styles.css">
 <link rel="stylesheet" href="/static/css/a11y.css">
 </head>
