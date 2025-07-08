@@ -417,15 +417,49 @@ function renderGrid() {
 
 /** Persist the current grid. Placeholder for IndexedDB integration. */
 function saveState() {
-  // TODO: implement persistence
+  const input = document.querySelector('#input-date');
+  const date = input && input.value ? input.value : todayUtcISO();
+  if (!date) return;
+
+  window.dbReady.then((db) => {
+    const tx = db.transaction('schedule', 'readwrite');
+    const store = tx.objectStore('schedule');
+    const record = { date, grid: scheduleGrid.slice(), meta: scheduleMeta };
+    store.put(record);
+  }).catch((err) => {
+    console.error('[IndexedDB] save failed', err);
+  });
 }
 
 /** Load grid data from the server for the given `date` via GET. */
 async function loadGridFromServer(date) {
-  const res = await fetch(`/api/schedule/generate?date=${date}&algo=greedy`);
-
-  if (!res.ok) {
-    throw new Error(`Schedule API failed: ${res.status}`);
+  let res;
+  try {
+    res = await fetch(`/api/schedule/generate?date=${date}&algo=greedy`);
+    if (!res.ok) {
+      throw new Error(`Schedule API failed: ${res.status}`);
+    }
+  } catch (err) {
+    // Fallback to IndexedDB if available
+    try {
+      const db = await window.dbReady;
+      const tx = db.transaction('schedule', 'readonly');
+      const store = tx.objectStore('schedule');
+      const rec = await new Promise((resolve, reject) => {
+        const r = store.get(date);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+      if (rec && rec.grid) {
+        scheduleMeta = rec.meta || { tasks: {}, events: {} };
+        scheduleGrid = rec.grid.slice();
+        renderGrid();
+        return { grid: scheduleGrid, unplaced: [] };
+      }
+    } catch (dbErr) {
+      console.error('[IndexedDB] load failed', dbErr);
+    }
+    throw err;
   }
 
   const raw = await res.json();
