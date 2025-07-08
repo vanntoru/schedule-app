@@ -284,8 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
     markSlot(nextIdx, card.dataset.taskId);
     if (originIndex !== null) unmarkSlot(originIndex);
 
-    // ----- record command -----
-    pushCommand({
+  // ----- record command -----
+  pushCommand({
       apply() {              // Redo
         slot.appendChild(card);
         card.dataset.slotIndex = nextIdx;
@@ -304,7 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         unmarkSlot(nextIdx);
       },
-    });
+      skipRender: true,
+  });
 
     // ----- visual cleanup -----
     slot.classList.remove('ring-2', 'ring-blue-400');
@@ -329,14 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function slotOccupied(i) {
     return gridState.has(i);
   }
-  function markSlot(i, tid) {
+function markSlot(i, tid) {
     gridState.set(i, tid);
     document
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.add('grid-slot--busy');
     applyContrastClasses();   // ★ 追加
     /* TODO: IndexedDB schedule save (phase‑1) */
-  }
+}
   function unmarkSlot(i) {
     gridState.delete(i);
     document
@@ -472,8 +473,10 @@ function doUndo() {
   const cmd = _history[_ptr];
   _ptr--;
   cmd.revert();
-  renderGrid();
-  saveState();
+  if (!cmd.skipRender) {
+    renderGrid();
+    saveState();
+  }
   updateUndoRedoButtons();
 }
 
@@ -483,8 +486,10 @@ function doRedo() {
   _ptr++;
   const cmd = _history[_ptr];
   cmd.apply();
-  renderGrid();
-  saveState();
+  if (!cmd.skipRender) {
+    renderGrid();
+    saveState();
+  }
   updateUndoRedoButtons();
 }
 

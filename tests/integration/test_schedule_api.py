@@ -28,7 +28,7 @@ def test_generate_simple(client) -> None:
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)
-    assert set(data.keys()) == {"date", "slots", "unplaced"}
+    assert set(data.keys()) == {"date", "slots", "unplaced", "tasks", "events"}
     assert data["date"] == "2025-01-01"
     assert len(data["slots"]) == 144
 
