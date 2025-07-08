@@ -8,7 +8,7 @@ const CACHE_URLS = [
   '/static/js/app.js',
   '/static/sw.js',
   '/manifest.json',
-  '/icon-192.png',
+  '/static/icon-192.png',
 ];
 
 self.addEventListener('install', (event) => {
