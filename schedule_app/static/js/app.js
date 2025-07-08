@@ -360,6 +360,23 @@ function shiftGridToLocalTZ(grid) {
   return rotate(grid, offsetSlot);
 }
 
+/** Adjust meta start/end slot to local timezone offset. */
+function shiftMetaToLocalTZ(meta) {
+  const offsetMin  = -new Date().getTimezoneOffset();
+  const offsetSlot = Math.round(offsetMin / 10);
+  const result = {};
+  for (const [id, m] of Object.entries(meta || {})) {
+    const s = Number.isInteger(m.start_slot)
+      ? (m.start_slot + offsetSlot + 144) % 144
+      : m.start_slot;
+    const e = Number.isInteger(m.end_slot)
+      ? (m.end_slot + offsetSlot + 144) % 144
+      : m.end_slot;
+    result[id] = { ...m, start_slot: s, end_slot: e };
+  }
+  return result;
+}
+
 let scheduleGrid = new Array(144).fill(0); // current grid state
 let scheduleMeta = { tasks: {}, events: {} };
 
@@ -488,8 +505,8 @@ async function loadGridFromServer(date) {
   const unplaced = Array.isArray(raw.unplaced) ? raw.unplaced : [];
 
   scheduleMeta = {
-    tasks: raw.tasks || {},
-    events: raw.events || {},
+    tasks: shiftMetaToLocalTZ(raw.tasks || {}),
+    events: shiftMetaToLocalTZ(raw.events || {}),
   };
 
   /** ★ ここでローカルタイム位置へシフト ★ */
