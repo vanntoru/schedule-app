@@ -118,7 +118,9 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     @app.get("/")
     def index():
         """Render the main page with optional local Tailwind."""
-        local_tw = os.getenv("LOCAL_TW") == "1"
+        # Use local Tailwind by default so offline mode still has styles.
+        # Set LOCAL_TW=0 to load the CDN script instead.
+        local_tw = os.getenv("LOCAL_TW", "1") != "0"
         return render_template("index.html", local_tw=local_tw)
 
     @app.get("/login")
