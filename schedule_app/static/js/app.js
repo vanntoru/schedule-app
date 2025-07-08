@@ -483,8 +483,40 @@ async function loadGridFromServer(date) {
         r.onerror = () => reject(r.error);
       });
       if (rec && rec.grid) {
+        const hasEventsMeta =
+          rec.meta && Object.prototype.hasOwnProperty.call(rec.meta, 'events');
         scheduleMeta = rec.meta || { tasks: {}, events: {} };
         scheduleGrid = rec.grid.slice();
+
+        if (!hasEventsMeta) {
+          const events = {};
+          let currentId = null;
+          for (let i = 0; i < scheduleGrid.length; i++) {
+            const cell = scheduleGrid[i];
+            const id =
+              cell && typeof cell === 'object' && 'event_id' in cell
+                ? cell.event_id
+                : null;
+            if (id !== currentId) {
+              if (currentId !== null) {
+                events[currentId].end_slot = i - 1;
+              }
+              if (id !== null) {
+                events[id] = { start_slot: i, end_slot: i };
+                currentId = id;
+              } else {
+                currentId = null;
+              }
+            } else if (id !== null) {
+              events[id].end_slot = i;
+            }
+          }
+          if (currentId !== null) {
+            events[currentId].end_slot = scheduleGrid.length - 1;
+          }
+          scheduleMeta.events = events;
+        }
+
         renderGrid();
         return { grid: scheduleGrid, unplaced: [] };
       }
