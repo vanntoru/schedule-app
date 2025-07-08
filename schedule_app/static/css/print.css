@@ -19,6 +19,13 @@
 
   #time-grid {
     --row-h: 6px;
+    grid-auto-rows: var(--row-h);
+  }
+
+  .hour-label,
+  .slot {
+    height: var(--row-h);
+    line-height: var(--row-h);
   }
 
   /* -- Task side-pane も確実に隠す ------------------------ */
