@@ -398,7 +398,11 @@ function renderGrid() {
     }
 
     [...el.classList].forEach((cls) => {
-      if (cls.startsWith('bg-') || cls === 'grid-slot--busy') {
+      if (
+        cls.startsWith('bg-') ||
+        cls === 'grid-slot--busy' ||
+        cls === 'busy-strong'
+      ) {
         el.classList.remove(cls);
       }
     });
