@@ -284,8 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
     markSlot(nextIdx, card.dataset.taskId);
     if (originIndex !== null) unmarkSlot(originIndex);
 
-    // ----- record command -----
-    pushCommand({
+  // ----- record command -----
+  pushCommand({
       apply() {              // Redo
         slot.appendChild(card);
         card.dataset.slotIndex = nextIdx;
@@ -304,7 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         unmarkSlot(nextIdx);
       },
-    });
+      skipRender: true,
+  });
 
     // ----- visual cleanup -----
     slot.classList.remove('ring-2', 'ring-blue-400');
@@ -329,14 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function slotOccupied(i) {
     return gridState.has(i);
   }
-  function markSlot(i, tid) {
+function markSlot(i, tid) {
     gridState.set(i, tid);
     document
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.add('grid-slot--busy');
     applyContrastClasses();   // ★ 追加
     /* TODO: IndexedDB schedule save (phase‑1) */
-  }
+}
   function unmarkSlot(i) {
     gridState.delete(i);
     document
@@ -368,6 +369,7 @@ function shiftGridToLocalTZ(grid) {
 }
 
 let scheduleGrid = new Array(144).fill(0); // current grid state
+let scheduleMeta = { tasks: {}, events: {} };
 
 const HISTORY_LIMIT = 20;
 const _history = [];
@@ -378,28 +380,36 @@ function renderGrid() {
   document.querySelectorAll('.slot[data-slot-index]').forEach((el) => {
     const idx = Number(el.dataset.slotIndex);
     const raw = scheduleGrid[idx] ?? 0;
-    const val = typeof raw === 'object'
-      ? raw.task ? 2 : raw.busy ? 1 : 0
-      : raw;
-
-    /* ---- 背景色と busy クラスをリセット ---- */
-    el.classList.remove(
-      'bg-gray-200',
-      'bg-green-200',
-      'bg-blue-500',
-      'grid-slot--busy',
-    );
-    switch (val) {
-      case 1:
-        el.classList.add('bg-gray-200');
-        el.classList.add('grid-slot--busy');
-        break;
-      case 2:
-        el.classList.add('bg-green-200');
-        el.classList.add('grid-slot--busy');
-        break;
-      default:
+    let type = 0;
+    if (typeof raw === 'object') {
+      if (raw.task_id) type = 2;
+      else if (raw.event_id || raw.busy) type = 1;
+    } else {
+      type = raw;
     }
+
+    [...el.classList].forEach((cls) => {
+      if (cls.startsWith('bg-') || cls === 'grid-slot--busy') {
+        el.classList.remove(cls);
+      }
+    });
+    el.textContent = '';
+
+    let meta = null;
+    if (typeof raw === 'object') {
+      if (raw.task_id) meta = scheduleMeta.tasks[raw.task_id];
+      if (raw.event_id) meta = scheduleMeta.events[raw.event_id];
+    }
+
+    if (meta && meta.color) {
+      el.classList.add(meta.color);
+    } else if (type === 1) {
+      el.classList.add('bg-gray-200');
+    } else if (type === 2) {
+      el.classList.add('bg-green-200');
+    }
+    if (type === 1 || type === 2) el.classList.add('grid-slot--busy');
+    if (meta && meta.title) el.textContent = meta.title;
   });
   /* Reduced-contrast ON なら新セルにも busy-strong を再付与 */
   applyContrastClasses();
@@ -428,15 +438,13 @@ async function loadGridFromServer(date) {
         : (() => { throw new Error('Malformed Grid'); })();
   const unplaced = Array.isArray(raw.unplaced) ? raw.unplaced : [];
 
-  const utcGrid = slots.map((s) => {
-    if (typeof s === 'number') return s;
-    if (s.busy === true) return 1;
-    if (s.task === true) return 2;
-    return 0;
-  });
+  scheduleMeta = {
+    tasks: raw.tasks || {},
+    events: raw.events || {},
+  };
 
   /** ★ ここでローカルタイム位置へシフト ★ */
-  scheduleGrid = shiftGridToLocalTZ(utcGrid);
+  scheduleGrid = shiftGridToLocalTZ(slots);
 
   renderGrid();
   saveState();
@@ -465,8 +473,10 @@ function doUndo() {
   const cmd = _history[_ptr];
   _ptr--;
   cmd.revert();
-  renderGrid();
-  saveState();
+  if (!cmd.skipRender) {
+    renderGrid();
+    saveState();
+  }
   updateUndoRedoButtons();
 }
 
@@ -476,8 +486,10 @@ function doRedo() {
   _ptr++;
   const cmd = _history[_ptr];
   cmd.apply();
-  renderGrid();
-  saveState();
+  if (!cmd.skipRender) {
+    renderGrid();
+    saveState();
+  }
   updateUndoRedoButtons();
 }
 

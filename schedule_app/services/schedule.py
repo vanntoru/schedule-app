@@ -161,12 +161,56 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
 
     busy_map = _init_slot_map(start_utc, events, blocks)
 
-    slots: list[int] = []
+    # --- collect metadata -------------------------------------------------
+    def _iso(dt: datetime) -> str:
+        return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    events_meta: dict[str, dict] = {
+        ev.id: {
+            "id": ev.id,
+            "title": ev.title,
+            "start_utc": _iso(ev.start_utc),
+            "end_utc": _iso(ev.end_utc),
+            "color": "bg-gray-200",
+        }
+        for ev in events
+    }
+
+    # Determine task placement times
+    placement: dict[str, list[int]] = {}
+    for i, tid in enumerate(grid):
+        if tid:
+            placement.setdefault(tid, []).append(i)
+
+    tasks_meta: dict[str, dict] = {}
+    for t in tasks:
+        idxs = placement.get(t.id, [])
+        start = start_utc + timedelta(minutes=min(idxs) * SLOT_MIN) if idxs else None
+        end = start_utc + timedelta(minutes=(max(idxs) + 1) * SLOT_MIN) if idxs else None
+        tasks_meta[t.id] = {
+            "id": t.id,
+            "title": t.title,
+            "category": t.category,
+            "start_utc": _iso(start) if start else None,
+            "end_utc": _iso(end) if end else None,
+            "color": "bg-green-200",
+        }
+
+    # --- build slot array -------------------------------------------------
+    slots: list[dict | int] = []
     for idx, cell in enumerate(grid):
-        if cell is None:
-            slots.append(1 if busy_map[idx] else 0)
+        if cell is not None:
+            slots.append({"task_id": cell})
+        elif busy_map[idx]:
+            # find first overlapping event
+            dt = start_utc + timedelta(minutes=idx * SLOT_MIN)
+            ev_id = next((e.id for e in events if e.start_utc <= dt < e.end_utc), None)
+            if ev_id:
+                slots.append({"event_id": ev_id})
+            else:
+                slots.append({"busy": True})
         else:
-            slots.append(2)
+            slots.append(0)
 
     placed_ids = {t_id for t_id in grid if t_id is not None}
     unplaced = [t.id for t in tasks if t.id not in placed_ids]
@@ -176,4 +220,6 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
         "algo": algo,
         "slots": slots,
         "unplaced": unplaced,
+        "tasks": tasks_meta,
+        "events": events_meta,
     }

@@ -57,6 +57,25 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin !== location.origin) return;
 
+  if (url.pathname.startsWith('/api/schedule/generate')) {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res && res.ok) {
+            const clone1 = res.clone();
+            const clone2 = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(request, clone1));
+            caches.open(CACHE_NAME).then((c) => c.put('/api/schedule/latest', clone2));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.match(request).then((r) => r || caches.match('/api/schedule/latest'))
+        )
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(request)
       .then((networkResponse) => {
