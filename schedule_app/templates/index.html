@@ -4,7 +4,6 @@
 <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 <link rel="stylesheet" href="/static/css/styles.css">
 <link rel="stylesheet" href="/static/css/a11y.css">
-<link rel="stylesheet" href="/static/css/print.css" media="print">
 </head>
 <body>
 <header
@@ -129,6 +128,13 @@
         ul.appendChild(li);
       });
     };
+  </script>
+  <script>
+    const printLink = document.createElement('link');
+    printLink.rel = 'stylesheet';
+    printLink.href = '/static/css/print.css';
+    printLink.media = 'print';
+    document.head.appendChild(printLink);
   </script>
   <script type="module" src="/static/js/app.js"></script>
 </body>
