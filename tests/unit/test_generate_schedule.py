@@ -13,3 +13,5 @@ def test_generate_schedule_empty() -> None:
     assert len(result["slots"]) == 144
     assert result["slots"] == [0] * 144
     assert result["unplaced"] == []
+    assert result["tasks"] == {}
+    assert result["events"] == {}
