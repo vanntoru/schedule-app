@@ -525,6 +525,9 @@ async function loadGridFromServer(date) {
       : Array.isArray(raw.grid)
         ? raw.grid
         : (() => { throw new Error('Malformed Grid'); })();
+  if (slots.length !== 144) {
+    throw new Error('Incomplete Grid');
+  }
   const unplaced = Array.isArray(raw.unplaced) ? raw.unplaced : [];
 
   scheduleMeta = {
