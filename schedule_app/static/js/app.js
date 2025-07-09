@@ -22,14 +22,6 @@ export function todayUtcISO() {
 }
 
 (async () => {
-  /** YYYY-MM-DD (UTC) を返す */
-  function todayUtcISO() { // DEPRECATED: moved to module scope
-    const d = new Date();
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(d.getUTCDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
 
   /** Event[] を取得 */
   async function fetchEvents(dateStr) {
