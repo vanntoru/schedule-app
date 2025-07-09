@@ -15,7 +15,7 @@ editors: codex & ChatGPT‑o3
 
 # 1. 目的 / Scope
 
-Google カレンダー予定・ユーザー入力タスク・ブロック（禁止時間帯）を **10 分グリッド**で統合し、印刷および PWA オフライン閲覧可能な **1 日スケジュール** を自動生成・編集できる **シングルユーザー向け Web アプリ** を提供する。
+Google カレンダー予定・ユーザー入力タスク・ブロック（禁止時間帯）を **10 分グリッド**で統合し、印刷および **1 日スケジュール** を自動生成・編集できる **シングルユーザー向け Web アプリ** を提供する。
 
 ---
 
@@ -220,7 +220,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 | ----------- | ------------------ | ---------------------- |
 | Unit        | pytest + freezegun | 丸め・TZ 変換               |
 | Integration | pytest + httpretty | Google API モック         |
-| E2E         | Playwright         | UI / DnD / PWA offline |
+| E2E         | Playwright         | UI / DnD |
 | Security    | dlint, OWASP ZAP   | XSS / CSRF             |
 
 ---
@@ -281,29 +281,7 @@ jobs:
 
 ---
 
-# 15. PWA（Phase 3）
-
-1. **Service Worker** — `network‑first`、失敗時 `Cache‑fallback`
-2. **Cache Storage** — 最新スケジュール JSON＋HTML を保存
-3. **Web App Manifest**
-
-```json
-{
-  "name": "1‑Day Schedule",
-  "short_name": "Schedule",
-  "start_url": "/?source=pwa",
-  "display": "standalone",
-  "theme_color": "#2563EB",
-  "background_color": "#FFFFFF",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }
-  ]
-}
-```
-
----
-
-# 16. 国際化（Phase 2）
+# 15. 国際化（Phase 2）
 
 * `@formatjs/intl-messageformat` v3
 * 既定 = 日本語、`Accept-Language: en` なら英語 UI
@@ -311,7 +289,7 @@ jobs:
 
 ---
 
-# 17. ディレクトリ構成（最終形）
+# 16. ディレクトリ構成（最終形）
 
 ```
 schedule-app/
@@ -335,7 +313,6 @@ schedule-app/
 │  └─ static/
 │      ├─ js/
 │      │   ├─ app.js
-│      │   └─ sw.js
 │      └─ css/
 │          └─ styles.css
 ├─ tests/
@@ -354,7 +331,7 @@ schedule-app/
 
 ---
 
-# 18. エージェント操作チートシート
+# 17. エージェント操作チートシート
 
 | 操作      | VS Code コマンド                  | 備考                          |
 | ------- | ----------------------------- | --------------------------- |
@@ -365,7 +342,7 @@ schedule-app/
 
 ---
 
-# 19. FAQ
+# 18. FAQ
 
 | Q             | A                                         |
 | ------------- | ----------------------------------------- |
@@ -375,7 +352,7 @@ schedule-app/
 
 ---
 
-# 20. まとめ — 5 ステップで完成
+# 19. まとめ — 5 ステップで完成
 
 1. **clone → `.venv` 作成 → 依存インストール**
 2. **`flask run` でローカル起動 → Google OAuth 通過**
