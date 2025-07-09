@@ -451,6 +451,61 @@ function renderGrid() {
   applyContrastClasses();
 }
 
+/**
+ * Apply styles to a contiguous event block.
+ * startIdx/endIdx are inclusive slot indexes.
+ */
+function renderEventBlock(startIdx, endIdx, eventId) {
+  const meta = (scheduleMeta.events && scheduleMeta.events[eventId]) || {};
+  for (let i = startIdx; i <= endIdx; i++) {
+    const slot = document.querySelector(`[data-slot-index="${i}"]`);
+    if (!slot) continue;
+
+    if (meta.color) {
+      slot.classList.add(meta.color);
+    } else {
+      slot.classList.add('bg-gray-200');
+    }
+    slot.classList.add('grid-slot--busy');
+
+    if (i === startIdx) {
+      if (meta.title) slot.textContent = meta.title;
+    } else {
+      slot.textContent = '';
+      slot.classList.add('border-t-0');
+    }
+    if (i < endIdx) slot.classList.add('border-b-0');
+  }
+}
+
+/**
+ * Render a grid loaded from IndexedDB when offline.
+ * The `slots` array is stored directly in the DB.
+ */
+function renderOfflineGrid(slots) {
+  scheduleGrid = slots.slice();
+  renderGrid();
+
+  for (let i = 0; i < slots.length; i++) {
+    const cell = slots[i];
+    if (typeof cell === 'object' && cell.event_id) {
+      const id = cell.event_id;
+      let start = i;
+      while (
+        i + 1 < slots.length &&
+        typeof slots[i + 1] === 'object' &&
+        slots[i + 1].event_id === id
+      ) {
+        i++;
+      }
+      const end = i;
+      renderEventBlock(start, end, id);
+    }
+  }
+
+  applyContrastClasses();
+}
+
 /** Persist the current grid. Placeholder for IndexedDB integration. */
 function saveState() {
   const input = document.querySelector('#input-date');
@@ -508,7 +563,7 @@ async function loadGridFromServer(date) {
           saveState();
         }
 
-        renderGrid();
+        renderOfflineGrid(scheduleGrid);
         return { grid: scheduleGrid, unplaced: [] };
       }
     } catch (dbErr) {
