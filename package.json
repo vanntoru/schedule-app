@@ -6,7 +6,9 @@
   "directories": {
     "test": "tests"
   },
-  "scripts": {},
+  "scripts": {
+    "test:e2e": "npx playwright test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vanntoru/schedule-app.git"
@@ -19,7 +21,8 @@
   },
   "homepage": "https://github.com/vanntoru/schedule-app#readme",
   "devDependencies": {
-    "@playwright/test": "^1.53.2",
+    "@playwright/test": "^1.latest",
+    "ts-node": "^10.latest",
     "@types/node": "^24.0.8"
   }
 }
