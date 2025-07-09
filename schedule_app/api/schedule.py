@@ -9,7 +9,7 @@ bp = Blueprint("schedule", __name__, url_prefix="/api/schedule")
 schedule_bp = bp
 
 
-@bp.route("/generate", methods=["POST", "GET"])
+@bp.route("/generate", methods=["GET"])
 def generate_schedule():  # noqa: D401 - simple endpoint
     """Generate a schedule grid for the specified date."""
     date_str = request.args.get("date")

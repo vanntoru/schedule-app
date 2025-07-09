@@ -276,8 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
     markSlot(nextIdx, card.dataset.taskId);
     if (originIndex !== null) unmarkSlot(originIndex);
 
-    // ----- record command -----
-    pushCommand({
+  // ----- record command -----
+  pushCommand({
       apply() {              // Redo
         slot.appendChild(card);
         card.dataset.slotIndex = nextIdx;
@@ -296,7 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         unmarkSlot(nextIdx);
       },
-    });
+      skipRender: true,
+  });
 
     // ----- visual cleanup -----
     slot.classList.remove('ring-2', 'ring-blue-400');
@@ -321,14 +322,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function slotOccupied(i) {
     return gridState.has(i);
   }
-  function markSlot(i, tid) {
+function markSlot(i, tid) {
     gridState.set(i, tid);
     document
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.add('grid-slot--busy');
     applyContrastClasses();   // ★ 追加
     /* TODO: IndexedDB schedule save (phase‑1) */
-  }
+}
   function unmarkSlot(i) {
     gridState.delete(i);
     document
@@ -359,7 +360,25 @@ function shiftGridToLocalTZ(grid) {
   return rotate(grid, offsetSlot);
 }
 
+/** Adjust meta start/end slot to local timezone offset. */
+function shiftMetaToLocalTZ(meta) {
+  const offsetMin  = -new Date().getTimezoneOffset();
+  const offsetSlot = Math.round(offsetMin / 10);
+  const result = {};
+  for (const [id, m] of Object.entries(meta || {})) {
+    const s = Number.isInteger(m.start_slot)
+      ? (m.start_slot + offsetSlot + 144) % 144
+      : m.start_slot;
+    const e = Number.isInteger(m.end_slot)
+      ? (m.end_slot + offsetSlot + 144) % 144
+      : m.end_slot;
+    result[id] = { ...m, start_slot: s, end_slot: e };
+  }
+  return result;
+}
+
 let scheduleGrid = new Array(144).fill(0); // current grid state
+let scheduleMeta = { tasks: {}, events: {} };
 
 const HISTORY_LIMIT = 20;
 const _history = [];
@@ -370,47 +389,193 @@ function renderGrid() {
   document.querySelectorAll('.slot[data-slot-index]').forEach((el) => {
     const idx = Number(el.dataset.slotIndex);
     const raw = scheduleGrid[idx] ?? 0;
-    const val = typeof raw === 'object'
-      ? raw.task ? 2 : raw.busy ? 1 : 0
-      : raw;
-
-    /* ---- 背景色と busy クラスをリセット ---- */
-    el.classList.remove(
-      'bg-gray-200',
-      'bg-green-200',
-      'bg-blue-500',
-      'grid-slot--busy',
-    );
-    switch (val) {
-      case 1:
-        el.classList.add('bg-gray-200');
-        el.classList.add('grid-slot--busy');
-        break;
-      case 2:
-        el.classList.add('bg-green-200');
-        el.classList.add('grid-slot--busy');
-        break;
-      default:
+    let type = 0;
+    if (typeof raw === 'object') {
+      if (raw.task_id) type = 2;
+      else if (raw.event_id || raw.busy) type = 1;
+    } else {
+      type = raw;
     }
+
+    [...el.classList].forEach((cls) => {
+      if (
+        cls.startsWith('bg-') ||
+        cls === 'grid-slot--busy' ||
+        cls === 'busy-strong'
+      ) {
+        el.classList.remove(cls);
+      }
+    });
+    el.textContent = '';
+
+    let meta = null;
+    if (typeof raw === 'object') {
+      if (raw.task_id) meta = scheduleMeta.tasks[raw.task_id];
+      if (raw.event_id) meta = scheduleMeta.events[raw.event_id];
+    }
+
+    if (meta && meta.color) {
+      el.classList.add(meta.color);
+    } else if (type === 1) {
+      el.classList.add('bg-gray-200');
+    } else if (type === 2) {
+      el.classList.add('bg-green-200');
+    }
+    if (type === 1 || type === 2) el.classList.add('grid-slot--busy');
+    if (meta && meta.title) el.textContent = meta.title;
+    el.classList.remove('border-t-0', 'border-b-0');
   });
+
+  function groupBlocks(metaMap) {
+    Object.values(metaMap || {}).forEach((m) => {
+      const s = Number(m.start_slot);
+      const e = Number(m.end_slot);
+      if (!Number.isInteger(s) || !Number.isInteger(e)) return;
+      for (let i = s; i <= e; i++) {
+        const slot = document.querySelector(`[data-slot-index="${i}"]`);
+        if (!slot) continue;
+        if (i === s) {
+          slot.textContent = m.title || '';
+        } else {
+          slot.textContent = '';
+          slot.classList.add('border-t-0');
+        }
+        if (i < e) slot.classList.add('border-b-0');
+      }
+    });
+  }
+
+  groupBlocks(scheduleMeta.events);
+  groupBlocks(scheduleMeta.tasks);
   /* Reduced-contrast ON なら新セルにも busy-strong を再付与 */
+  applyContrastClasses();
+}
+
+/**
+ * Apply styles to a contiguous event block.
+ * startIdx/endIdx are inclusive slot indexes.
+ */
+function renderEventBlock(startIdx, endIdx, eventId) {
+  const meta = (scheduleMeta.events && scheduleMeta.events[eventId]) || {};
+  for (let i = startIdx; i <= endIdx; i++) {
+    const slot = document.querySelector(`[data-slot-index="${i}"]`);
+    if (!slot) continue;
+
+    if (meta.color) {
+      slot.classList.add(meta.color);
+    } else {
+      slot.classList.add('bg-gray-200');
+    }
+    slot.classList.add('grid-slot--busy');
+
+    if (i === startIdx) {
+      if (meta.title) slot.textContent = meta.title;
+    } else {
+      slot.textContent = '';
+      slot.classList.add('border-t-0');
+    }
+    if (i < endIdx) slot.classList.add('border-b-0');
+  }
+}
+
+/**
+ * Render a grid loaded from IndexedDB when offline.
+ * The `slots` array is stored directly in the DB.
+ */
+function renderOfflineGrid(slots) {
+  scheduleGrid = slots.slice();
+  renderGrid();
+
+  for (let i = 0; i < slots.length; i++) {
+    const cell = slots[i];
+    if (typeof cell === 'object' && cell.event_id) {
+      const id = cell.event_id;
+      let start = i;
+      while (
+        i + 1 < slots.length &&
+        typeof slots[i + 1] === 'object' &&
+        slots[i + 1].event_id === id
+      ) {
+        i++;
+      }
+      const end = i;
+      renderEventBlock(start, end, id);
+    }
+  }
+
   applyContrastClasses();
 }
 
 /** Persist the current grid. Placeholder for IndexedDB integration. */
 function saveState() {
-  // TODO: implement persistence
+  const input = document.querySelector('#input-date');
+  const date = input && input.value ? input.value : todayUtcISO();
+  if (!date) return;
+
+  window.dbReady.then((db) => {
+    const tx = db.transaction('schedule', 'readwrite');
+    const store = tx.objectStore('schedule');
+    const record = { date, grid: scheduleGrid.slice(), meta: scheduleMeta };
+    store.put(record);
+  }).catch((err) => {
+    console.error('[IndexedDB] save failed', err);
+  });
 }
 
-/** Load grid data from the server for the given `date`. */
+/** Load grid data from the server for the given `date` via GET. */
 async function loadGridFromServer(date) {
-  const res = await fetch(
-    `/api/schedule/generate?date=${date}&algo=greedy`,
-    { method: 'POST' },
-  );
+  let res;
+  try {
+    res = await fetch(`/api/schedule/generate?date=${date}&algo=greedy`);
+    if (!res.ok) {
+      throw new Error(`Schedule API failed: ${res.status}`);
+    }
+  } catch (err) {
+    // Fallback to IndexedDB if available
+    try {
+      const db = await window.dbReady;
+      const tx = db.transaction('schedule', 'readonly');
+      const store = tx.objectStore('schedule');
+      const rec = await new Promise((resolve, reject) => {
+        const r = store.get(date);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+      if (rec && rec.grid) {
+        scheduleMeta = rec.meta || { tasks: {}, events: {} };
+        scheduleGrid = rec.grid.slice();
 
-  if (!res.ok) {
-    throw new Error(`Schedule API failed: ${res.status}`);
+        // ───── reconstruct missing event metadata ─────
+        if (!scheduleMeta.events || Object.keys(scheduleMeta.events).length === 0) {
+          const events = {};
+          for (let i = 0; i < scheduleGrid.length; i++) {
+            const cell = scheduleGrid[i];
+            if (typeof cell === 'object' && cell.event_id) {
+              const id = cell.event_id;
+              if (!events[id]) {
+                events[id] = {
+                  id,
+                  start_slot: i,
+                  end_slot: i,
+                  color: 'bg-gray-200',
+                  title: '予定あり',
+                };
+              } else {
+                events[id].end_slot = i;
+              }
+            }
+          }
+          scheduleMeta.events = events;
+          saveState();
+        }
+
+        renderOfflineGrid(scheduleGrid);
+        return { grid: scheduleGrid, unplaced: [] };
+      }
+    } catch (dbErr) {
+      console.error('[IndexedDB] load failed', dbErr);
+    }
+    throw err;
   }
 
   const raw = await res.json();
@@ -421,17 +586,18 @@ async function loadGridFromServer(date) {
       : Array.isArray(raw.grid)
         ? raw.grid
         : (() => { throw new Error('Malformed Grid'); })();
+  if (slots.length !== 144) {
+    throw new Error('Incomplete Grid');
+  }
   const unplaced = Array.isArray(raw.unplaced) ? raw.unplaced : [];
 
-  const utcGrid = slots.map((s) => {
-    if (typeof s === 'number') return s;
-    if (s.busy === true) return 1;
-    if (s.task === true) return 2;
-    return 0;
-  });
+  scheduleMeta = {
+    tasks: shiftMetaToLocalTZ(raw.tasks || {}),
+    events: shiftMetaToLocalTZ(raw.events || {}),
+  };
 
   /** ★ ここでローカルタイム位置へシフト ★ */
-  scheduleGrid = shiftGridToLocalTZ(utcGrid);
+  scheduleGrid = shiftGridToLocalTZ(slots);
 
   renderGrid();
   saveState();
@@ -460,8 +626,10 @@ function doUndo() {
   const cmd = _history[_ptr];
   _ptr--;
   cmd.revert();
-  renderGrid();
-  saveState();
+  if (!cmd.skipRender) {
+    renderGrid();
+    saveState();
+  }
   updateUndoRedoButtons();
 }
 
@@ -471,8 +639,10 @@ function doRedo() {
   _ptr++;
   const cmd = _history[_ptr];
   cmd.apply();
-  renderGrid();
-  saveState();
+  if (!cmd.skipRender) {
+    renderGrid();
+    saveState();
+  }
   updateUndoRedoButtons();
 }
 
@@ -650,3 +820,10 @@ function applyContrastClasses() {
 mqReduced.addEventListener('change', applyContrastClasses);
 document.addEventListener('DOMContentLoaded', applyContrastClasses);   // ← グリッド生成後
 
+
+// Service Worker registration
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js", { scope: "/" })
+    .then(reg => console.log("SW registered:", reg.scope))
+    .catch(err => console.error("SW registration failed:", err));
+}

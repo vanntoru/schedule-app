@@ -24,17 +24,17 @@ def client(app: Flask):
 
 
 def test_generate_simple(client) -> None:
-    resp = client.post("/api/schedule/generate?date=2025-01-01")
+    resp = client.get("/api/schedule/generate?date=2025-01-01")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)
-    assert set(data.keys()) == {"date", "slots", "unplaced"}
+    assert set(data.keys()) == {"date", "slots", "unplaced", "tasks", "events"}
     assert data["date"] == "2025-01-01"
     assert len(data["slots"]) == 144
 
 
 def test_generate_accepts_z_datetime(client) -> None:
-    resp = client.post("/api/schedule/generate?date=2025-01-01T00:00:00Z")
+    resp = client.get("/api/schedule/generate?date=2025-01-01T00:00:00Z")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)
@@ -42,7 +42,7 @@ def test_generate_accepts_z_datetime(client) -> None:
 
 
 def test_generate_accepts_naive_datetime(client) -> None:
-    resp = client.post("/api/schedule/generate?date=2025-01-01T00:00:00")
+    resp = client.get("/api/schedule/generate?date=2025-01-01T00:00:00")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)
@@ -50,7 +50,7 @@ def test_generate_accepts_naive_datetime(client) -> None:
 
 
 def test_generate_naive_datetime_midday(client) -> None:
-    resp = client.post("/api/schedule/generate?date=2025-07-05T15:00:00")
+    resp = client.get("/api/schedule/generate?date=2025-07-05T15:00:00")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, dict)

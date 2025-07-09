@@ -13,5 +13,5 @@ test('generate button triggers schedule API', async ({ page }) => {
     page.getByTestId('generate-btn').click()
   ]);
 
-  expect(req.method()).toBe('POST');
+  expect(req.method()).toBe('GET');
 });

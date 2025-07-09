@@ -85,6 +85,12 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     # Lightweight Google API client stub
     app.extensions["gclient"] = GoogleClient(credentials=None)
 
+    @app.after_request
+    def _allow_service_worker(response):
+        if request.path == "/static/sw.js":
+            response.headers["Service-Worker-Allowed"] = "/"
+        return response
+
     if testing:
         app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 
@@ -111,7 +117,9 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     # 暫定トップページ
     @app.get("/")
     def index():
-        return render_template("index.html")
+        """Render the main page with optional local Tailwind."""
+        local_tw = os.getenv("LOCAL_TW") == "1"
+        return render_template("index.html", local_tw=local_tw)
 
     @app.get("/login")
     def login():

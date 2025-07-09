@@ -41,6 +41,12 @@ pip install -r requirements.dev.txt
 pytest -q
 ```
 
+### Playwright offline mode
+
+When network access is restricted (e.g. CI), set `LOCAL_TW=1` so the app uses
+`static/css/tailwind.min.css` instead of the CDN script. Playwright will then
+run entirely offline with `npx playwright test`.
+
 
 ## Tasks API
 
@@ -59,7 +65,7 @@ All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response 
 
 | Method | Path | Description |
 | ------ | ---- | ----------- |
-| POST | `/api/schedule/generate` | Generate a schedule grid for one day |
+| GET | `/api/schedule/generate?date=YYYY-MM-DD` | Generate a schedule grid for one day |
 
 `date` is a required query parameter that accepts an ISO‑8601 datetime
 (e.g. `2025-01-01T09:00:00+09:00`) or `YYYY-MM-DD`. When the value lacks a
@@ -72,15 +78,21 @@ On success, the endpoint returns `200 OK` with a JSON object:
 ```json
 {
   "date": "2025-01-01",
-  "slots": [0, 1, 2, ...],
+  "slots": [
+    {"busy": true},
+    {"event_id": "abc123"},
+    {"task_id": "t1"},
+    0,
+    ...
+  ],
   "unplaced": []
 }
 ```
 
-`slots` is an array of 144 ten-minute entries where `0` means free, `1` busy and
-`2` occupied by a task. Missing or malformed query parameters yield
-`400 Bad Request`. Invalid task, event or block data returns a `422` problem
-response.
+`slots` is an array of 144 ten-minute entries. `0` indicates free time. An
+object marks busy time and contains either `busy`, `event_id` or `task_id`.
+Missing or malformed query parameters yield `400 Bad Request`. Invalid task,
+event or block data returns a `422` problem response.
 
 
 ## Calendar API
