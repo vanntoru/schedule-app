@@ -553,7 +553,13 @@ async function loadGridFromServer(date) {
             if (typeof cell === 'object' && cell.event_id) {
               const id = cell.event_id;
               if (!events[id]) {
-                events[id] = { id, start_slot: i, end_slot: i, color: 'bg-gray-200' };
+                events[id] = {
+                  id,
+                  start_slot: i,
+                  end_slot: i,
+                  color: 'bg-gray-200',
+                  title: '予定あり',
+                };
               } else {
                 events[id].end_slot = i;
               }
