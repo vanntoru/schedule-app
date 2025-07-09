@@ -494,7 +494,10 @@ function renderOfflineGrid(slots) {
       while (
         i + 1 < slots.length &&
         typeof slots[i + 1] === 'object' &&
-        slots[i + 1].event_id === id
+        (
+          (slots[i + 1].event_id && slots[i + 1].event_id === id) ||
+          slots[i + 1].busy === true
+        )
       ) {
         i++;
       }
@@ -548,15 +551,25 @@ async function loadGridFromServer(date) {
         // ───── reconstruct missing event metadata ─────
         if (!scheduleMeta.events || Object.keys(scheduleMeta.events).length === 0) {
           const events = {};
+          let lastId = null;
           for (let i = 0; i < scheduleGrid.length; i++) {
             const cell = scheduleGrid[i];
-            if (typeof cell === 'object' && cell.event_id) {
-              const id = cell.event_id;
-              if (!events[id]) {
-                events[id] = { id, start_slot: i, end_slot: i, color: 'bg-gray-200' };
+            if (typeof cell === 'object') {
+              if (cell.event_id) {
+                const id = cell.event_id;
+                if (!events[id]) {
+                  events[id] = { id, start_slot: i, end_slot: i, color: 'bg-gray-200' };
+                } else {
+                  events[id].end_slot = i;
+                }
+                lastId = id;
+              } else if (cell.busy && lastId && events[lastId]) {
+                events[lastId].end_slot = i;
               } else {
-                events[id].end_slot = i;
+                lastId = null;
               }
+            } else {
+              lastId = null;
             }
           }
           scheduleMeta.events = events;
