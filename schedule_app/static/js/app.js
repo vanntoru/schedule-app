@@ -122,7 +122,7 @@ async function loadAndRenderTasks() {
     const res   = await fetch('/api/tasks');
     const tasks = await res.json();          // [{id,title,…}, …]
 
-    const pane       = document.getElementById('task-pane');
+    const pane       = document.getElementById('task-list');
     const emptyLabel = document.getElementById('task-empty');
     pane.querySelectorAll('.task-card').forEach((n) => n.remove());
 
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
           markSlot(originIndex, card.dataset.taskId);
         } else {
           // 元は side‑pane にあったカード
-          document.getElementById('task-pane').appendChild(card);
+          document.getElementById('task-list').appendChild(card);
           card.removeAttribute('data-slot-index');
         }
         unmarkSlot(nextIdx);
@@ -479,7 +479,7 @@ function doRedo() {
 
 /** Highlight unplaced tasks and show toast messages. */
 function showUnplacedTasks(unplacedIds) {
-  const pane = document.getElementById('task-pane');
+  const pane = document.getElementById('task-list');
   if (!pane) return;
 
   pane.querySelectorAll('.task-card').forEach((card) => {

@@ -27,8 +27,20 @@
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
          fill="currentColor"><path fill-rule="evenodd"
          d="M3 5a1 1 0 011-1h1a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V5zm3.5 5l8-5v10l-8-5z"
-         clip-rule="evenodd" /></svg>
+    clip-rule="evenodd" /></svg>
     Generate
+  </button>
+
+  <!-- Add Task ボタン -->
+  <button
+    id="btn-add-task"
+    type="button"
+    class="inline-flex items-center gap-1 border rounded px-3 py-1
+           bg-green-600 text-white text-sm hover:bg-green-700 active:translate-y-0.5">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+    </svg>
+    Add Task
   </button>
 
   <!-- Undo / Redo Buttons -->
@@ -76,11 +88,12 @@
 <main class="p-4 flex gap-4">
   <!-- ── task side-pane ───────────────────────────────────────────── -->
   <aside id="task-pane"
-         class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto"
-         aria-label="Tasks list"
-         role="list">
-    <!-- JS がここに .task-card を挿入 -->
+         class="w-60 shrink-0 border-r border-gray-300 pr-4 overflow-y-auto"
+         aria-label="Tasks list">
     <p id="task-empty" class="text-gray-500 text-sm">タスクがありません</p>
+    <ul id="task-list" class="space-y-2" role="list">
+      <!-- JS がここに .task-card を挿入 -->
+    </ul>
     <template id="task-card-template">
       <div class="task-card p-2 bg-white rounded shadow border cursor-grab select-none hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
            role="listitem" tabindex="0" draggable="true"></div>
