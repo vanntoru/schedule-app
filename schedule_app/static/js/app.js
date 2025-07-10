@@ -743,16 +743,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancel = document.getElementById('task-cancel');
   const list      = document.getElementById('task-list');
 
+  /**
+   * Open the modal and focus the first input field.
+   */
+  function openModal() {
+    modal.showModal();
+    const first = modal.querySelector('input, select, textarea');
+    first?.focus();
+  }
+
   if (!btnAdd || !modal || !form) return;
 
   btnAdd.addEventListener('click', () => {
     form.reset();
     document.getElementById('task-id').value = '';
-    modal.showModal();
+    form
+      .querySelectorAll('[aria-invalid]')
+      .forEach((el) => el.removeAttribute('aria-invalid'));
+    openModal();
   });
 
   btnCancel?.addEventListener('click', () => {
     modal.close();
+  });
+
+  modal.addEventListener('close', () => {
+    form
+      .querySelectorAll('[aria-invalid]')
+      .forEach((el) => el.removeAttribute('aria-invalid'));
+  });
+
+  // Close modal on ESC key
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      modal.close();
+    }
   });
 
   list?.addEventListener('click', (e) => {
@@ -776,7 +802,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('task-earliest').value = '';
     }
 
-    modal.showModal();
+    form
+      .querySelectorAll('[aria-invalid]')
+      .forEach((el) => el.removeAttribute('aria-invalid'));
+    openModal();
   });
 
   form.addEventListener('submit', async (e) => {
@@ -791,13 +820,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = titleEl.value.trim();
     const duration = parseInt(durEl.value, 10);
 
+    titleEl.removeAttribute('aria-invalid');
+    durEl.removeAttribute('aria-invalid');
+
     if (!title) {
+      titleEl.setAttribute('aria-invalid', 'true');
       alert('タイトルを入力してください');
       titleEl.focus();
       return;
     }
 
     if (!Number.isFinite(duration) || duration % 5 !== 0) {
+      durEl.setAttribute('aria-invalid', 'true');
       alert('所要時間は5分単位で入力してください');
       durEl.focus();
       return;
