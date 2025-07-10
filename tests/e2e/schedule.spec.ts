@@ -39,10 +39,10 @@ test('page shows logged-in state after pseudo login and reload', async ({ page }
 test('all-day timeline clears on date change', async ({ page }) => {
   await pseudoLogin(page);
 
+  let call = 0;
   await page.route('**/api/calendar**', route => {
-    const url = new URL(route.request().url());
-    const date = url.searchParams.get('date');
-    const events = date?.startsWith('2025-01-01')
+    call++;
+    const events = call === 1
       ? [{
           id: 'evA',
           start_utc: '2025-01-01T00:00:00Z',

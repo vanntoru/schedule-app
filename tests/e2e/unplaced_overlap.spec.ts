@@ -1,9 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { mockGoogleCalendar } from './helpers';
 
 // Scenario: overlapping long tasks that can't all be scheduled
 
 test('overlap tasks trigger toast and red card', async ({ page, request }) => {
-  /* ---- 1. Create two long tasks starting at noon ---- */
+  /* ---- 1. Clear existing tasks and create two long ones ---- */
+  const existing = await request.get('/api/tasks');
+  for (const t of await existing.json()) {
+    await request.delete(`/api/tasks/${t.id}`);
+  }
+
   for (const i of [1, 2]) {
     await request.post('/api/tasks', {
       data: {
@@ -17,8 +23,14 @@ test('overlap tasks trigger toast and red card', async ({ page, request }) => {
     });
   }
 
-  /* ---- 2. Generate schedule ---- */
+  /* ---- 2. Generate schedule on 2025-01-01 ---- */
+  await mockGoogleCalendar(page);
   await page.goto('/');
+  await page.evaluate(() => {
+    const input = document.getElementById('input-date') as HTMLInputElement;
+    input.value = '2025-01-01';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   await page.getByTestId('generate-btn').click();
 
   /* ---- 3. Verify toast appears ---- */
