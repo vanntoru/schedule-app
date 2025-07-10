@@ -100,3 +100,44 @@ test('all-day timeline clears after generating schedule', async ({ page }) => {
 
   await expect(timeline).toHaveCount(0);
 });
+
+test('all-day event updates when selecting a new date', async ({ page }) => {
+  await pseudoLogin(page);
+
+  let call = 0;
+  await page.route('**/api/calendar**', route => {
+    call++;
+    const events = call === 1
+      ? [{
+          id: 'evD1',
+          start_utc: '2025-01-01T00:00:00Z',
+          end_utc: '2025-01-02T00:00:00Z',
+          title: 'All Day 1',
+          all_day: true,
+        }]
+      : [{
+          id: 'evD2',
+          start_utc: '2025-01-02T00:00:00Z',
+          end_utc: '2025-01-03T00:00:00Z',
+          title: 'All Day 2',
+          all_day: true,
+        }];
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(events) });
+  });
+
+  await page.goto('/');
+
+  const timeline = page.locator('#all-day-timeline > li');
+  await expect(timeline).toHaveCount(1);
+  await expect(timeline.first()).toContainText('All Day 1');
+
+  await page.evaluate(() => {
+    const input = document.getElementById('input-date') as HTMLInputElement;
+    input.value = '2025-01-02';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  await expect(timeline).toHaveCount(1);
+  await expect(timeline.first()).toContainText('All Day 2');
+  await expect(page.locator('#all-day-timeline').getByText('All Day 1')).toHaveCount(0);
+});
