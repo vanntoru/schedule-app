@@ -96,6 +96,8 @@ Google API.
 The front-end will automatically build the `#time-grid` element at page load if
 it is missing.
 
+終日イベントはページ上部にチップ形式で表示され、スケジュールには配置されません。
+
 
 ## Google Calendar Stub
 
