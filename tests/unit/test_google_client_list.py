@@ -28,8 +28,8 @@ def test_list_events_dataclass(monkeypatch):
     sample = {
         "id": "1",
         "summary": "Demo",
-        "start": {"dateTime": "2025-01-01T01:00:00Z"},
-        "end": {"dateTime": "2025-01-01T02:00:00Z"},
+        "start": {"date": "2025-01-01"},
+        "end": {"date": "2025-01-02"},
     }
 
     def fake_fetch(*, time_min: str, time_max: str):
@@ -43,8 +43,8 @@ def test_list_events_dataclass(monkeypatch):
     assert isinstance(ev, Event)
     assert ev.id == "1"
     assert ev.title == "Demo"
-    assert ev.start_utc == datetime(2025, 1, 1, 1, 0, tzinfo=timezone.utc)
-    assert ev.end_utc == datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc)
+    assert ev.start_utc == datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc)
+    assert ev.end_utc == datetime(2025, 1, 2, 0, 0, tzinfo=timezone.utc)
 
 
 def test_list_events_all_day_filter(monkeypatch):
