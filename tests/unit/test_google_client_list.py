@@ -47,3 +47,43 @@ def test_list_events_dataclass(monkeypatch):
     assert ev.end_utc == datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc)
 
 
+def test_list_events_all_day_filter(monkeypatch):
+    client = GoogleClient(credentials=None)
+
+    items = [
+        {
+            "id": "a",
+            "summary": "AD1",
+            "start": {"date": "2025-01-01"},
+            "end": {"date": "2025-01-02"},
+        },
+        {
+            "id": "b",
+            "summary": "AD2",
+            "start": {"date": "2024-12-31"},
+            "end": {"date": "2025-01-02"},
+        },
+        {
+            "id": "c",
+            "summary": "no end",
+            "start": {"date": "2025-01-01"},
+        },
+        {
+            "id": "d",
+            "summary": "timed",
+            "start": {"dateTime": "2025-01-01T03:00:00Z"},
+            "end": {"dateTime": "2025-01-01T04:00:00Z"},
+        },
+    ]
+
+    def fake_fetch(*, time_min: str, time_max: str):
+        return items
+
+    monkeypatch.setattr(client, "fetch_calendar_events", fake_fetch)
+
+    events = client.list_events(date=datetime(2025, 1, 1))
+    ids = {e.id for e in events}
+    assert ids == {"a", "b", "c"}
+    assert all(e.all_day for e in events)
+
+
