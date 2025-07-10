@@ -103,18 +103,35 @@
    custom layer としてまとめておく。
    ---------------------------------------------------------- */
 
-@layer components {
-  /* サイドパネル幅や余白など */
-  #task-pane {
-    @apply w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto;
-  }
+/* Basic styles compiled from Tailwind utilities */
+#task-pane {
+  width: 15rem;                   /* w-60 */
+  flex-shrink: 0;                 /* shrink-0 */
+  border-right-width: 1px;        /* border-r */
+  border-right-color: #d1d5db;    /* border-gray-300 */
+  padding-right: 1rem;            /* pr-4 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;                    /* space-y-2 */
+  overflow-y: auto;               /* overflow-y-auto */
+}
 
-  /* タスクカードの背景色・角丸・影付け */
-  .task-card {
-    @apply p-2 bg-white rounded shadow border cursor-grab select-none
-           hover:bg-gray-50 focus-visible:outline-none
-           focus-visible:ring-2 focus-visible:ring-blue-400;
-  }
+.task-card {
+  padding: 0.5rem;                /* p-2 */
+  background-color: #ffffff;      /* bg-white */
+  border-radius: 0.25rem;         /* rounded */
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05),
+              0 1px 1px 0 rgba(0,0,0,0.05); /* shadow */
+  border-width: 1px;              /* border */
+  cursor: grab;                   /* cursor-grab */
+  user-select: none;              /* select-none */
+}
+.task-card:hover {                /* hover:bg-gray-50 */
+  background-color: #f9fafb;
+}
+.task-card:focus-visible {        /* focus-visible:ring-2 focus-visible:ring-blue-400 */
+  outline: 0;
+  box-shadow: 0 0 0 2px #60a5fa;
 }
 
 /*
@@ -122,21 +139,31 @@
    All-day timeline chip styles
    ---------------------------------------------------------- */
 
-@layer components {
-  /* 横並びのチップを収めるコンテナ */
-  #all-day-timeline {
-    @apply flex flex-nowrap gap-2 overflow-x-auto py-2 px-4 scrollbar-thin list-none;
-  }
+#all-day-timeline {
+  display: flex;                  /* flex */
+  flex-wrap: nowrap;              /* flex-nowrap */
+  gap: 0.5rem;                    /* gap-2 */
+  overflow-x: auto;               /* overflow-x-auto */
+  padding: 0.5rem 1rem;           /* py-2 px-4 */
+  list-style: none;               /* list-none */
+}
 
-  #all-day-timeline li {
-    @apply inline;
-  }
+#all-day-timeline li {
+  display: inline;                /* inline */
+}
 
-  /* 個々のチップボタン */
-  #all-day-timeline .chip-btn {
-    @apply inline-flex items-center rounded-full bg-blue-100 text-gray-800
-           text-xs font-medium px-3 py-1 whitespace-nowrap;
-  }
+/* Individual all-day event chip */
+#all-day-timeline .chip-btn {
+  display: inline-flex;           /* inline-flex */
+  align-items: center;            /* items-center */
+  border-radius: 9999px;          /* rounded-full */
+  background-color: #dbeafe;      /* bg-blue-100 */
+  color: #1f2937;                 /* text-gray-800 */
+  font-size: 0.75rem;             /* text-xs */
+  line-height: 1rem;
+  font-weight: 500;               /* font-medium */
+  padding: 0.25rem 0.75rem;       /* px-3 py-1 */
+  white-space: nowrap;            /* whitespace-nowrap */
 }
 
 /*
@@ -144,24 +171,27 @@
   Color variants for schedule cards and blocks
   ---------------------------------------------------------- */
 
-@layer components {
-  /* Regular event cards */
-  .event-card {
-    @apply bg-green-100 border border-green-400 text-gray-900;
-  }
+.event-card {
+  background-color: #dcfce7;      /* bg-green-100 */
+  border: 1px solid #4ade80;      /* border-green-400 */
+  color: #111827;                 /* text-gray-900 */
+}
 
-  /* Task cards by priority */
-  .task-priority-a {
-    @apply bg-orange-100 border border-orange-400 text-gray-900;
-  }
+.task-priority-a {
+  background-color: #ffedd5;      /* bg-orange-100 */
+  border: 1px solid #fb923c;      /* border-orange-400 */
+  color: #111827;                 /* text-gray-900 */
+}
 
-  .task-priority-b {
-    @apply bg-yellow-100 border border-yellow-400 text-gray-900;
-  }
+.task-priority-b {
+  background-color: #fef9c3;      /* bg-yellow-100 */
+  border: 1px solid #facc15;      /* border-yellow-400 */
+  color: #111827;                 /* text-gray-900 */
+}
 
-  /* Blocked time range */
-  .block-slot {
-    @apply bg-red-100 border border-red-400 text-gray-900;
-  }
+.block-slot {
+  background-color: #fee2e2;      /* bg-red-100 */
+  border: 1px solid #f87171;      /* border-red-400 */
+  color: #111827;                 /* text-gray-900 */
 }
 
