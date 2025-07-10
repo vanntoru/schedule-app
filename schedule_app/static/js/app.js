@@ -680,3 +680,63 @@ function applyContrastClasses() {
 mqReduced.addEventListener('change', applyContrastClasses);
 document.addEventListener('DOMContentLoaded', applyContrastClasses);   // ← グリッド生成後
 
+// ---------------------------------------------------------------------------
+// Task creation modal handlers
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const btnAdd    = document.getElementById('btn-add-task');
+  const modal     = document.getElementById('task-modal');
+  const form      = document.getElementById('task-form');
+  const btnCancel = document.getElementById('task-cancel');
+
+  if (!btnAdd || !modal || !form) return;
+
+  btnAdd.addEventListener('click', () => {
+    form.reset();
+    modal.showModal();
+  });
+
+  btnCancel?.addEventListener('click', () => {
+    modal.close();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const titleEl = document.getElementById('task-title');
+    const catEl   = document.getElementById('task-category');
+    const durEl   = document.getElementById('task-duration');
+    const priEl   = document.getElementById('task-priority');
+    const earEl   = document.getElementById('task-earliest');
+
+    const duration = parseInt(durEl.value, 10);
+
+    const payload = {
+      title: titleEl.value,
+      category: catEl.value,
+      duration_min: duration,
+      duration_raw_min: duration,
+      priority: priEl.value,
+    };
+
+    if (earEl.value) {
+      const iso = new Date(`1970-01-01T${earEl.value}:00Z`).toISOString().replace('.000Z', 'Z');
+      payload.earliest_start_utc = iso;
+    }
+
+    try {
+      await apiFetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      modal.close();
+      form.reset();
+      await loadAndRenderTasks();
+    } catch (err) {
+      console.error('task create failed', err);
+      alert(err.message ?? err);
+    }
+  });
+});
+
