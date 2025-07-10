@@ -14,3 +14,25 @@ export async function pseudoLogin(page: Page, token: string = 'test-token'): Pro
     window.sessionStorage.setItem('token', value);
   }, token);
 }
+
+/**
+ * Mock Google Calendar API requests during Playwright tests.
+ *
+ * Intercepts network calls to ``/api/calendar`` and returns ``events``
+ * without contacting the real Google API.
+ *
+ * @param page    Playwright page instance
+ * @param events  Array of event objects to return (defaults to empty array)
+ */
+export async function mockGoogleCalendar(
+  page: Page,
+  events: any[] = [],
+): Promise<void> {
+  await page.route('**/api/calendar**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(events),
+    });
+  });
+}
