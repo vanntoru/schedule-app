@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="/static/css/a11y.css">
 </head>
 <body>
-<header
-  class="sticky top-0 z-10 flex items-center gap-2
-         bg-white border-b border-gray-200 px-4 py-2">
+  <header
+    class="sticky top-0 z-10 flex items-center gap-2
+           bg-white border-b border-gray-200 px-4 py-2">
   <!-- 日付ピッカー -->
   <input
     id="input-date"
@@ -32,7 +32,7 @@
   </button>
 
   <!-- Undo / Redo Buttons -->
-  <div id="history-buttons" class="inline-flex items-center gap-1 ml-2">
+    <div id="history-buttons" class="inline-flex items-center gap-1 ml-2">
     <button
       id="undo-btn"
       title="元に戻す (Ctrl+Z)"
@@ -44,9 +44,15 @@
       title="やり直す (Ctrl+Y)"
       class="px-2 py-1 rounded border text-gray-400 border-gray-300"
       disabled
-    >→</button>
-  </div>
-</header>
+      >→</button>
+    </div>
+
+    <!-- タスク追加ボタン -->
+    <button id="btn-add-task" type="button"
+            class="ml-auto border rounded px-3 py-1 text-sm bg-green-600 text-white hover:bg-green-700 active:translate-y-0.5">
+      ＋タスク追加
+    </button>
+  </header>
 <!-- ─────────── All-day timeline ─────────── -->
 <section
   id="all-day-wrap"
@@ -77,10 +83,10 @@
   <!-- ── task side-pane ───────────────────────────────────────────── -->
   <aside id="task-pane"
          class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto"
-         aria-label="Tasks list"
-         role="list">
+         aria-label="Tasks list">
     <!-- JS がここに .task-card を挿入 -->
     <p id="task-empty" class="text-gray-500 text-sm">タスクがありません</p>
+    <ul id="task-list" role="list" class="space-y-2"></ul>
     <template id="task-card-template">
       <div class="task-card p-2 bg-white rounded shadow border cursor-grab select-none hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
            role="listitem" tabindex="0" draggable="true"></div>

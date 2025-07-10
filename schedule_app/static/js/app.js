@@ -123,8 +123,9 @@ async function loadAndRenderTasks() {
     const tasks = await res.json();          // [{id,title,…}, …]
 
     const pane       = document.getElementById('task-pane');
+    const list       = document.getElementById('task-list');
     const emptyLabel = document.getElementById('task-empty');
-    pane.querySelectorAll('.task-card').forEach((n) => n.remove());
+    list.querySelectorAll('.task-card').forEach((n) => n.remove());
 
     if (!tasks.length) {
       emptyLabel.classList.remove('hidden');
@@ -144,7 +145,7 @@ async function loadAndRenderTasks() {
       card.dataset.taskId = t.id;
       card.dataset.taskTitle = t.title;
       card.textContent    = `${t.title} (${t.duration_min}m)`;
-      pane.appendChild(card);
+      list.appendChild(card);
     }
     applyContrastClasses();
   } catch (err) {
@@ -291,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
           markSlot(originIndex, card.dataset.taskId);
         } else {
           // 元は side‑pane にあったカード
-          document.getElementById('task-pane').appendChild(card);
+          document.getElementById('task-list').appendChild(card);
           card.removeAttribute('data-slot-index');
         }
         unmarkSlot(nextIdx);
