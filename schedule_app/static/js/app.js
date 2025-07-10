@@ -788,7 +788,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const priEl   = document.getElementById('task-priority');
     const earEl   = document.getElementById('task-earliest');
 
+    const title = titleEl.value.trim();
     const duration = parseInt(durEl.value, 10);
+
+    if (!title) {
+      alert('タイトルを入力してください');
+      titleEl.focus();
+      return;
+    }
+
+    if (!Number.isFinite(duration) || duration % 5 !== 0) {
+      alert('所要時間は5分単位で入力してください');
+      durEl.focus();
+      return;
+    }
 
     const payload = {
       title: titleEl.value,
