@@ -77,6 +77,14 @@ export function filterAllDay(events) {
   return (events || []).filter(ev => ev.all_day);
 }
 
+/**
+ * Remove all existing <li> elements from the all-day timeline.
+ */
+export function resetAllDayTimeline() {
+  const ul = document.getElementById('all-day-timeline');
+  if (ul) ul.innerHTML = '';
+}
+
 (async () => {
 
   /** Event[] を取得 */
@@ -88,6 +96,7 @@ export function filterAllDay(events) {
     const events = await fetchEvents(todayUtcISO());
     const allDay = filterAllDay(events);
     window.allDayEvents = allDay;
+    resetAllDayTimeline();
     window.renderAllDay(allDay);
   } catch (err) {
     console.error(err);
@@ -670,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const events = await apiFetch(`/api/calendar?date=${ymd}`);
       const allDay = filterAllDay(events);
       window.allDayEvents = allDay;
+      resetAllDayTimeline();
       window.renderAllDay(allDay);
     } catch (err) {
       console.error('[calendar] reload failed', err);
@@ -692,6 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const events = await apiFetch(`/api/calendar?date=${ymd}`);
       const allDay = filterAllDay(events);
       window.allDayEvents = allDay;
+      resetAllDayTimeline();
       window.renderAllDay(allDay);
     } catch (err) {
       console.error(err);
