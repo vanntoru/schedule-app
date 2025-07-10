@@ -154,6 +154,8 @@ async function loadAndRenderTasks() {
     const pane       = document.getElementById('task-pane');
     const list       = document.getElementById('task-list');
     const emptyLabel = document.getElementById('task-empty');
+    const tmpl       = document.getElementById('task-card-template');
+
     list.querySelectorAll('.task-card').forEach((n) => n.remove());
 
     if (!tasks.length) {
@@ -163,17 +165,23 @@ async function loadAndRenderTasks() {
     emptyLabel.classList.add('hidden');
 
     for (const t of tasks) {
-      const card = document.createElement('div');
-      card.className =
-        'task-card p-2 bg-white rounded shadow border ' +
-        'cursor-grab select-none hover:bg-gray-50 ' +
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
-      card.setAttribute('draggable', 'true');
-      card.setAttribute('role', 'listitem');
-      card.setAttribute('tabindex', '0');
+      /** @type {HTMLElement} */
+      let card;
+      if (tmpl && tmpl.content.firstElementChild) {
+        card = tmpl.content.firstElementChild.cloneNode(true);
+      } else {
+        card = document.createElement('div');
+        card.className =
+          'task-card p-2 bg-white rounded shadow border ' +
+          'cursor-grab select-none hover:bg-gray-50 ' +
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('role', 'listitem');
+        card.setAttribute('tabindex', '0');
+      }
       card.dataset.taskId = t.id;
       card.dataset.taskTitle = t.title;
-      card.textContent    = `${t.title} (${t.duration_min}m)`;
+      card.textContent = `${t.title} (${t.duration_min}m)`;
       list.appendChild(card);
     }
     applyContrastClasses();
