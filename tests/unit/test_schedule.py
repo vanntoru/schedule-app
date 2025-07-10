@@ -105,3 +105,24 @@ def test_event_spans_midnight() -> None:
     assert slots[:3] == [1] * 3
     assert slots[3] == 0
 
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_all_day_event_ignored() -> None:
+    TASKS.clear()
+    BLOCKS.clear()
+    from schedule_app.api.calendar import EVENTS
+
+    EVENTS.clear()
+    EVENTS["ad"] = Event(
+        id="ad",
+        title="",
+        start_utc=_dt("2025-01-01T00:00:00Z"),
+        end_utc=_dt("2025-01-02T00:00:00Z"),
+        all_day=True,
+    )
+
+    result = schedule.generate_schedule(target_day=date(2025, 1, 1))
+    slots = result["slots"]
+    assert len(slots) == 144
+    assert all(s == 0 for s in slots)
+

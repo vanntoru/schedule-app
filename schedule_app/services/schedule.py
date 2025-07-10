@@ -47,9 +47,14 @@ def _mark_busy(slot_map: list[bool], start: datetime, end: datetime, *, base: da
 
 
 def _init_slot_map(start_utc: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
-    """Return a slot map initialised with busy periods for ``start_utc``."""
+    """Return a slot map initialised with busy periods for ``start_utc``.
+
+    All-day events are skipped because they do not occupy time slots.
+    """
     slot_map = [False] * DAY_SLOTS
     for ev in events:
+        if ev.all_day:
+            continue
         _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=start_utc)
     for blk in blocks:
         _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=start_utc)
@@ -122,6 +127,8 @@ def generate(
 def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     """Return a simple JSON friendly schedule for ``target_day``.
 
+    All-day events are ignored when generating the time grid.
+
     Parameters
     ----------
     target_day:
@@ -145,7 +152,7 @@ def generate_schedule(target_day: date, *, algo: str = "greedy") -> dict:
     events = [
         ev
         for ev in EVENTS.values()
-        if ev.end_utc > start_utc and ev.start_utc < end_utc
+        if ev.end_utc > start_utc and ev.start_utc < end_utc and not ev.all_day
     ]
 
     tasks = list(TASKS.values())
