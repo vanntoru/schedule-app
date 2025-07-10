@@ -169,43 +169,34 @@ class GoogleClient:
         target_day = local_start.date()
         events: list[Event] = []
         for item in items:
-            start_info = item.get("start", {})
-            end_info = item.get("end", {})
-            start_date_raw = start_info.get("date")
-            end_date_raw = end_info.get("date")
-            if not (start_date_raw or end_date_raw):
-                continue
+            ev = self._to_event(item)
 
-            start_date = (
-                datetime.fromisoformat(start_date_raw).date()
-                if start_date_raw
-                else target_day
-            )
-            end_date = (
-                datetime.fromisoformat(end_date_raw).date()
-                if end_date_raw
-                else None
-            )
-
-            include = False
-            if end_date is not None:
-                if start_date <= target_day < end_date:
-                    include = True
-            else:
-                if start_date == target_day:
-                    include = True
-
-            if include:
-                ev = self._to_event(item)
-                events.append(
-                    Event(
-                        id=ev.id,
-                        start_utc=ev.start_utc,
-                        end_utc=ev.end_utc,
-                        title=ev.title,
-                        all_day=True,
-                    )
+            if ev.all_day:
+                start_info = item.get("start", {})
+                end_info = item.get("end", {})
+                start_date_raw = start_info.get("date")
+                end_date_raw = end_info.get("date")
+                start_date = (
+                    datetime.fromisoformat(start_date_raw).date()
+                    if start_date_raw
+                    else target_day
                 )
+                end_date = (
+                    datetime.fromisoformat(end_date_raw).date()
+                    if end_date_raw
+                    else None
+                )
+                include = False
+                if end_date is not None:
+                    if start_date <= target_day < end_date:
+                        include = True
+                else:
+                    if start_date == target_day:
+                        include = True
+                if include:
+                    events.append(ev)
+            else:
+                events.append(ev)
 
         return events
 

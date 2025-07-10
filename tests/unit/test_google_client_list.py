@@ -83,7 +83,9 @@ def test_list_events_all_day_filter(monkeypatch):
 
     events = client.list_events(date=datetime(2025, 1, 1))
     ids = {e.id for e in events}
-    assert ids == {"a", "b", "c"}
-    assert all(e.all_day for e in events)
+    assert ids == {"a", "b", "c", "d"}
+    timed = next(e for e in events if e.id == "d")
+    assert timed.all_day is False
+    assert all(e.all_day for e in events if e.id != "d")
 
 
