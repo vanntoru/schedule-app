@@ -125,7 +125,11 @@
 @layer components {
   /* 横並びのチップを収めるコンテナ */
   #all-day-timeline {
-    @apply flex flex-nowrap gap-2 overflow-x-auto py-2 px-4 scrollbar-thin;
+    @apply flex flex-nowrap gap-2 overflow-x-auto py-2 px-4 scrollbar-thin list-none;
+  }
+
+  #all-day-timeline li {
+    @apply inline;
   }
 
   /* 個々のチップボタン */
