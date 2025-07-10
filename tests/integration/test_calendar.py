@@ -122,3 +122,47 @@ def test_calendar_api_error(app: Flask, client) -> None:
     assert resp.status_code == 502
     data = json.loads(resp.data)
     _assert_problem_details(data)
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_all_day_single(app: Flask, client) -> None:
+    event = Event(
+        id="ad1",
+        start_utc=datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc),
+        end_utc=datetime(2025, 1, 2, 0, 0, tzinfo=timezone.utc),
+        title="All Day",
+        all_day=True,
+    )
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(events=[event])):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok", "expiry": None}
+        resp = client.get("/api/calendar?date=2025-01-01")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data) == 1
+    ev = data[0]
+    assert ev["all_day"] is True
+    assert ev["start_utc"] == "2025-01-01T00:00:00Z"
+    assert ev["end_utc"] == "2025-01-02T00:00:00Z"
+
+
+@freeze_time("2025-01-01T00:00:00Z")
+def test_calendar_all_day_multi_day(app: Flask, client) -> None:
+    event = Event(
+        id="ad2",
+        start_utc=datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc),
+        end_utc=datetime(2025, 1, 3, 0, 0, tzinfo=timezone.utc),
+        title="Span",
+        all_day=True,
+    )
+    with patch("schedule_app.api.calendar.GoogleClient", return_value=DummyGClient(events=[event])):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok", "expiry": None}
+        resp1 = client.get("/api/calendar?date=2025-01-01")
+        resp2 = client.get("/api/calendar?date=2025-01-02")
+    for resp in (resp1, resp2):
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert len(data) == 1
+        assert data[0]["id"] == "ad2"
+        assert data[0]["all_day"] is True
