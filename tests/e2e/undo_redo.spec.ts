@@ -71,9 +71,11 @@ test('Undo/Redo 動作確認', async ({ page }) => {
   /* --- Undo / Redo --- */
   await page.keyboard.press('Control+Z');
 
+  // Slot should no longer contain the task after undo
+  await expect(slotAfter.locator(selector)).toHaveCount(0);
   await expect(slotBefore.locator(selector)).toHaveCount(0);
 
-  // 🔴ここを実際のDOMに合わせて変更してください
+  // Card should return to the side panel
   const sidePanel = page.locator('#task-pane');
   await expect(sidePanel.locator(selector)).toHaveCount(1);
 
