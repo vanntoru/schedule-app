@@ -97,3 +97,23 @@
   mix-blend-mode: normal;       /* 背景色に影響されず確実に表示 */
 }
 
+/* ----------------------------------------------------------
+   サイドパネルとタスクカードの基本スタイル
+   最低限の見た目を整えるため Tailwind ユーティリティを
+   custom layer としてまとめておく。
+   ---------------------------------------------------------- */
+
+@layer components {
+  /* サイドパネル幅や余白など */
+  #task-pane {
+    @apply w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto;
+  }
+
+  /* タスクカードの背景色・角丸・影付け */
+  .task-card {
+    @apply p-2 bg-white rounded shadow border cursor-grab select-none
+           hover:bg-gray-50 focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-blue-400;
+  }
+}
+
