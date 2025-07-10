@@ -178,10 +178,29 @@ async function loadAndRenderTasks() {
         card.setAttribute('draggable', 'true');
         card.setAttribute('role', 'listitem');
         card.setAttribute('tabindex', '0');
+
+        const span = document.createElement('span');
+        span.className = 'task-label';
+        card.appendChild(span);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'edit-task ml-2 border rounded px-1 text-xs';
+        btn.textContent = '編集';
+        card.appendChild(btn);
       }
       card.dataset.taskId = t.id;
       card.dataset.taskTitle = t.title;
-      card.textContent = `${t.title} (${t.duration_min}m)`;
+      card.dataset.taskCategory = t.category || '';
+      card.dataset.taskDuration = t.duration_min;
+      card.dataset.taskPriority = t.priority;
+      if (t.earliest_start_utc) {
+        card.dataset.taskEarliest = t.earliest_start_utc;
+      } else {
+        delete card.dataset.taskEarliest;
+      }
+
+      const label = card.querySelector('.task-label') || card;
+      label.textContent = `${t.title} (${t.duration_min}m)`;
       list.appendChild(card);
     }
     applyContrastClasses();
@@ -688,16 +707,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal     = document.getElementById('task-modal');
   const form      = document.getElementById('task-form');
   const btnCancel = document.getElementById('task-cancel');
+  const list      = document.getElementById('task-list');
 
   if (!btnAdd || !modal || !form) return;
 
   btnAdd.addEventListener('click', () => {
     form.reset();
+    document.getElementById('task-id').value = '';
     modal.showModal();
   });
 
   btnCancel?.addEventListener('click', () => {
     modal.close();
+  });
+
+  list?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.edit-task');
+    if (!btn) return;
+
+    const card = btn.closest('.task-card');
+    if (!card) return;
+
+    document.getElementById('task-id').value = card.dataset.taskId;
+    document.getElementById('task-title').value = card.dataset.taskTitle;
+    document.getElementById('task-category').value = card.dataset.taskCategory || '';
+    document.getElementById('task-duration').value = card.dataset.taskDuration;
+    document.getElementById('task-priority').value = card.dataset.taskPriority;
+
+    const earliest = card.dataset.taskEarliest;
+    if (earliest) {
+      const hhmm = new Date(earliest).toISOString().substring(11, 16);
+      document.getElementById('task-earliest').value = hhmm;
+    } else {
+      document.getElementById('task-earliest').value = '';
+    }
+
+    modal.showModal();
   });
 
   form.addEventListener('submit', async (e) => {
@@ -724,9 +769,13 @@ document.addEventListener('DOMContentLoaded', () => {
       payload.earliest_start_utc = iso;
     }
 
+    const taskId = document.getElementById('task-id').value;
+
     try {
-      await apiFetch('/api/tasks', {
-        method: 'POST',
+      const url = taskId ? `/api/tasks/${taskId}` : '/api/tasks';
+      const method = taskId ? 'PUT' : 'POST';
+      await apiFetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });

@@ -89,7 +89,10 @@
     <ul id="task-list" role="list" class="space-y-2"></ul>
     <template id="task-card-template">
       <div class="task-card p-2 bg-white rounded shadow border cursor-grab select-none hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-           role="listitem" tabindex="0" draggable="true"></div>
+           role="listitem" tabindex="0" draggable="true">
+        <span class="task-label"></span>
+        <button type="button" class="edit-task ml-2 border rounded px-1 text-xs">編集</button>
+      </div>
     </template>
   </aside>
 
