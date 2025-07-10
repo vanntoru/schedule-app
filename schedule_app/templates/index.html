@@ -59,21 +59,14 @@
   class="sticky top-14 z-20 bg-white border-b border-gray-200"
   aria-label="All-day events"
 >
-  <ul
-    id="all-day-timeline"
-    role="list"
-    class="flex flex-nowrap gap-2 overflow-x-auto py-2 px-4 scrollbar-thin focus-visible:outline-none"
-  ></ul>
+  <ul id="all-day-timeline" role="list" class="focus-visible:outline-none"></ul>
 
   <!-- クライアント側 JS から clone して使うテンプレート -->
   <template id="all-day-chip">
     <button
       type="button"
       aria-label=""
-      class="chip-btn inline-flex items-center rounded-full
-             bg-blue-100 text-blue-800 text-xs font-medium
-             px-3 py-1 whitespace-nowrap
-             focus-visible:ring-2 focus-visible:ring-blue-400"
+      class="chip-btn focus-visible:ring-2 focus-visible:ring-blue-400"
     ></button>
   </template>
 </section>
