@@ -117,3 +117,21 @@
   }
 }
 
+/*
+   ----------------------------------------------------------
+   All-day timeline chip styles
+   ---------------------------------------------------------- */
+
+@layer components {
+  /* 横並びのチップを収めるコンテナ */
+  #all-day-timeline {
+    @apply flex flex-nowrap gap-2 overflow-x-auto py-2 px-4 scrollbar-thin;
+  }
+
+  /* 個々のチップボタン */
+  #all-day-timeline .chip-btn {
+    @apply inline-flex items-center rounded-full bg-blue-100 text-blue-800
+           text-xs font-medium px-3 py-1 whitespace-nowrap;
+  }
+}
+
