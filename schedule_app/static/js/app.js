@@ -9,6 +9,52 @@
  */
 
 /* ──────────────  Utilities (shared) ────────────── */
+
+/**
+ * Fetch JSON from the REST API with unified error handling.
+ * Redirects to /login on 401 unless running under Playwright.
+ *
+ * @param {string} url
+ * @param {RequestInit} [options]
+ * @returns {Promise<any>}
+ * @throws {Error} when the request fails
+ */
+export async function apiFetch(url, options = {}) {
+  let res;
+  try {
+    res = await fetch(url, options);
+  } catch (err) {
+    throw new Error('Network error');
+  }
+
+  if (res.status === 401) {
+    if (!navigator.webdriver) {
+      window.location.assign('/login');
+    }
+    throw new Error('Unauthorized');
+  }
+
+  if (!res.ok) {
+    let message = res.statusText || 'Request failed';
+    try {
+      const data = await res.clone().json();
+      message = data.detail || data.message || message;
+    } catch (_) {
+      // ignore JSON parse errors
+    }
+    throw new Error(message);
+  }
+
+  if (res.status === 204) {
+    return null;
+  }
+
+  const ct = res.headers.get('content-type') ?? '';
+  if (ct.includes('application/json')) {
+    return res.json();
+  }
+  return res.text();
+}
 /**
  * 今日の日付を **UTC 基準** の YYYY-MM-DD 文字列で返す。
  * <input type="date"> の value にそのまま渡せる。
@@ -25,23 +71,7 @@ export function todayUtcISO() {
 
   /** Event[] を取得 */
   async function fetchEvents(dateStr) {
-    const res = await fetch(`/api/calendar?date=${dateStr}`);
-
-    if (res.status === 401) {
-      // Redirect to login for unauthenticated users, except when running
-      // under Playwright where `navigator.webdriver` is true. Playwright
-      // should remain on the current page so tests are not interrupted.
-      if (!navigator.webdriver) {
-        window.location.assign('/login');
-      }
-      throw new Error('Calendar API unauthorized');
-    }
-
-    if (!res.ok) {
-      throw new Error(`Calendar API failed: ${res.status}`);
-    }
-
-    return res.json(); // [{ id, title, ... }]
+    return apiFetch(`/api/calendar?date=${dateStr}`);
   }
 
   try {
@@ -119,8 +149,7 @@ window.dbReady = openDb();
 
 async function loadAndRenderTasks() {
   try {
-    const res   = await fetch('/api/tasks');
-    const tasks = await res.json();          // [{id,title,…}, …]
+    const tasks = await apiFetch('/api/tasks'); // [{id,title,…}, …]
 
     const pane       = document.getElementById('task-pane');
     const list       = document.getElementById('task-list');
@@ -405,16 +434,10 @@ function saveState() {
 
 /** Load grid data from the server for the given `date`. */
 async function loadGridFromServer(date) {
-  const res = await fetch(
+  const raw = await apiFetch(
     `/api/schedule/generate?date=${date}&algo=greedy`,
     { method: 'POST' },
   );
-
-  if (!res.ok) {
-    throw new Error(`Schedule API failed: ${res.status}`);
-  }
-
-  const raw = await res.json();
   const slots = Array.isArray(raw)
     ? raw
     : Array.isArray(raw.slots)
@@ -571,9 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ymd = inputDate.value;
     if (!ymd) return;
     try {
-      const events = await fetch(`/api/calendar?date=${ymd}`).then((r) =>
-        r.json(),
-      );
+      const events = await apiFetch(`/api/calendar?date=${ymd}`);
       window.renderAllDay(events);
     } catch (err) {
       console.error('[calendar] reload failed', err);
@@ -593,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await generateSchedule(ymd);
 
       /* 2) All-day 予定も最新化 */
-      const events = await fetch(`/api/calendar?date=${ymd}`).then((r) => r.json());
+      const events = await apiFetch(`/api/calendar?date=${ymd}`);
       window.renderAllDay(events);
     } catch (err) {
       console.error(err);
