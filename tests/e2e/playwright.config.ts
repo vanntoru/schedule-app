@@ -6,4 +6,8 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
+  use: {
+    trace: 'retain-on-failure',
+    headless: true,
+  },
 });
