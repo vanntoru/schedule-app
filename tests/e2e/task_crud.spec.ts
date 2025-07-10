@@ -44,13 +44,14 @@ test('task CRUD via modal form', async ({ page, request }) => {
     page.locator('#task-form button[type=submit]').click(),
   ]);
   expect(putReq.method()).toBe('PUT');
-  await expect(card).toContainText('Updated Task');
+  const updated = page.locator(`[data-task-id="${taskId}"]`);
+  await expect(updated).toContainText('Updated Task');
 
   // ---- Delete the task ----
   page.once('dialog', d => d.accept());
   const [delReq] = await Promise.all([
     page.waitForRequest(r => r.url().includes(`/api/tasks/${taskId}`) && r.method() === 'DELETE'),
-    card.locator('.delete-task').click(),
+    updated.locator('.delete-task').click(),
   ]);
   expect(delReq.method()).toBe('DELETE');
   await expect(page.locator(`[data-task-id="${taskId}"]`)).toHaveCount(0);
