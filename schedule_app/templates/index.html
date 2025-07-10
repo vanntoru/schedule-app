@@ -173,16 +173,28 @@
     window.renderAllDay ??= (events) => {
       const ul   = document.getElementById('all-day-timeline');
       const tmpl = document.getElementById('all-day-chip');
+      if (!ul || !tmpl) return;
+
       ul.innerHTML = '';
 
-      events.forEach((ev) => {
+      const sorted = [...(events || [])].sort((a, b) =>
+        String(a.title).localeCompare(String(b.title))
+      );
+
+      sorted.forEach((ev) => {
         const btn = tmpl.content.firstElementChild.cloneNode(true);
         btn.textContent = ev.title;
         btn.setAttribute('aria-label', ev.title);
 
-        // デモ用クリックハンドラ
         btn.addEventListener('click', () => {
-          console.log('All\u2011day chip clicked:', ev.id);
+          const href =
+            ev.htmlLink ||
+            ev.html_link ||
+            ev.url ||
+            `https://calendar.google.com/calendar/event?eid=${encodeURIComponent(
+              ev.id
+            )}`;
+          window.open(href, '_blank');
         });
 
         const li = document.createElement('li');
