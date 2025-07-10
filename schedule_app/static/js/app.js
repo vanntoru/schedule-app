@@ -182,11 +182,16 @@ async function loadAndRenderTasks() {
         const span = document.createElement('span');
         span.className = 'task-label';
         card.appendChild(span);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'edit-task ml-2 border rounded px-1 text-xs';
-        btn.textContent = '編集';
-        card.appendChild(btn);
+        const btnEdit = document.createElement('button');
+        btnEdit.type = 'button';
+        btnEdit.className = 'edit-task ml-2 border rounded px-1 text-xs';
+        btnEdit.textContent = '編集';
+        card.appendChild(btnEdit);
+        const btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'delete-task ml-2 border rounded px-1 text-xs';
+        btnDel.textContent = '削除';
+        card.appendChild(btnDel);
       }
       card.dataset.taskId = t.id;
       card.dataset.taskTitle = t.title;
@@ -392,6 +397,35 @@ document.addEventListener('DOMContentLoaded', () => {
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.remove('grid-slot--busy');
   }
+
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.delete-task');
+    if (!btn) return;
+
+    const card = btn.closest('.task-card');
+    if (!card) return;
+
+    if (!confirm('このタスクを削除しますか?')) return;
+
+    try {
+      await apiFetch(`/api/tasks/${card.dataset.taskId}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('task delete failed', err);
+      alert(err.message ?? err);
+      return;
+    }
+
+    if (card.dataset.slotIndex) {
+      unmarkSlot(parseInt(card.dataset.slotIndex, 10));
+    }
+
+    card.remove();
+
+    const list = document.getElementById('task-list');
+    if (list && !list.querySelector('.task-card')) {
+      document.getElementById('task-empty')?.classList.remove('hidden');
+    }
+  });
 })();
 
 // ---------------------------------------------------------------------------
