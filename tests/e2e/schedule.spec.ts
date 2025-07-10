@@ -9,18 +9,25 @@ test('top page loads with correct title', async ({ page }) => {
 test('page shows logged-in state after pseudo login and reload', async ({ page }) => {
   await mockGoogleCalendar(page, [
     {
-      id: 'ev1',
+      id: 'ev0',
       start_utc: '2025-01-01T09:00:00Z',
       end_utc: '2025-01-01T10:00:00Z',
-      title: 'Sample Event',
+      title: 'Timed Event',
       all_day: false,
+    },
+    {
+      id: 'ev1',
+      start_utc: '2025-01-01T00:00:00Z',
+      end_utc: '2025-01-02T00:00:00Z',
+      title: 'All Day',
+      all_day: true,
     },
   ]);
 
   await pseudoLogin(page);
   await page.goto('/');
 
-  // All-day timeline should contain the mocked event
+  // Only the all-day event should appear on the timeline
   const timeline = page.locator('#all-day-timeline > li');
   await expect(timeline).toHaveCount(1);
 

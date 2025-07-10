@@ -67,6 +67,16 @@ export function todayUtcISO() {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Extract only all-day events from an array.
+ *
+ * @param {Array<{all_day?: boolean}>} events
+ * @returns {any[]}
+ */
+export function filterAllDay(events) {
+  return (events || []).filter(ev => ev.all_day);
+}
+
 (async () => {
 
   /** Event[] を取得 */
@@ -76,7 +86,9 @@ export function todayUtcISO() {
 
   try {
     const events = await fetchEvents(todayUtcISO());
-    window.renderAllDay(events);
+    const allDay = filterAllDay(events);
+    window.allDayEvents = allDay;
+    window.renderAllDay(allDay);
   } catch (err) {
     console.error(err);
   }
@@ -656,7 +668,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!ymd) return;
     try {
       const events = await apiFetch(`/api/calendar?date=${ymd}`);
-      window.renderAllDay(events);
+      const allDay = filterAllDay(events);
+      window.allDayEvents = allDay;
+      window.renderAllDay(allDay);
     } catch (err) {
       console.error('[calendar] reload failed', err);
     }
@@ -676,7 +690,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       /* 2) All-day 予定も最新化 */
       const events = await apiFetch(`/api/calendar?date=${ymd}`);
-      window.renderAllDay(events);
+      const allDay = filterAllDay(events);
+      window.allDayEvents = allDay;
+      window.renderAllDay(allDay);
     } catch (err) {
       console.error(err);
       alert(`スケジュール生成に失敗しました\n${err.message ?? err}`);
