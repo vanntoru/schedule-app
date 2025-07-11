@@ -119,15 +119,15 @@ def test_to_task_uuid_and_round(monkeypatch):
         "id": "",
         "title": "T",
         "category": "c",
-        "duration_min": "21",
-        "duration_raw_min": "21",
+        "duration_min": "25",
+        "duration_raw_min": "25",
         "priority": "A",
     }
 
     task = st._to_task(data)
     assert task.id
     assert task.duration_min == 30
-    assert task.duration_raw_min == 21
+    assert task.duration_raw_min == 25
 
 
 def test_to_task_priority_error(monkeypatch):
@@ -140,3 +140,10 @@ def test_to_task_invalid_datetime(monkeypatch):
     st, _ = _setup(monkeypatch, [])
     with pytest.raises(st.InvalidSheetRowError):
         st._to_task({"priority": "A", "duration_min": "10", "duration_raw_min": "10", "earliest_start_utc": "bad"})
+
+
+@pytest.mark.parametrize("val", ["9", "-5"])
+def test_to_task_invalid_duration(monkeypatch, val):
+    st, _ = _setup(monkeypatch, [])
+    with pytest.raises(st.InvalidSheetRowError):
+        st._to_task({"priority": "A", "duration_min": val, "duration_raw_min": val})
