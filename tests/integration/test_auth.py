@@ -6,6 +6,8 @@ import os
 from urllib.parse import parse_qs, urlparse
 from unittest.mock import MagicMock, patch
 
+from schedule_app.services.google_client import SCOPES
+
 import pytest
 import sys
 from pathlib import Path
@@ -59,6 +61,11 @@ def test_login_redirects_to_google(mock_flow_cls, client):
 
     resp = client.get("/login", follow_redirects=False)
     assert resp.status_code == 302
+
+    # verify Flow.from_client_config called with expected scopes
+    called_scopes = mock_flow_cls.from_client_config.call_args.kwargs.get("scopes")
+    assert called_scopes == SCOPES
+    assert "https://www.googleapis.com/auth/spreadsheets.readonly" in called_scopes
 
     loc = resp.headers["Location"]
     assert "accounts.google.com" in loc
