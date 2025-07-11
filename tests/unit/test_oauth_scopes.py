@@ -18,4 +18,6 @@ def test_build_flow_scopes(monkeypatch):
 
     schedule_app._build_flow(redirect_uri="http://localhost")
     assert "https://www.googleapis.com/auth/spreadsheets.readonly" in captured["scopes"]
+    assert "https://www.googleapis.com/auth/userinfo.profile" in captured["scopes"]
+    assert "https://www.googleapis.com/auth/userinfo.email" in captured["scopes"]
 
