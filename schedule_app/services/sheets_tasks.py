@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 import math
 import time
@@ -11,6 +10,7 @@ from googleapiclient.discovery import build  # type: ignore
 
 from schedule_app.config import cfg
 from schedule_app.models import Task
+from schedule_app.utils.validation import _parse_dt, _validate_durations
 
 
 class InvalidSheetRowError(Exception):
@@ -23,31 +23,6 @@ class InvalidSheetRowError(Exception):
 _CACHE: tuple[list[Task], float] | None = None
 
 
-def _parse_dt(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    if value.endswith("Z"):
-        value = value[:-1] + "+00:00"
-    try:
-        dt = datetime.fromisoformat(value)
-    except ValueError as e:
-        raise InvalidSheetRowError("invalid datetime") from e
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
-
-
-def _validate_durations(duration_min: int, duration_raw_min: int) -> None:
-    ok = (
-        isinstance(duration_min, int)
-        and isinstance(duration_raw_min, int)
-        and duration_min > 0
-        and duration_raw_min > 0
-        and duration_min % 5 == 0
-        and duration_raw_min % 5 == 0
-    )
-    if not ok:
-        raise InvalidSheetRowError("invalid duration")
 
 
 def _to_task(data: dict[str, str]) -> Task:
@@ -63,7 +38,10 @@ def _to_task(data: dict[str, str]) -> Task:
     except ValueError as e:  # pragma: no cover - invalid sheet data
         raise InvalidSheetRowError("invalid duration") from e
 
-    _validate_durations(raw_min, raw_raw_min)
+    try:
+        _validate_durations(raw_min, raw_raw_min)
+    except ValueError as e:
+        raise InvalidSheetRowError("invalid duration") from e
 
     duration_min = math.ceil(raw_min / 10) * 10 if raw_min > 0 else 0
 
@@ -72,7 +50,10 @@ def _to_task(data: dict[str, str]) -> Task:
         raise InvalidSheetRowError("invalid priority")
 
     earliest = data.get("earliest_start_utc")
-    es_dt = _parse_dt(earliest)
+    try:
+        es_dt = _parse_dt(earliest)
+    except ValueError as e:
+        raise InvalidSheetRowError("invalid datetime") from e
 
     task_id = data.get("id") or str(uuid.uuid4())
 
