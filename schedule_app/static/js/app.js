@@ -250,7 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
       await loadAndRenderTasks();
     } catch (err) {
       console.error('tasks import failed', err);
-      alert(err.message ?? err);
+      if (err && err.message === 'Unauthorized') {
+        return; // Redirect handled by apiFetch
+      }
+      showToast(err.message ?? err);
     }
   });
 });
