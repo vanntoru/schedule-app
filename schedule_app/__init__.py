@@ -109,7 +109,7 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     def login():
         """Begin the OAuth2 PKCE flow and redirect the user."""
 
-        redirect_uri = _get_setting("GOOGLE_REDIRECT_URI")
+        redirect_uri = _get_setting("OAUTH_REDIRECT_URI")
         flow = _build_flow(redirect_uri=redirect_uri)
         auth_url, state = flow.authorization_url(
             include_granted_scopes="true",
@@ -130,7 +130,7 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
         if not code:
             abort(400)
 
-        redirect_uri = _get_setting("GOOGLE_REDIRECT_URI")
+        redirect_uri = _get_setting("OAUTH_REDIRECT_URI")
         flow = _build_flow(redirect_uri=redirect_uri)
         flow.code_verifier = session.get("pkce_verifier")
         flow.fetch_token(code=code)
