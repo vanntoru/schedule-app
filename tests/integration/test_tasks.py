@@ -190,3 +190,80 @@ def test_import_tasks_api_error(client) -> None:
     assert resp.status_code == 502
     _assert_problem_details(resp.get_json())
 
+
+def _create_sample_task(client) -> str:
+    payload = {
+        "title": "Old",
+        "category": "c",
+        "duration_min": 10,
+        "duration_raw_min": 10,
+        "priority": "A",
+    }
+    resp = client.post("/api/tasks", json=payload)
+    return resp.get_json()["id"]
+
+
+def test_import_tasks_post_replace(client) -> None:
+    old_id = _create_sample_task(client)
+
+    new_tasks = [
+        Task(
+            id="n1",
+            title="New",
+            category="c",
+            duration_min=20,
+            duration_raw_min=20,
+            priority="A",
+        )
+    ]
+
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        return_value=new_tasks,
+    ):
+        resp = client.post("/api/tasks/import")
+
+    assert resp.status_code == 204
+
+    resp = client.get("/api/tasks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == "n1"
+    assert data[0]["id"] != old_id
+
+
+def test_import_tasks_post_validation_error(client) -> None:
+    old_id = _create_sample_task(client)
+
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=InvalidSheetRowError("bad"),
+    ):
+        resp = client.post("/api/tasks/import")
+
+    assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+    resp = client.get("/api/tasks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == old_id
+
+
+def test_import_tasks_post_api_error(client) -> None:
+    old_id = _create_sample_task(client)
+
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=Exception("boom"),
+    ):
+        resp = client.post("/api/tasks/import")
+
+    assert resp.status_code == 502
+    _assert_problem_details(resp.get_json())
+
+    resp = client.get("/api/tasks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == old_id
+
