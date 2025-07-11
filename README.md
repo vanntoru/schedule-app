@@ -64,8 +64,10 @@ Simple in-memory endpoints used by the front-end.
 | POST | `/api/tasks` | Create a task |
 | PUT | `/api/tasks/<id>` | Update a task |
 | DELETE | `/api/tasks/<id>` | Remove a task |
+| GET | `/api/tasks/import` | Fetch tasks from Google Sheets |
+| POST | `/api/tasks/import` | Replace tasks with sheet data |
 
-All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response with type `https://schedule.app/errors/invalid-field`.
+All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response with type `https://schedule.app/errors/invalid-field`. The import endpoints may also return 422 for invalid sheet rows or 502 when Google Sheets cannot be reached.
 
 ## Schedule API
 
