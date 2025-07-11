@@ -38,7 +38,7 @@ class _Config:
     GOOGLE_CLIENT_SECRET: str | None = os.getenv("GOOGLE_CLIENT_SECRET")  # PKCEでは不要
     OAUTH_REDIRECT_URI: str = os.getenv(
         "OAUTH_REDIRECT_URI",
-        "http://localhost:5173/oauth2callback",
+        "http://localhost:5173/callback",
     )
 
     # --- App Settings ---

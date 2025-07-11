@@ -34,8 +34,16 @@ identifier.
 ## OAuth Setup
 
 Create Google OAuth 2.0 credentials and set `GOOGLE_CLIENT_ID`,
-`GOOGLE_CLIENT_SECRET` and `OAUTH_REDIRECT_URI` in your environment. The
-application requests the following scopes:
+`GOOGLE_CLIENT_SECRET` and `OAUTH_REDIRECT_URI` in your environment. For local
+development you can create a `.env` file containing:
+
+```env
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-secret
+OAUTH_REDIRECT_URI=http://localhost:5173/callback
+```
+
+The application requests the following scopes:
 
 ```
 openid profile email
