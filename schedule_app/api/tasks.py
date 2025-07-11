@@ -153,3 +153,20 @@ def import_tasks():
         raise APIError(str(exc))
 
     return jsonify([_serialize(t) for t in tasks])
+
+
+@bp.post("/import")
+def import_tasks_post():
+    """Fetch tasks from Google Sheets and replace existing tasks."""
+    try:
+        tasks = fetch_tasks_from_sheet(session, force=True)
+    except (InvalidSheetRowError, RuntimeError) as exc:
+        _problem(422, "invalid-field", str(exc))
+    except Exception as exc:  # pragma: no cover - network errors
+        raise APIError(str(exc))
+
+    TASKS.clear()
+    for t in tasks:
+        TASKS[t.id] = t
+
+    return ("", 204)
