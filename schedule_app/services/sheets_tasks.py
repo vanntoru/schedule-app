@@ -43,7 +43,7 @@ def _to_task(data: dict[str, str]) -> Task:
     except ValueError as e:
         raise InvalidSheetRowError("invalid duration") from e
 
-    duration_min = math.ceil(raw_min / 10) * 10 if raw_min > 0 else 0
+    duration_min = math.ceil(raw_min / 10) * 10
 
     priority = data.get("priority", "B").strip().upper() or "B"
     if priority not in {"A", "B"}:
