@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import timezone
 from typing import Any
 import uuid
 
 from flask import Blueprint, abort, jsonify, request, url_for
 
 from schedule_app.models import Task
+from schedule_app.utils.validation import _parse_dt, _validate_durations
 
 bp = Blueprint("tasks", __name__, url_prefix="/api/tasks")
 
@@ -37,33 +38,6 @@ def _problem(status: int, code: str, detail: str) -> None:
     abort(response)
 
 
-def _parse_dt(value: str | None) -> datetime | None:
-    if value is None:
-        return None
-    # “Z” 終端を許容して UTC に統一
-    if value.endswith("Z"):
-        value = value[:-1] + "+00:00"
-    try:
-        return datetime.fromisoformat(value).astimezone(timezone.utc)
-    except ValueError:
-        _problem(422, "invalid-field", "Invalid datetime format.")
-
-
-def _validate_durations(duration_min: int, duration_raw_min: int) -> None:
-    ok = (
-        isinstance(duration_min, int)
-        and isinstance(duration_raw_min, int)
-        and duration_min > 0
-        and duration_raw_min > 0
-        and duration_min % 5 == 0
-        and duration_raw_min % 5 == 0
-    )
-    if not ok:
-        _problem(
-            422,
-            "invalid-field",
-            "Duration must be a positive multiple of 5 minutes.",
-        )
 
 
 def _task_from_json(data: dict[str, Any]) -> Task:
@@ -72,10 +46,22 @@ def _task_from_json(data: dict[str, Any]) -> Task:
     if missing:
         _problem(422, "invalid-field", f"Missing field(s): {', '.join(sorted(missing))}")
 
-    _validate_durations(data["duration_min"], data["duration_raw_min"])
+    try:
+        _validate_durations(data["duration_min"], data["duration_raw_min"])
+    except ValueError:
+        _problem(
+            422,
+            "invalid-field",
+            "Duration must be a positive multiple of 5 minutes.",
+        )
 
     if data["priority"] not in {"A", "B"}:
         _problem(422, "invalid-field", "Priority must be 'A' or 'B'.")
+
+    try:
+        es_utc = _parse_dt(data.get("earliest_start_utc"))
+    except ValueError:
+        _problem(422, "invalid-field", "Invalid datetime format.")
 
     return Task(
         id=data["id"],
@@ -84,7 +70,7 @@ def _task_from_json(data: dict[str, Any]) -> Task:
         duration_min=data["duration_min"],
         duration_raw_min=data["duration_raw_min"],
         priority=data["priority"],
-        earliest_start_utc=_parse_dt(data.get("earliest_start_utc")),
+        earliest_start_utc=es_utc,
     )
 
 
