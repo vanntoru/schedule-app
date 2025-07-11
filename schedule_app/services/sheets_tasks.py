@@ -108,4 +108,11 @@ def fetch_tasks_from_sheet(session: dict[str, Any], *, force: bool = False) -> l
     return tasks
 
 
-__all__ = ["fetch_tasks_from_sheet", "InvalidSheetRowError"]
+def invalidate_cache() -> None:
+    """Clear the in-memory tasks cache."""
+
+    global _CACHE
+    _CACHE = None
+
+
+__all__ = ["fetch_tasks_from_sheet", "InvalidSheetRowError", "invalidate_cache"]

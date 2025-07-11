@@ -13,6 +13,7 @@ from schedule_app.exceptions import APIError
 from schedule_app.services.sheets_tasks import (
     fetch_tasks_from_sheet,
     InvalidSheetRowError,
+    invalidate_cache,
 )
 from schedule_app.utils.validation import _parse_dt, _validate_durations
 
@@ -174,4 +175,12 @@ def import_tasks_post():
     for t in tasks:
         TASKS[t.id] = t
 
+    return ("", 204)
+
+
+@bp.delete("/cache")
+def clear_cache() -> tuple[str, int]:
+    """Invalidate the Google Sheets tasks cache."""
+
+    invalidate_cache()
     return ("", 204)
