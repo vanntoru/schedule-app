@@ -153,3 +153,17 @@ def test_to_task_non_numeric_duration(monkeypatch):
     st, _ = _setup(monkeypatch, [])
     with pytest.raises(st.InvalidSheetRowError):
         st._to_task({"priority": "A", "duration_min": "abc", "duration_raw_min": "abc"})
+
+
+def test_to_task_naive_datetime(monkeypatch):
+    st, _ = _setup(monkeypatch, [])
+
+    data = {
+        "priority": "A",
+        "duration_min": "10",
+        "duration_raw_min": "10",
+        "earliest_start_utc": "2025-01-01T09:00:00",
+    }
+
+    task = st._to_task(data)
+    assert task.earliest_start_utc == datetime(2025, 1, 1, 9, 0, tzinfo=timezone.utc)
