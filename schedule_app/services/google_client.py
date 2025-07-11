@@ -34,12 +34,17 @@ class GoogleAPIUnauthorized(APIError):
 
 # OAuth scopes required for accessing Google APIs
 
+# Scope for read-only access to Google Sheets
+SPREADSHEETS_READONLY_SCOPE = (
+    "https://www.googleapis.com/auth/spreadsheets.readonly"
+)
+
 SCOPES = [
     "openid",
     "profile",
     "email",
     "https://www.googleapis.com/auth/calendar.readonly",
-    "https://www.googleapis.com/auth/spreadsheets.readonly",
+    SPREADSHEETS_READONLY_SCOPE,
 ]
 
 
