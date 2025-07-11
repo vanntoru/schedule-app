@@ -240,6 +240,21 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndRenderTasks();
 });
 
+// Sheets Import button handler
+document.addEventListener('DOMContentLoaded', () => {
+  const btnImport = document.getElementById('btn-import-sheets');
+  if (!btnImport) return;
+  btnImport.addEventListener('click', async () => {
+    try {
+      await apiFetch('/api/tasks/import', { method: 'POST' });
+      await loadAndRenderTasks();
+    } catch (err) {
+      console.error('tasks import failed', err);
+      alert(err.message ?? err);
+    }
+  });
+});
+
 // Ensure a time grid exists for tests or pages missing it
 document.addEventListener('DOMContentLoaded', () => {
   if (document.querySelector('#time-grid')) return;
