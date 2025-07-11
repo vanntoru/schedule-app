@@ -7,7 +7,7 @@ test('header and toolbar buttons hidden when printing', async ({ page }) => {
   await expect(header).toBeVisible();
 
   const buttons = header.locator('button');
-  await expect(buttons).toHaveCount(4);
+  await expect(buttons).toHaveCount(5);
   for (let i = 0; i < await buttons.count(); i++) {
     await expect(buttons.nth(i)).toBeVisible();
   }
