@@ -8,6 +8,9 @@ from flask import Flask
 
 from schedule_app import create_app
 from schedule_app.api.tasks import TASKS
+from schedule_app.models import Task
+from schedule_app.services.sheets_tasks import InvalidSheetRowError
+from unittest.mock import patch
 
 
 @pytest.fixture()
@@ -139,4 +142,51 @@ def test_update_and_delete(client) -> None:
 
     resp = client.get("/api/tasks")
     assert resp.get_json() == []
+
+
+def test_import_tasks_success(client) -> None:
+    sample_tasks = [
+        Task(
+            id="t1",
+            title="A",
+            category="c",
+            duration_min=10,
+            duration_raw_min=10,
+            priority="A",
+        )
+    ]
+
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        return_value=sample_tasks,
+    ):
+        resp = client.get("/api/tasks/import")
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["id"] == "t1"
+
+
+def test_import_tasks_validation_error(client) -> None:
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=InvalidSheetRowError("bad"),
+    ):
+        resp = client.get("/api/tasks/import")
+
+    assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+
+def test_import_tasks_api_error(client) -> None:
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=Exception("boom"),
+    ):
+        resp = client.get("/api/tasks/import")
+
+    assert resp.status_code == 502
+    _assert_problem_details(resp.get_json())
 
