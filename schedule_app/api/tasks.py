@@ -92,7 +92,9 @@ def _serialize(task: Task) -> dict[str, Any]:
     d = asdict(task)
     if d["earliest_start_utc"] is not None:
         d["earliest_start_utc"] = (
-            d["earliest_start_utc"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+            d["earliest_start_utc"].astimezone(timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
         )
     return d
 
