@@ -7,8 +7,8 @@ import schedule_app.config as config_module
 
 
 class DummyService:
-    def __init__(self, values):
-        self.values = values
+    def __init__(self, rows):
+        self.rows = rows
         self.calls = 0
 
     def spreadsheets(self):
@@ -24,7 +24,7 @@ class DummyService:
         return self
 
     def execute(self):
-        return {"values": self.values}
+        return {"values": self.rows}
 
 
 def _setup(monkeypatch, values, cache_sec=60):
