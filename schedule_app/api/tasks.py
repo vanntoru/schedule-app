@@ -92,6 +92,19 @@ def _serialize(task: Task) -> dict[str, Any]:
     return d
 
 
+def _load_sheet_tasks(*, force: bool = False) -> list[Task]:
+    try:
+        return fetch_tasks_from_sheet(session, force=force)
+    except InvalidSheetRowError as exc:
+        _problem(422, "invalid-field", str(exc))
+    except RuntimeError as exc:
+        if str(exc) == "missing credentials":
+            _problem(401, "unauthorized", "missing credentials")
+        _problem(422, "invalid-field", str(exc))
+    except Exception as exc:  # pragma: no cover - network errors
+        raise APIError(str(exc))
+
+
 # ---------------------------------------------------------------------------
 # ルーティング
 # ---------------------------------------------------------------------------
@@ -147,16 +160,7 @@ def delete_task(id: str):
 @bp.get("/import")
 def import_tasks():
     """Fetch tasks from Google Sheets and return them."""
-    try:
-        tasks = fetch_tasks_from_sheet(session)
-    except InvalidSheetRowError as exc:
-        _problem(422, "invalid-field", str(exc))
-    except RuntimeError as exc:
-        if str(exc) == "missing credentials":
-            _problem(401, "unauthorized", "missing credentials")
-        _problem(422, "invalid-field", str(exc))
-    except Exception as exc:  # pragma: no cover - network errors
-        raise APIError(str(exc))
+    tasks = _load_sheet_tasks()
 
     return jsonify([_serialize(t) for t in tasks])
 
@@ -164,16 +168,7 @@ def import_tasks():
 @bp.post("/import")
 def import_tasks_post():
     """Fetch tasks from Google Sheets and replace existing tasks."""
-    try:
-        tasks = fetch_tasks_from_sheet(session, force=True)
-    except InvalidSheetRowError as exc:
-        _problem(422, "invalid-field", str(exc))
-    except RuntimeError as exc:
-        if str(exc) == "missing credentials":
-            _problem(401, "unauthorized", "missing credentials")
-        _problem(422, "invalid-field", str(exc))
-    except Exception as exc:  # pragma: no cover - network errors
-        raise APIError(str(exc))
+    tasks = _load_sheet_tasks(force=True)
 
     TASKS.clear()
     for t in tasks:
