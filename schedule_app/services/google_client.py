@@ -23,6 +23,7 @@ import pytz
 
 from schedule_app.models import Event
 from schedule_app.exceptions import APIError
+from schedule_app.utils.validation import _parse_dt
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -106,15 +107,6 @@ class GoogleClient:
             raise
         return data.get("items", [])
 
-    def _parse_dt(self, value: str) -> datetime:
-        """Return a timezone-aware UTC datetime from ISO string."""
-
-        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        else:
-            dt = dt.astimezone(timezone.utc)
-        return dt
 
     def _to_event(self, data: dict) -> Event:
         """Convert a Google Calendar event dictionary to an :class:`Event`."""
@@ -123,8 +115,8 @@ class GoogleClient:
         end_info = data.get("end", {})
         start_raw = start_info.get("dateTime") or start_info.get("date")
         end_raw = end_info.get("dateTime") or end_info.get("date")
-        start_dt = self._parse_dt(start_raw) if start_raw else datetime.min.replace(tzinfo=timezone.utc)
-        end_dt = self._parse_dt(end_raw) if end_raw else start_dt
+        start_dt = _parse_dt(start_raw) or datetime.min.replace(tzinfo=timezone.utc)
+        end_dt = _parse_dt(end_raw) or start_dt
         all_day = "date" in start_info or "date" in end_info
         return Event(
             id=data.get("id", ""),
