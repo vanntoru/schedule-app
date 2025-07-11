@@ -169,6 +169,39 @@ def test_import_tasks_success(client) -> None:
     assert data[0]["id"] == "t1"
 
 
+def test_import_tasks_does_not_replace_existing(client) -> None:
+    payload = {
+        "title": "Existing",
+        "category": "c",
+        "duration_min": 10,
+        "duration_raw_min": 10,
+        "priority": "A",
+    }
+    resp = client.post("/api/tasks", json=payload)
+    old_id = resp.get_json()["id"]
+
+    dummy_tasks = [
+        Task(
+            id="d1",
+            title="Dummy",
+            category="c",
+            duration_min=5,
+            duration_raw_min=5,
+            priority="A",
+        )
+    ]
+
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        return_value=dummy_tasks,
+    ):
+        resp = client.get("/api/tasks/import")
+
+    assert resp.status_code == 200
+    assert len(TASKS) == 1
+    assert old_id in TASKS
+
+
 def test_import_tasks_validation_error(client) -> None:
     with patch(
         "schedule_app.api.tasks.fetch_tasks_from_sheet",
