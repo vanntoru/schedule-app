@@ -61,6 +61,7 @@ Simple in-memory endpoints used by the front-end.
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | GET | `/api/tasks` | List all tasks |
+| GET | `/api/tasks/import` | Import tasks from Google Sheets |
 | POST | `/api/tasks` | Create a task |
 | PUT | `/api/tasks/<id>` | Update a task |
 | DELETE | `/api/tasks/<id>` | Remove a task |

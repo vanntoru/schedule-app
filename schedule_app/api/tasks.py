@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from typing import Any
 import uuid
 
-from flask import Blueprint, abort, jsonify, request, url_for
+from flask import Blueprint, abort, jsonify, request, url_for, session
+
+from schedule_app.services.sheets_tasks import (
+    fetch_tasks_from_sheet,
+    InvalidSheetRowError,
+)
+from schedule_app.exceptions import APIError
 
 from schedule_app.models import Task
 
@@ -110,6 +116,20 @@ def list_tasks():
     return jsonify([_serialize(t) for t in TASKS.values()])
 
 
+@bp.get("/import")
+def import_tasks():
+    """Sheets API からタスクを取得して返す."""
+    try:
+        tasks = fetch_tasks_from_sheet(session)
+    except InvalidSheetRowError as exc:
+        _problem(422, "invalid-field", str(exc))
+    except RuntimeError as exc:
+        _problem(422, "invalid-field", str(exc))
+    except Exception as exc:  # pragma: no cover - unexpected failures
+        raise APIError(str(exc))
+    return jsonify([_serialize(t) for t in tasks])
+
+
 @bp.post("")
 def create_task():
     data = request.get_json(force=True, silent=False)
@@ -149,3 +169,4 @@ def delete_task(id: str):
         _problem(404, "not-found", "Task not found.")
     del TASKS[id]
     return ("", 204)
+

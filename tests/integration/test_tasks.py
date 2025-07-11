@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from unittest.mock import patch
+
+from schedule_app.models import Task
+from schedule_app.services.sheets_tasks import InvalidSheetRowError
+from schedule_app.exceptions import APIError
 
 import pytest
 from flask import Flask
@@ -139,4 +144,50 @@ def test_update_and_delete(client) -> None:
 
     resp = client.get("/api/tasks")
     assert resp.get_json() == []
+
+
+def test_import_tasks_success(client) -> None:
+    task = Task(
+        id="t1",
+        title="FromSheet",
+        category="cat",
+        duration_min=10,
+        duration_raw_min=10,
+        priority="A",
+    )
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        return_value=[task],
+    ) as mock_fetch:
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok"}
+        resp = client.get("/api/tasks/import")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list) and data[0]["id"] == "t1"
+    mock_fetch.assert_called_once()
+
+
+def test_import_tasks_invalid(client) -> None:
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=InvalidSheetRowError("bad"),
+    ):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok"}
+        resp = client.get("/api/tasks/import")
+    assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+
+def test_import_tasks_api_error(client) -> None:
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=APIError("boom"),
+    ):
+        with client.session_transaction() as sess:
+            sess["credentials"] = {"access_token": "tok"}
+        resp = client.get("/api/tasks/import")
+    assert resp.status_code == 502
+    _assert_problem_details(resp.get_json())
 

@@ -112,6 +112,7 @@ class Block:
 | ------ | --------------------------------------------------------------- | ------------ | --------------------------- |
 | GET    | `/api/calendar?date={2025-01-01T09:00:00+09:00\|YYYY‑MM‑DD}`    | 200 Event\[] | 400 / 401 / 403 / 404 / 500 / 502 |
 | GET    | `/api/tasks`                                                    | 200 Task\[]  | –                           |
+| GET    | `/api/tasks/import`                                             | 200 Task\[]  | 422 / 502                   |
 | POST   | `/api/tasks`                                                    | 201 Task     | 422 invalid‑field           |
 | PUT    | `/api/tasks/{id}`                                               | 200 Task     | 404 / 422                   |
 | DELETE | `/api/tasks/{id}`                                               | 204          | 404                         |
