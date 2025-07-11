@@ -202,7 +202,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 | Flow           | OAuth 2.1 authorization\_code + PKCE (S256)         |
 | code\_verifier | 128 byte URL‑safe Base64                            |
 | Token 保存       | `sessionStorage` AES‑GCM 256（ブラウザ再起動で失効）            |
-| Scope          | `openid profile email` + Calendar & Sheets readonly |
+| Scope          | `openid` + `https://www.googleapis.com/auth/userinfo.profile` + `https://www.googleapis.com/auth/userinfo.email` + Calendar & Sheets readonly |
 | Refresh        | silent refresh (iframe + `prompt=none`)             |
 
 ---
