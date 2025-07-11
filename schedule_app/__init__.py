@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from werkzeug.exceptions import HTTPException
 
-from schedule_app.services.google_client import GoogleClient
+from schedule_app.services.google_client import GoogleClient, SCOPES
 from schedule_app.exceptions import APIError
 
 try:  # Flask may be absent in some test environments
@@ -51,18 +51,10 @@ def _build_flow(*, redirect_uri: str) -> Flow:
         }
     }
 
-    # OAuth2 認証スコープをURI形式で指定（短縮表記を使用しない）
-    scopes = [
-        "openid",
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/calendar.readonly",
-        "https://www.googleapis.com/auth/spreadsheets.readonly",
-    ]
-
+    # OAuth2 認証スコープ
     return Flow.from_client_config(
         client_config,
-        scopes=scopes,
+        scopes=SCOPES,
         redirect_uri=redirect_uri,
     )
 
