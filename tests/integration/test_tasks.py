@@ -53,6 +53,21 @@ def test_create_and_get(client) -> None:
     assert len(resp.get_json()) == 1
 
 
+def test_microsecond_truncation(client) -> None:
+    payload = {
+        "title": "Task",
+        "category": "general",
+        "duration_min": 20,
+        "duration_raw_min": 25,
+        "priority": "A",
+        "earliest_start_utc": "2025-01-01T09:00:00.123456Z",
+    }
+    resp = client.post("/api/tasks", json=payload)
+    assert resp.status_code == 201
+    data = resp.get_json()
+    assert data["earliest_start_utc"] == "2025-01-01T09:00:00Z"
+
+
 def test_validation_error(client) -> None:
     payload = {
         "title": "bad",
