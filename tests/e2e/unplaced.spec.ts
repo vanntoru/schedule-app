@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test('unplaced task shows red highlight & toast', async ({ page, request }) => {
+  // Remove any existing tasks to avoid interference
+  const existing = await request.get('/api/tasks');
+  for (const t of await existing.json()) {
+    await request.delete(`/api/tasks/${t.id}`);
+  }
   /* ------- 1. 24 h を越えるタスクを 2 件投入して容量オーバーにする ------- */
   for (const i of [1, 2]) {
     await request.post('/api/tasks', {

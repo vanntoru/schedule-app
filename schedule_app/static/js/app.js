@@ -232,6 +232,7 @@ async function loadAndRenderTasks() {
     applyContrastClasses();
   } catch (err) {
     console.error('[tasks] failed to load', err);
+    showToast(err.message ?? err);
   }
 }
 
