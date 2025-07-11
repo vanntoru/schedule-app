@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
 # ---------------------------------------------------------------------------
 os.environ.setdefault("GCP_PROJECT", "dummy-project")
 os.environ.setdefault("GOOGLE_CLIENT_ID", "dummy-client-id")
+os.environ.setdefault("SECRET_KEY", "test-secret")
 
 if importlib.util.find_spec("freezegun") is None:
     pytest.skip("freezegun is required to run tests", allow_module_level=True)

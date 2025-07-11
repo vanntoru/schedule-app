@@ -51,6 +51,12 @@ https://www.googleapis.com/auth/calendar.readonly
 https://www.googleapis.com/auth/spreadsheets.readonly
 ```
 
+## Environment
+
+Set `SECRET_KEY` to any random string for Flask session security. A default
+`dev-secret-key` is used when the variable is unset, which is suitable for
+development only.
+
 ## Running Tests
 
 The test suite depends on the `freezegun` library to control time. Tests will
