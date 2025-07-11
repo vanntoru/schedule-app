@@ -6,6 +6,7 @@ from typing import Any
 import uuid
 
 from flask import Blueprint, abort, jsonify, request, url_for, session
+from http import HTTPStatus
 
 from schedule_app.models import Task
 from schedule_app.exceptions import APIError
@@ -29,10 +30,11 @@ __all__ = ["bp", "TASKS"]
 
 def _problem(status: int, code: str, detail: str) -> None:
     """Problem Details 仕様フォーマットで abort する。"""
+    title = "Validation failed" if status == 422 else HTTPStatus(status).phrase
     response = jsonify(
         {
             "type": f"https://schedule.app/errors/{code}",
-            "title": "Validation failed" if status == 422 else "Not found",
+            "title": title,
             "status": status,
             "detail": detail,
             "instance": request.path,
@@ -147,7 +149,11 @@ def import_tasks():
     """Fetch tasks from Google Sheets and return them."""
     try:
         tasks = fetch_tasks_from_sheet(session)
-    except (InvalidSheetRowError, RuntimeError) as exc:
+    except InvalidSheetRowError as exc:
+        _problem(422, "invalid-field", str(exc))
+    except RuntimeError as exc:
+        if str(exc) == "missing credentials":
+            _problem(401, "unauthorized", "missing credentials")
         _problem(422, "invalid-field", str(exc))
     except Exception as exc:  # pragma: no cover - network errors
         raise APIError(str(exc))
@@ -160,7 +166,11 @@ def import_tasks_post():
     """Fetch tasks from Google Sheets and replace existing tasks."""
     try:
         tasks = fetch_tasks_from_sheet(session, force=True)
-    except (InvalidSheetRowError, RuntimeError) as exc:
+    except InvalidSheetRowError as exc:
+        _problem(422, "invalid-field", str(exc))
+    except RuntimeError as exc:
+        if str(exc) == "missing credentials":
+            _problem(401, "unauthorized", "missing credentials")
         _problem(422, "invalid-field", str(exc))
     except Exception as exc:  # pragma: no cover - network errors
         raise APIError(str(exc))
