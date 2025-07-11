@@ -167,3 +167,17 @@ def test_to_task_naive_datetime(monkeypatch):
 
     task = st._to_task(data)
     assert task.earliest_start_utc == datetime(2025, 1, 1, 9, 0, tzinfo=timezone.utc)
+
+
+def test_to_task_datetime_whitespace(monkeypatch):
+    st, _ = _setup(monkeypatch, [])
+
+    data = {
+        "priority": "A",
+        "duration_min": "10",
+        "duration_raw_min": "10",
+        "earliest_start_utc": " 2025-01-01T09:00:00Z ",
+    }
+
+    task = st._to_task(data)
+    assert task.earliest_start_utc == datetime(2025, 1, 1, 9, 0, tzinfo=timezone.utc)

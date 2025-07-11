@@ -49,7 +49,7 @@ def _to_task(data: dict[str, str]) -> Task:
     if priority not in {"A", "B"}:
         raise InvalidSheetRowError("invalid priority")
 
-    earliest = data.get("earliest_start_utc")
+    earliest = (data.get("earliest_start_utc", "") or "").strip()
     try:
         es_dt = _parse_dt(earliest)
     except ValueError as e:
