@@ -5,9 +5,14 @@ from datetime import timezone
 from typing import Any
 import uuid
 
-from flask import Blueprint, abort, jsonify, request, url_for
+from flask import Blueprint, abort, jsonify, request, url_for, session
 
 from schedule_app.models import Task
+from schedule_app.exceptions import APIError
+from schedule_app.services.sheets_tasks import (
+    fetch_tasks_from_sheet,
+    InvalidSheetRowError,
+)
 from schedule_app.utils.validation import _parse_dt, _validate_durations
 
 bp = Blueprint("tasks", __name__, url_prefix="/api/tasks")
@@ -135,3 +140,16 @@ def delete_task(id: str):
         _problem(404, "not-found", "Task not found.")
     del TASKS[id]
     return ("", 204)
+
+
+@bp.get("/import")
+def import_tasks():
+    """Fetch tasks from Google Sheets and return them."""
+    try:
+        tasks = fetch_tasks_from_sheet(session)
+    except (InvalidSheetRowError, RuntimeError) as exc:
+        _problem(422, "invalid-field", str(exc))
+    except Exception as exc:  # pragma: no cover - network errors
+        raise APIError(str(exc))
+
+    return jsonify([_serialize(t) for t in tasks])
