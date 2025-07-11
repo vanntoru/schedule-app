@@ -259,6 +259,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Clear Sheets cache button handler
+document.addEventListener('DOMContentLoaded', () => {
+  const btnClear = document.getElementById('btn-clear-cache');
+  if (!btnClear) return;
+  btnClear.addEventListener('click', async () => {
+    try {
+      await apiFetch('/api/tasks/cache', { method: 'DELETE' });
+      showToast('Cache cleared');
+    } catch (err) {
+      console.error('cache clear failed', err);
+      if (err && err.message === 'Unauthorized') {
+        return;
+      }
+      showToast(err.message ?? err);
+    }
+  });
+});
+
 // Ensure a time grid exists for tests or pages missing it
 document.addEventListener('DOMContentLoaded', () => {
   if (document.querySelector('#time-grid')) return;

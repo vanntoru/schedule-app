@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 import pytest
@@ -328,4 +329,63 @@ def test_import_tasks_post_api_error(client) -> None:
     data = resp.get_json()
     assert len(data) == 1
     assert data[0]["id"] == old_id
+
+
+def test_clear_cache_endpoint(client, monkeypatch) -> None:
+    from schedule_app.services import sheets_tasks as st
+
+    tasks1 = [
+        Task(
+            id="a",
+            title="A",
+            category="c",
+            duration_min=10,
+            duration_raw_min=10,
+            priority="A",
+        )
+    ]
+    tasks2 = [
+        Task(
+            id="b",
+            title="B",
+            category="c",
+            duration_min=10,
+            duration_raw_min=10,
+            priority="A",
+        )
+    ]
+
+    current = {"val": tasks1}
+    calls = {"n": 0}
+
+    def fake_fetch(_session, *, force=False):
+        if not force and st._CACHE is not None:
+            tasks, expiry = st._CACHE
+            if time.time() < expiry:
+                return tasks
+        calls["n"] += 1
+        st._CACHE = (current["val"], time.time() + 60)
+        return current["val"]
+
+    monkeypatch.setattr("schedule_app.api.tasks.fetch_tasks_from_sheet", fake_fetch)
+
+    st._CACHE = None
+    resp = client.get("/api/tasks/import")
+    assert resp.status_code == 200
+    assert calls["n"] == 1
+
+    resp = client.get("/api/tasks/import")
+    assert resp.status_code == 200
+    assert calls["n"] == 1
+
+    resp = client.delete("/api/tasks/cache")
+    assert resp.status_code == 204
+    assert st._CACHE is None
+
+    current["val"] = tasks2
+    resp = client.get("/api/tasks/import")
+    assert resp.status_code == 200
+    assert calls["n"] == 2
+    data = resp.get_json()
+    assert data[0]["id"] == "b"
 
