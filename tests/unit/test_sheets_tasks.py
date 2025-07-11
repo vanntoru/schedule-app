@@ -140,3 +140,10 @@ def test_to_task_invalid_datetime(monkeypatch):
     st, _ = _setup(monkeypatch, [])
     with pytest.raises(st.InvalidSheetRowError):
         st._to_task({"priority": "A", "duration_min": "10", "duration_raw_min": "10", "earliest_start_utc": "bad"})
+
+
+@pytest.mark.parametrize("val", ["9", "-5"])
+def test_to_task_invalid_duration(monkeypatch, val):
+    st, _ = _setup(monkeypatch, [])
+    with pytest.raises(st.InvalidSheetRowError):
+        st._to_task({"priority": "A", "duration_min": val, "duration_raw_min": val})

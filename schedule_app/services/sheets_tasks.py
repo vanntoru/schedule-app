@@ -37,6 +37,19 @@ def _parse_dt(value: str | None) -> datetime | None:
     return dt.astimezone(timezone.utc)
 
 
+def _validate_durations(duration_min: int, duration_raw_min: int) -> None:
+    ok = (
+        isinstance(duration_min, int)
+        and isinstance(duration_raw_min, int)
+        and duration_min > 0
+        and duration_raw_min > 0
+        and duration_min % 5 == 0
+        and duration_raw_min % 5 == 0
+    )
+    if not ok:
+        raise InvalidSheetRowError("invalid duration")
+
+
 def _to_task(data: dict[str, str]) -> Task:
     """Return a :class:`Task` converted from a sheet row dictionary."""
 
@@ -49,6 +62,8 @@ def _to_task(data: dict[str, str]) -> Task:
         raw_raw_min = int(data.get("duration_raw_min", str(raw_min)))
     except ValueError as e:  # pragma: no cover - invalid sheet data
         raise InvalidSheetRowError("invalid duration") from e
+
+    _validate_durations(raw_min, raw_raw_min)
 
     duration_min = math.ceil(raw_min / 10) * 10 if raw_min > 0 else 0
 
