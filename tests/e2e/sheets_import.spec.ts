@@ -53,3 +53,31 @@ test('sheets import 401 redirects to login', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/login$/);
 });
+
+// Display toast on server error
+test('sheets import 502 shows error toast', async ({ page }) => {
+  await page.route('**/api/calendar**', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  );
+  await page.route('**/api/tasks/import', route =>
+    route.fulfill({
+      status: 502,
+      contentType: 'application/json',
+      body: JSON.stringify({ detail: 'server down' })
+    })
+  );
+
+  await page.goto('/');
+
+  await Promise.all([
+    page.waitForResponse(
+      r => r.url().includes('/api/tasks/import') && r.status() === 502
+    ),
+    page.locator('#btn-import-sheets').click(),
+  ]);
+
+  const toast = page.locator('.schedule-toast');
+  await expect(toast).toHaveCount(1);
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText('server down');
+});
