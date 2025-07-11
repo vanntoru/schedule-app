@@ -191,6 +191,17 @@ def test_import_tasks_api_error(client) -> None:
     _assert_problem_details(resp.get_json())
 
 
+def test_import_tasks_missing_credentials(client) -> None:
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=RuntimeError("missing credentials"),
+    ):
+        resp = client.get("/api/tasks/import")
+
+    assert resp.status_code == 401
+    _assert_problem_details(resp.get_json())
+
+
 def _create_sample_task(client) -> str:
     payload = {
         "title": "Old",
@@ -242,6 +253,24 @@ def test_import_tasks_post_validation_error(client) -> None:
         resp = client.post("/api/tasks/import")
 
     assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+    resp = client.get("/api/tasks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == old_id
+
+
+def test_import_tasks_post_missing_credentials(client) -> None:
+    old_id = _create_sample_task(client)
+
+    with patch(
+        "schedule_app.api.tasks.fetch_tasks_from_sheet",
+        side_effect=RuntimeError("missing credentials"),
+    ):
+        resp = client.post("/api/tasks/import")
+
+    assert resp.status_code == 401
     _assert_problem_details(resp.get_json())
 
     resp = client.get("/api/tasks")
