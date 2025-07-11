@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 os.environ.setdefault("GOOGLE_CLIENT_ID", "dummy-client-id")
 os.environ.setdefault("GOOGLE_CLIENT_SECRET", "dummy-secret")
-os.environ.setdefault("GOOGLE_REDIRECT_URI", "http://localhost:5173/callback")
+os.environ.setdefault("OAUTH_REDIRECT_URI", "http://localhost:5173/callback")
 
 # ---------------------------------------------------------------------------
 # Fixtures
