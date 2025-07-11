@@ -229,6 +229,7 @@ def test_import_tasks_post_replace(client) -> None:
     data = resp.get_json()
     assert len(data) == 1
     assert data[0]["id"] == "n1"
+    assert data[0]["id"] != old_id
 
 
 def test_import_tasks_post_validation_error(client) -> None:
