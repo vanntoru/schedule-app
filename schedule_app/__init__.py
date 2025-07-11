@@ -72,7 +72,8 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     from flask import jsonify, render_template, request
 
     app = Flask(__name__)
-    app.secret_key = "dev-secret-key"
+    # SECRET_KEY environment variable overrides the development key
+    app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
 
     # Lightweight Google API client stub
     app.extensions["gclient"] = GoogleClient(credentials=None)
