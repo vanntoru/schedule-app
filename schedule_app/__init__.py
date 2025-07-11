@@ -57,7 +57,7 @@ def _build_flow(*, redirect_uri: str) -> Flow:
         "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/calendar.readonly",
-        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/spreadsheets.readonly",
     ]
 
     return Flow.from_client_config(
