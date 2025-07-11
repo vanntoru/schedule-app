@@ -68,6 +68,22 @@ def test_microsecond_truncation(client) -> None:
     assert data["earliest_start_utc"] == "2025-01-01T09:00:00Z"
 
 
+def test_invalid_earliest_start_format(client) -> None:
+    payload = {
+        "title": "Task",
+        "category": "general",
+        "duration_min": 20,
+        "duration_raw_min": 20,
+        "priority": "A",
+        "earliest_start_utc": "not-a-date",
+    }
+    resp = client.post("/api/tasks", json=payload)
+    assert resp.status_code == 422
+    data = resp.get_json()
+    _assert_problem_details(data)
+    assert data["detail"] == "Invalid datetime format."
+
+
 def test_validation_error(client) -> None:
     payload = {
         "title": "bad",
