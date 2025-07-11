@@ -31,6 +31,18 @@ the default IANA zone used when parsing API dates that lack timezone
 information. It defaults to `cfg.TIMEZONE` but may be changed to any valid zone
 identifier.
 
+## OAuth Setup
+
+Create Google OAuth 2.0 credentials and set `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET` and `OAUTH_REDIRECT_URI` in your environment. The
+application requests the following scopes:
+
+```
+openid profile email
+https://www.googleapis.com/auth/calendar.readonly
+https://www.googleapis.com/auth/spreadsheets.readonly
+```
+
 ## Running Tests
 
 The test suite depends on the `freezegun` library to control time. Tests will
