@@ -27,7 +27,7 @@ except ImportError:
 class _Config:
     # --- Flask ---
     DEBUG: bool = os.getenv("FLASK_DEBUG", "0") == "1"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "please-change-me")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key")
 
     # --- Google Cloud ---
     GCP_PROJECT: str = os.environ["GCP_PROJECT"]
