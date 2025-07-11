@@ -115,11 +115,14 @@ class Block:
 | POST   | `/api/tasks`                                                    | 201 Task     | 422 invalid‑field           |
 | PUT    | `/api/tasks/{id}`                                               | 200 Task     | 404 / 422                   |
 | DELETE | `/api/tasks/{id}`                                               | 204          | 404                         |
+| GET    | `/api/tasks/import`                                             | 200 Task[] | 422/502                   |
+| POST   | `/api/tasks/import`                                             | 204        | 422/502                   |
 | GET    | `/api/blocks`                                                   | 200 Block\[] | –                           |
 | POST   | `/api/blocks`                                                   | 201 Block    | 422                         |
 | PUT    | `/api/blocks/{id}`                                              | 200 Block    | 404 / 422                   |
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
 | POST   | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Schedule | 400 / 422                   |
+*`POST /api/tasks/import` は取得した一覧で既存タスクをすべて置き換える。*
 
 *`date` は ISO‑8601 日時 (例: `2025-01-01T09:00:00+09:00`) または `YYYY‑MM‑DD` を受け付ける。タイムゾーンを含まない場合は `TIMEZONE` 環境変数で指定されたゾーン（既定 `cfg.TIMEZONE`）として解釈し、エンドポイントはこの JST 日付をサービス層へそのまま渡し、サービス側で UTC へ変換する。*
 *Google Calendar API が失敗した場合は 502 Bad Gateway として応答する。*
