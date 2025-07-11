@@ -66,6 +66,8 @@ def test_login_redirects_to_google(mock_flow_cls, client):
     called_scopes = mock_flow_cls.from_client_config.call_args.kwargs.get("scopes")
     assert called_scopes == SCOPES
     assert "https://www.googleapis.com/auth/spreadsheets.readonly" in called_scopes
+    assert "https://www.googleapis.com/auth/userinfo.profile" in called_scopes
+    assert "https://www.googleapis.com/auth/userinfo.email" in called_scopes
 
     loc = resp.headers["Location"]
     assert "accounts.google.com" in loc
