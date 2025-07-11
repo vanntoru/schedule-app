@@ -2,6 +2,7 @@ import importlib
 from datetime import datetime, timezone, timedelta
 
 from freezegun import freeze_time
+import pytest
 
 import schedule_app.config as config_module
 
@@ -109,3 +110,33 @@ def test_fetch_tasks_cache(monkeypatch):
         tasks3 = st.fetch_tasks_from_sheet(session)
         assert service2.calls == 1
         assert tasks3 != tasks1
+
+
+def test_to_task_uuid_and_round(monkeypatch):
+    st, _service = _setup(monkeypatch, [])
+
+    data = {
+        "id": "",
+        "title": "T",
+        "category": "c",
+        "duration_min": "21",
+        "duration_raw_min": "21",
+        "priority": "A",
+    }
+
+    task = st._to_task(data)
+    assert task.id
+    assert task.duration_min == 30
+    assert task.duration_raw_min == 21
+
+
+def test_to_task_priority_error(monkeypatch):
+    st, _ = _setup(monkeypatch, [])
+    with pytest.raises(st.InvalidSheetRowError):
+        st._to_task({"priority": "C", "duration_min": "10", "duration_raw_min": "10"})
+
+
+def test_to_task_invalid_datetime(monkeypatch):
+    st, _ = _setup(monkeypatch, [])
+    with pytest.raises(st.InvalidSheetRowError):
+        st._to_task({"priority": "A", "duration_min": "10", "duration_raw_min": "10", "earliest_start_utc": "bad"})

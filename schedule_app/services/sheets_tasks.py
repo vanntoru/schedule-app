@@ -2,13 +2,21 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+import math
 import time
+import uuid
 
 from google.oauth2.credentials import Credentials  # type: ignore
 from googleapiclient.discovery import build  # type: ignore
 
 from schedule_app.config import cfg
 from schedule_app.models import Task
+
+
+class InvalidSheetRowError(Exception):
+    """Raised when a sheet row contains invalid data."""
+
+
 
 
 # Simple in-memory cache (tasks, expiry timestamp)
@@ -22,24 +30,45 @@ def _parse_dt(value: str | None) -> datetime | None:
         value = value[:-1] + "+00:00"
     try:
         dt = datetime.fromisoformat(value)
-    except ValueError:
-        return None
+    except ValueError as e:
+        raise InvalidSheetRowError("invalid datetime") from e
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
 
 
 def _to_task(data: dict[str, str]) -> Task:
-    duration_min = int(data.get("duration_min", "0"))
-    duration_raw_min = int(data.get("duration_raw_min", str(duration_min)))
+    """Return a :class:`Task` converted from a sheet row dictionary."""
+
+    try:
+        raw_min = int(data.get("duration_min", "0"))
+    except ValueError as e:  # pragma: no cover - invalid sheet data
+        raise InvalidSheetRowError("invalid duration") from e
+
+    try:
+        raw_raw_min = int(data.get("duration_raw_min", str(raw_min)))
+    except ValueError as e:  # pragma: no cover - invalid sheet data
+        raise InvalidSheetRowError("invalid duration") from e
+
+    duration_min = math.ceil(raw_min / 10) * 10 if raw_min > 0 else 0
+
+    priority = data.get("priority", "B").strip().upper() or "B"
+    if priority not in {"A", "B"}:
+        raise InvalidSheetRowError("invalid priority")
+
+    earliest = data.get("earliest_start_utc")
+    es_dt = _parse_dt(earliest)
+
+    task_id = data.get("id") or str(uuid.uuid4())
+
     return Task(
-        id=data.get("id", ""),
+        id=task_id,
         title=data.get("title", ""),
         category=data.get("category", ""),
         duration_min=duration_min,
-        duration_raw_min=duration_raw_min,
-        priority=data.get("priority", "B"),
-        earliest_start_utc=_parse_dt(data.get("earliest_start_utc")),
+        duration_raw_min=raw_raw_min,
+        priority=priority,
+        earliest_start_utc=es_dt,
     )
 
 
@@ -83,4 +112,4 @@ def fetch_tasks_from_sheet(session: dict[str, Any], *, force: bool = False) -> l
     return tasks
 
 
-__all__ = ["fetch_tasks_from_sheet"]
+__all__ = ["fetch_tasks_from_sheet", "InvalidSheetRowError"]
