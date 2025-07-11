@@ -68,7 +68,13 @@ test('sheets import 502 shows error toast', async ({ page }) => {
   );
 
   await page.goto('/');
-  await page.locator('#btn-import-sheets').click();
+
+  await Promise.all([
+    page.waitForResponse(
+      r => r.url().includes('/api/tasks/import') && r.status() === 502
+    ),
+    page.locator('#btn-import-sheets').click(),
+  ]);
 
   const toast = page.locator('.schedule-toast');
   await expect(toast).toHaveCount(1);
