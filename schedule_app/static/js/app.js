@@ -287,6 +287,13 @@ document.addEventListener('alpine:init', () => {
   });
 });
 
+['blocks:fetched', 'blocks:created', 'blocks:updated', 'blocks:removed', 'blocks:import-replace']
+  .forEach((ev) => {
+    window.addEventListener(ev, () => {
+      if (blockedDate) updateBlockedSlots(blockedDate);
+    });
+  });
+
 /* ─────────────────── 既存コードの下 (DnD 即上あたり) ────────────────── */
 //////////////////////////////////////////////////////////////////////
 //  SECTION: Task loading / rendering
@@ -698,7 +705,51 @@ function shiftGridToLocalTZ(grid) {
   return rotate(grid, offsetSlot);
 }
 
+/**
+ * Convert an array of block objects to a Set of local slot indices.
+ * @param {Array<{start_utc:string,end_utc:string}>} blocks
+ * @param {string} dateYmd  YYYY-MM-DD (UTC base)
+ */
+function calculateBlockedSlots(blocks, dateYmd) {
+  const result = new Set();
+  if (!Array.isArray(blocks) || !dateYmd) return result;
+
+  const startOfDay = Date.parse(`${dateYmd}T00:00:00Z`);
+  const offsetSlot = Math.round(-new Date().getTimezoneOffset() / 10);
+
+  for (const b of blocks) {
+    const s = Date.parse(b.start_utc);
+    const e = Date.parse(b.end_utc);
+    if (Number.isNaN(s) || Number.isNaN(e)) continue;
+
+    let from = Math.floor((s - startOfDay) / 600000);
+    let to   = Math.ceil((e - startOfDay) / 600000);
+    from = Math.max(0, from);
+    to   = Math.min(144, to);
+
+    for (let i = from; i < to; i++) {
+      const local = (i + offsetSlot + 144) % 144;
+      result.add(local);
+    }
+  }
+  return result;
+}
+
+/**
+ * Recompute blockedSlots and re-render the grid.
+ * @param {string} dateYmd
+ */
+function updateBlockedSlots(dateYmd) {
+  blockedDate = dateYmd;
+  const blocks = window.Alpine?.store?.('blocks')?.data ?? [];
+  blockedSlots = calculateBlockedSlots(blocks, dateYmd);
+  renderGrid();
+}
+
 let scheduleGrid = new Array(144).fill(0); // current grid state
+
+let blockedSlots = new Set(); // indices of blocked time slots
+let blockedDate = null;       // yyyy-mm-dd currently applied
 
 const HISTORY_LIMIT = 20;
 const _history = [];
@@ -719,6 +770,7 @@ function renderGrid() {
       'bg-green-200',
       'bg-blue-500',
       'grid-slot--busy',
+      'grid-slot--blocked',
     );
     switch (val) {
       case 1:
@@ -730,6 +782,10 @@ function renderGrid() {
         el.classList.add('grid-slot--busy');
         break;
       default:
+    }
+
+    if (blockedSlots.has(idx)) {
+      el.classList.add('grid-slot--blocked');
     }
   });
   /* Reduced-contrast ON なら新セルにも busy-strong を再付与 */
@@ -833,14 +889,17 @@ async function generateSchedule(date) {
   const previousGrid = scheduleGrid.slice();
   const { unplaced } = await loadGridFromServer(date);
   showUnplacedTasks(unplaced);
+  updateBlockedSlots(date);
   pushCommand({
     apply: async () => {
       const { unplaced } = await loadGridFromServer(date);
       showUnplacedTasks(unplaced);
+      updateBlockedSlots(date);
     },
     revert: () => {
       restoreGrid(previousGrid);
       showUnplacedTasks([]);
+      updateBlockedSlots(date);
     },
   });
 }
@@ -977,7 +1036,7 @@ const mqReduced = window.matchMedia('(prefers-contrast: less)');
 function applyContrastClasses() {
   const strong = mqReduced.matches;
   document
-    .querySelectorAll('.grid-slot--busy, .task-card')
+    .querySelectorAll('.grid-slot--busy, .grid-slot--blocked, .task-card')
     .forEach((el) =>
       el.classList.toggle('busy-strong', strong),
     );

@@ -36,6 +36,11 @@
   isolation: isolate;           /* Safari 対応で z-index 独立 */
 }
 
+.grid-slot--blocked {
+  position: relative;
+  isolation: isolate;
+}
+
 /* 疑似要素でストライプを重ねる */
 .task-card::after,
 .grid-slot--busy::after {
@@ -57,6 +62,25 @@
   z-index: 1;                   /* 本体より前面、ドラッグ時は JS 側で上げる */
 }
 
+/* ===== Blocked slot overlay ================================ */
+.grid-slot--blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background-image: repeating-linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.35) 0,
+      rgba(0, 0, 0, 0.35) 4px,
+      transparent 4px,
+      transparent 8px
+  );
+  background-size: 8px 8px;
+  mix-blend-mode: multiply;
+  z-index: 2;
+}
+
 /* 色覚バリアフリー ― Reduced contrast 専用オーバーライド  */
 @media (prefers-contrast: less) {
   .task-card::after,
@@ -71,12 +95,22 @@
       transparent          4px 8px
     );
   }
+
+  .grid-slot--blocked::after {
+    mix-blend-mode: normal;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.45) 0 4px,
+      transparent          4px 8px
+    );
+  }
 }
 
 /* Windows High‑Contrast (forced‑colors) も念のため */
 @media (forced-colors: active) {
   .task-card::after,
-  .grid-slot--busy::after {
+  .grid-slot--busy::after,
+  .grid-slot--blocked::after {
     background-image: repeating-linear-gradient(
       135deg,
       CanvasText 0 4px,
