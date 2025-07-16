@@ -106,6 +106,19 @@ def import_blocks() -> Response:
     return jsonify([_block_to_dict(b) for b in blocks])
 
 
+@blocks_bp.post("/import")
+def import_blocks_post() -> Response:
+    """POST /api/blocks/import → 204"""
+
+    blocks = _load_sheet_blocks()
+
+    BLOCKS.clear()
+    for b in blocks:
+        BLOCKS[b.id] = b
+
+    return ("", 204)
+
+
 @blocks_bp.post("")
 def create_block() -> tuple[Response, int, dict[str, str]]:
     """POST /api/blocks → 201 Block + Location"""

@@ -119,3 +119,81 @@ def test_import_blocks_api_error(client, monkeypatch):
     resp = client.get("/api/blocks/import")
     assert resp.status_code == 502
     _assert_problem_details(resp.get_json())
+
+
+def _create_sample_block(client) -> str:
+    resp = client.post(
+        "/api/blocks",
+        json={
+            "start_utc": iso("2025-01-01T01:00"),
+            "end_utc": iso("2025-01-01T01:10"),
+        },
+    )
+    return resp.get_json()["id"]
+
+
+def test_import_blocks_post_replace(client, monkeypatch):
+    old_id = _create_sample_block(client)
+
+    from schedule_app.models import Block
+    from datetime import datetime, timezone
+
+    new_blocks = [
+        Block(
+            id="n1",
+            start_utc=datetime(2025, 1, 1, 2, 0, tzinfo=timezone.utc),
+            end_utc=datetime(2025, 1, 1, 2, 10, tzinfo=timezone.utc),
+        )
+    ]
+
+    monkeypatch.setattr(
+        "schedule_app.api.blocks.fetch_blocks_from_sheet",
+        lambda *a, **k: new_blocks,
+    )
+
+    resp = client.post("/api/blocks/import")
+    assert resp.status_code == 204
+
+    resp = client.get("/api/blocks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == "n1"
+    assert data[0]["id"] != old_id
+
+
+def test_import_blocks_post_validation_error(client, monkeypatch):
+    old_id = _create_sample_block(client)
+
+    from schedule_app.errors import InvalidBlockRow
+
+    monkeypatch.setattr(
+        "schedule_app.api.blocks.fetch_blocks_from_sheet",
+        lambda *a, **k: (_ for _ in ()).throw(InvalidBlockRow()),
+    )
+
+    resp = client.post("/api/blocks/import")
+    assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+    resp = client.get("/api/blocks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == old_id
+
+
+def test_import_blocks_post_api_error(client, monkeypatch):
+    old_id = _create_sample_block(client)
+
+    def boom(*a, **k):
+        raise Exception("boom")
+
+    monkeypatch.setattr("schedule_app.api.blocks.fetch_blocks_from_sheet", boom)
+
+    resp = client.post("/api/blocks/import")
+    assert resp.status_code == 502
+    _assert_problem_details(resp.get_json())
+
+    resp = client.get("/api/blocks")
+    data = resp.get_json()
+    assert len(data) == 1
+    assert data[0]["id"] == old_id
