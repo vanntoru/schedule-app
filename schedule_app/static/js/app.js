@@ -208,12 +208,22 @@ document.addEventListener('alpine:init', () => {
     async update(id, payload) {
       this.isLoading = true;
       try {
-        // TODO: PUT /api/blocks/${id}
-        // const updated = await apiFetch(`/api/blocks/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-        const updated = { id, ...payload };
+        const updated = await apiFetch(`/api/blocks/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
         const idx = this.data.findIndex((b) => b.id === id);
-        if (idx !== -1) this.data.splice(idx, 1, updated);
-        window.dispatchEvent(new CustomEvent('blocks:updated', { detail: updated }));
+        if (idx !== -1) {
+          this.data.splice(idx, 1, updated);
+        }
+        window.dispatchEvent(
+          new CustomEvent('blocks:updated', { detail: updated })
+        );
+      } catch (err) {
+        console.error('[blocks] update failed', err);
+        showToast(err.message ?? err);
+        throw err;
       } finally {
         this.isLoading = false;
       }
