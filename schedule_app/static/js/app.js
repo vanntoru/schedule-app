@@ -430,6 +430,27 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Blocks import button handler
+document.addEventListener('DOMContentLoaded', () => {
+  const btnImport = document.getElementById('btn-import-blocks');
+  if (!btnImport) return;
+  btnImport.addEventListener('click', async () => {
+    if (!window.Alpine) return;
+    const store = Alpine.store('blocks');
+    if (!store || typeof store.importPreview !== 'function') return;
+    try {
+      const preview = await store.importPreview();
+      const count = Array.isArray(preview) ? preview.length : 0;
+      if (confirm(`Import ${count} blocks from Sheets?`)) {
+        await store.importReplace();
+      }
+    } catch (err) {
+      console.error('blocks import failed', err);
+      alert(err.message ?? err);
+    }
+  });
+});
+
 // Ensure a time grid exists for tests or pages missing it
 document.addEventListener('DOMContentLoaded', () => {
   if (document.querySelector('#time-grid')) return;
