@@ -71,6 +71,15 @@ pip install -r requirements.dev.txt
 pytest -q
 ```
 
+## End-to-End Tests
+
+Playwright is listed under `devDependencies` and must be installed with `npm install` before running the browser tests.
+
+```bash
+npm install
+npm run test:e2e
+```
+
 
 ## Tasks API
 
