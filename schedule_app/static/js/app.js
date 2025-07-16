@@ -1141,6 +1141,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    // method="dialog" forms skip built-in validation, so trigger it manually
+    if (!form.reportValidity()) {
+      return;
+    }
+
     if (window.Alpine) {
       const payload = {
         title: document.getElementById('block-title').value.trim(),
