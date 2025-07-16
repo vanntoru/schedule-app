@@ -264,10 +264,22 @@ document.addEventListener('alpine:init', () => {
     async importReplace() {
       this.isLoading = true;
       try {
-        // TODO: POST /api/blocks/import
-        // await apiFetch('/api/blocks/import', { method: 'POST' });
+        await apiFetch('/api/blocks/import', { method: 'POST' });
         window.dispatchEvent(new CustomEvent('blocks:import-replace'));
         await this.fetch();
+        const input = document.querySelector('#input-date');
+        const ymd = input ? input.value : todayUtcISO();
+        if (ymd) {
+          try {
+            await generateSchedule(ymd);
+          } catch (err) {
+            console.error('[blocks] grid refresh failed', err);
+          }
+        }
+      } catch (err) {
+        console.error('[blocks] import replace failed', err);
+        showToast(err.message ?? err);
+        throw err;
       } finally {
         this.isLoading = false;
       }
