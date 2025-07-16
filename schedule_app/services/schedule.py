@@ -10,6 +10,7 @@ import pytz
 from schedule_app.config import cfg
 
 from schedule_app.models import Block, Event, Task
+from operator import itemgetter
 from schedule_app.services.rounding import quantize
 
 __all__ = ["generate", "generate_schedule"]
@@ -46,18 +47,43 @@ def _mark_busy(slot_map: list[bool], start: datetime, end: datetime, *, base: da
             slot_map[i] = True
 
 
+def _merge_ranges(ranges: list[tuple[datetime, datetime]]) -> list[tuple[datetime, datetime]]:
+    """Return merged busy ranges sorted by start time."""
+
+    if not ranges:
+        return []
+
+    ranges.sort(key=itemgetter(0))
+    merged: list[list[datetime]] = [list(ranges[0])]
+
+    for start, end in ranges[1:]:
+        last_start, last_end = merged[-1]
+        if start <= last_end:
+            if end > last_end:
+                merged[-1][1] = end
+        else:
+            merged.append([start, end])
+
+    return [(s, e) for s, e in merged]
+
+
 def _init_slot_map(start_utc: datetime, events: list[Event], blocks: list[Block]) -> list[bool]:
     """Return a slot map initialised with busy periods for ``start_utc``.
 
     All-day events are skipped because they do not occupy time slots.
     """
     slot_map = [False] * DAY_SLOTS
+    ranges: list[tuple[datetime, datetime]] = []
     for ev in events:
         if ev.all_day:
             continue
-        _mark_busy(slot_map, ev.start_utc, ev.end_utc, base=start_utc)
+        ranges.append((ev.start_utc, ev.end_utc))
     for blk in blocks:
-        _mark_busy(slot_map, blk.start_utc, blk.end_utc, base=start_utc)
+        ranges.append((blk.start_utc, blk.end_utc))
+
+    for start, end in _merge_ranges(ranges):
+        _mark_busy(slot_map, start, end, base=start_utc)
+
     return slot_map
 
 
