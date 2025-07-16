@@ -42,6 +42,7 @@ GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-secret
 OAUTH_REDIRECT_URI=http://localhost:5173/callback
 BLOCKS_SHEET_ID=your-blocks-sheet-id
+SHEETS_BLOCK_RANGE=Blocks!A2:C
 ```
 
 The application requests the following scopes:
