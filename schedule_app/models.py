@@ -29,6 +29,9 @@ class Task:
 
 @dataclass(slots=True, frozen=True)
 class Block:
+    """User-defined busy period with an optional label."""
+
     id: str
     start_utc: datetime
     end_utc: datetime
+    title: str | None = None
