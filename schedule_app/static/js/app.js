@@ -247,11 +247,15 @@ document.addEventListener('alpine:init', () => {
     async importPreview() {
       this.isLoading = true;
       try {
-        // TODO: GET /api/blocks/import
-        // const blocks = await apiFetch('/api/blocks/import');
-        const blocks = [];
-        window.dispatchEvent(new CustomEvent('blocks:import-preview', { detail: blocks }));
+        const blocks = await apiFetch('/api/blocks/import');
+        window.dispatchEvent(
+          new CustomEvent('blocks:import-preview', { detail: blocks })
+        );
         return blocks;
+      } catch (err) {
+        console.error('[blocks] import preview failed', err);
+        showToast(err.message ?? err);
+        throw err;
       } finally {
         this.isLoading = false;
       }
