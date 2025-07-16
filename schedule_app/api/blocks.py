@@ -74,12 +74,8 @@ def _block_to_dict(block: Block) -> dict[str, Any]:
 def _load_sheet_blocks() -> list[Block]:
     """Return blocks fetched from Google Sheets."""
 
-    ssid = cfg.BLOCKS_SHEET_ID
-    if not ssid:
-        return []
-
     try:
-        return fetch_blocks_from_sheet(ssid, cfg.SHEETS_BLOCK_RANGE)
+        return fetch_blocks_from_sheet(cfg.BLOCKS_SHEET_ID, cfg.SHEETS_BLOCK_RANGE)
     except InvalidBlockRow:
         raise
     except Exception as exc:  # pragma: no cover - network errors
@@ -104,6 +100,19 @@ def import_blocks() -> Response:
 
     blocks = _load_sheet_blocks()
     return jsonify([_block_to_dict(b) for b in blocks])
+
+
+@blocks_bp.post("/import")
+def import_blocks_post() -> Response:
+    """POST /api/blocks/import → 204"""
+
+    blocks = _load_sheet_blocks()
+
+    BLOCKS.clear()
+    for b in blocks:
+        BLOCKS[b.id] = b
+
+    return ("", 204)
 
 
 @blocks_bp.post("")

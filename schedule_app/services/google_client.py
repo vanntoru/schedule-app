@@ -80,8 +80,11 @@ def _to_block(data: dict[str, str]) -> Block:
     return Block(id=uuid.uuid4().hex, start_utc=start_dt, end_utc=end_dt, title=title)
 
 
-def fetch_blocks_from_sheet(spreadsheet_id: str, cell_range: str) -> list[Block]:
+def fetch_blocks_from_sheet(spreadsheet_id: str | None, cell_range: str) -> list[Block]:
     """Return blocks fetched from Google Sheets."""
+
+    if not spreadsheet_id:
+        return []
 
     global _BLOCK_CACHE
 
