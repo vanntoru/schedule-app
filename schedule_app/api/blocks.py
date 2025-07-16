@@ -22,7 +22,10 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from schedule_app.models import Block
 from schedule_app.config import cfg
-from schedule_app.services.google_client import fetch_blocks_from_sheet
+from schedule_app.services.google_client import (
+    fetch_blocks_from_sheet,
+    invalidate_blocks_cache,
+)
 from schedule_app.exceptions import APIError
 from schedule_app.errors import InvalidBlockRow
 
@@ -169,6 +172,17 @@ def delete_block(id_: str) -> Response:
     if id_ not in BLOCKS:
         raise NotFound()
     del BLOCKS[id_]
+    return ("", 204)
+
+
+@blocks_bp.delete("/cache")
+def clear_blocks_cache() -> tuple[str, int]:
+    """Invalidate the Google Sheets blocks cache."""
+
+    try:
+        invalidate_blocks_cache()
+    except Exception as exc:  # pragma: no cover - unexpected errors
+        raise APIError(str(exc))
     return ("", 204)
 
 

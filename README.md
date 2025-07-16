@@ -89,6 +89,20 @@ Simple in-memory endpoints used by the front-end.
 All datetimes are UTC RFC 3339 strings. Validation errors return a 422 response with type `https://schedule.app/errors/invalid-field`. The import endpoints may also return 422 for invalid sheet rows or 502 when Google Sheets cannot be reached.
 Invalid block rows use the type `https://schedule.app/errors/invalid-block-row`.
 
+## Blocks API
+
+Endpoints for managing busy blocks stored in memory.
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/api/blocks` | List all blocks |
+| POST | `/api/blocks` | Create a block |
+| PUT | `/api/blocks/<id>` | Update a block |
+| DELETE | `/api/blocks/<id>` | Remove a block |
+| GET | `/api/blocks/import` | Fetch blocks from Google Sheets |
+| POST | `/api/blocks/import` | Replace blocks with sheet data |
+| DELETE | `/api/blocks/cache` | Invalidate Google Sheets blocks cache |
+
 ## Schedule API
 
 | Method | Path | Description |

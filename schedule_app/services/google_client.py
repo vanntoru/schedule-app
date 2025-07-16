@@ -128,6 +128,13 @@ def fetch_blocks_from_sheet(spreadsheet_id: str | None, cell_range: str) -> list
 _BLOCK_CACHE: tuple[list[Block], float] | None = None
 
 
+def invalidate_blocks_cache() -> None:
+    """Clear the in-memory blocks cache."""
+
+    global _BLOCK_CACHE
+    _BLOCK_CACHE = None
+
+
 class GoogleClient:
     """Lightweight wrapper around Google service clients."""
 
@@ -280,4 +287,5 @@ __all__ = [
     "APIError",
     "SCOPES",
     "fetch_blocks_from_sheet",
+    "invalidate_blocks_cache",
 ]
