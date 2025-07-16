@@ -112,6 +112,12 @@
          x-data="{ get blocks() { return $store.blocks?.data || [] } }"
          class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 hidden"
          aria-label="Blocks list">
+    <header class="flex justify-end">
+      <button id="btn-import-blocks" type="button"
+              class="border rounded px-3 py-1 text-sm bg-purple-600 text-white hover:bg-purple-700 active:translate-y-0.5">
+        Import from Sheets
+      </button>
+    </header>
     <p class="text-gray-500 text-sm" x-show="!blocks.length">No blocks</p>
     <ul id="block-list" role="list" class="space-y-2 max-h-80 overflow-y-auto" x-show="blocks.length">
       <template x-for="block in blocks" :key="block.id">
@@ -221,6 +227,18 @@
       <div class="flex justify-end gap-2 pt-2">
         <button type="submit" class="border rounded px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">Save</button>
         <button type="button" id="block-cancel" class="border rounded px-3 py-1 text-sm">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="blocks-import-dialog" class="p-4 rounded-lg shadow-md">
+    <form id="blocks-import-form" method="dialog" class="space-y-2">
+      <p><span id="blocks-import-count">0</span> blocks will be imported.</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="submit" id="blocks-import-ok"
+                class="border rounded px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">OK</button>
+        <button type="button" id="blocks-import-cancel"
+                class="border rounded px-3 py-1 text-sm">Cancel</button>
       </div>
     </form>
   </dialog>

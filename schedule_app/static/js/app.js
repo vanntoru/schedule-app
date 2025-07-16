@@ -430,6 +430,48 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Blocks import button handler
+document.addEventListener('DOMContentLoaded', () => {
+  const btnImport = document.getElementById('btn-import-blocks');
+  const dialog = document.getElementById('blocks-import-dialog');
+  if (!btnImport || !dialog) return;
+
+  const spanCount = dialog.querySelector('#blocks-import-count');
+  const btnOk = dialog.querySelector('#blocks-import-ok');
+  const btnCancel = dialog.querySelector('#blocks-import-cancel');
+
+  btnImport.addEventListener('click', async () => {
+    if (!window.Alpine) return;
+    try {
+      const blocks = await Alpine.store('blocks').importPreview();
+      if (spanCount) spanCount.textContent = String(blocks.length);
+      dialog.showModal();
+    } catch (err) {
+      console.error('blocks import preview failed', err);
+    }
+  });
+
+  btnOk?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (!window.Alpine) return dialog.close();
+    try {
+      await Alpine.store('blocks').importReplace();
+    } catch (err) {
+      console.error('blocks import failed', err);
+    }
+    dialog.close();
+  });
+
+  const close = () => dialog.close();
+  btnCancel?.addEventListener('click', close);
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    }
+  });
+});
+
 // Ensure a time grid exists for tests or pages missing it
 document.addEventListener('DOMContentLoaded', () => {
   if (document.querySelector('#time-grid')) return;
