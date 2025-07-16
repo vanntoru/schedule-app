@@ -23,3 +23,13 @@ os.environ.setdefault("SECRET_KEY", "test-secret")
 
 if importlib.util.find_spec("freezegun") is None:
     pytest.skip("freezegun is required to run tests", allow_module_level=True)
+
+
+@pytest.fixture(autouse=True)
+def _clear_blocks():
+    """Ensure BLOCKS store is empty for each test."""
+    from schedule_app.api.blocks import BLOCKS
+
+    BLOCKS.clear()
+    yield
+    BLOCKS.clear()
