@@ -1066,3 +1066,59 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnAdd    = document.getElementById('btn-add-block');
+  const modal     = document.getElementById('block-modal');
+  const form      = document.getElementById('block-form');
+  const btnCancel = document.getElementById('block-cancel');
+
+  function openBlockModal() {
+    modal.showModal();
+    const first = modal.querySelector('input, select, textarea');
+    first?.focus();
+  }
+
+  if (!btnAdd || !modal || !form) return;
+
+  btnAdd.addEventListener('click', () => {
+    form.reset();
+    form.querySelectorAll('[aria-invalid]')
+        .forEach(el => el.removeAttribute('aria-invalid'));
+    openBlockModal();
+  });
+
+  btnCancel?.addEventListener('click', () => {
+    modal.close();
+  });
+
+  modal.addEventListener('close', () => {
+    form.querySelectorAll('[aria-invalid]')
+        .forEach(el => el.removeAttribute('aria-invalid'));
+  });
+
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      modal.close();
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (window.Alpine) {
+      const payload = {
+        title: document.getElementById('block-title').value.trim(),
+        start: document.getElementById('block-start').value,
+        end: document.getElementById('block-end').value,
+      };
+      try {
+        await Alpine.store('blocks').create(payload);
+      } catch (err) {
+        console.error('block create failed', err);
+      }
+    }
+    modal.close();
+    form.reset();
+  });
+});
