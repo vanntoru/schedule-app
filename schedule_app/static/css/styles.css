@@ -195,3 +195,24 @@
   color: #111827;                 /* text-gray-900 */
 }
 
+/* --------------------------------------------------------------------------
+   Utility classes required for tests (subset of Tailwind)
+   These are defined here so the app works without the Tailwind CDN.
+   -------------------------------------------------------------------------- */
+
+.hidden {
+  display: none !important;
+}
+
+.border-b-2 {
+  border-bottom-width: 2px;
+}
+
+.border-blue-600 {
+  border-color: #2563eb;
+}
+
+.border-transparent {
+  border-color: transparent;
+}
+

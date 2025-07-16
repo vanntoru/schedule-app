@@ -60,6 +60,17 @@
             class="ml-2 border rounded px-3 py-1 text-sm bg-gray-600 text-white hover:bg-gray-700 active:translate-y-0.5">
       Clear Cache
     </button>
+
+    <div class="ml-4 space-x-2">
+      <button data-tab="task-pane" id="tab-tasks" type="button"
+              class="tab-btn border-b-2 border-blue-600 px-2 py-1 text-sm">
+        Tasks
+      </button>
+      <button data-tab="blocks-panel" id="tab-blocks" type="button"
+              class="tab-btn border-b-2 border-transparent px-2 py-1 text-sm">
+        Blocks
+      </button>
+    </div>
   </header>
 <!-- ─────────── All-day timeline ─────────── -->
 <section
@@ -95,6 +106,12 @@
         <button type="button" class="delete-task ml-2 border rounded px-1 text-xs">削除</button>
       </div>
     </template>
+  </aside>
+
+  <aside id="blocks-panel"
+         class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto hidden"
+         aria-label="Blocks list">
+    <p class="text-gray-500 text-sm">No blocks</p>
   </aside>
 
   <!-- ── time grid ─────────────────────────────────────────────────── -->
