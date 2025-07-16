@@ -74,12 +74,8 @@ def _block_to_dict(block: Block) -> dict[str, Any]:
 def _load_sheet_blocks() -> list[Block]:
     """Return blocks fetched from Google Sheets."""
 
-    ssid = cfg.BLOCKS_SHEET_ID
-    if not ssid:
-        return []
-
     try:
-        return fetch_blocks_from_sheet(ssid, cfg.SHEETS_BLOCK_RANGE)
+        return fetch_blocks_from_sheet(cfg.BLOCKS_SHEET_ID, cfg.SHEETS_BLOCK_RANGE)
     except InvalidBlockRow:
         raise
     except Exception as exc:  # pragma: no cover - network errors
