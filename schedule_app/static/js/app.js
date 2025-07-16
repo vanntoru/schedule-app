@@ -187,11 +187,19 @@ document.addEventListener('alpine:init', () => {
     async create(payload) {
       this.isLoading = true;
       try {
-        // TODO: POST /api/blocks
-        // const block = await apiFetch('/api/blocks', { method: 'POST', body: JSON.stringify(payload) });
-        const block = payload;
+        const block = await apiFetch('/api/blocks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
         this.data.push(block);
-        window.dispatchEvent(new CustomEvent('blocks:created', { detail: block }));
+        window.dispatchEvent(
+          new CustomEvent('blocks:created', { detail: block })
+        );
+      } catch (err) {
+        console.error('[blocks] create failed', err);
+        showToast(err.message ?? err);
+        throw err;
       } finally {
         this.isLoading = false;
       }
