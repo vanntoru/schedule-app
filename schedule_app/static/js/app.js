@@ -232,10 +232,13 @@ document.addEventListener('alpine:init', () => {
     async remove(id) {
       this.isLoading = true;
       try {
-        // TODO: DELETE /api/blocks/${id}
-        // await apiFetch(`/api/blocks/${id}`, { method: 'DELETE' });
+        await apiFetch(`/api/blocks/${id}`, { method: 'DELETE' });
         this.data = this.data.filter((b) => b.id !== id);
         window.dispatchEvent(new CustomEvent('blocks:removed', { detail: id }));
+      } catch (err) {
+        console.error('[blocks] remove failed', err);
+        showToast(err.message ?? err);
+        throw err;
       } finally {
         this.isLoading = false;
       }
@@ -1139,6 +1142,25 @@ document.addEventListener('DOMContentLoaded', () => {
     form.querySelectorAll('[aria-invalid]')
         .forEach(el => el.removeAttribute('aria-invalid'));
     openBlockModal();
+  });
+
+  list?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.delete-block');
+    if (!btn) return;
+    const item = btn.closest('li');
+    if (!item) return;
+
+    if (!confirm('このブロックを削除しますか?')) return;
+
+    if (window.Alpine) {
+      try {
+        await Alpine.store('blocks').remove(item.dataset.blockId);
+      } catch (err) {
+        console.error('block delete failed', err);
+        alert(err.message ?? err);
+        return;
+      }
+    }
   });
 
   btnCancel?.addEventListener('click', () => {
