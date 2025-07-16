@@ -147,6 +147,10 @@
   </section>
 </main>
 
+  <button id="btn-add-block" aria-label="Add block" class="fixed bottom-4 right-4 p-4 rounded-full bg-blue-600 text-white shadow">
+    ＋
+  </button>
+
   <!-- タスク追加・編集モーダル -->
   <dialog id="task-modal" class="p-4 rounded-lg shadow-md">
     <form id="task-form" method="dialog" class="space-y-2">
@@ -192,6 +196,27 @@
         </button>
         <button type="button" id="task-cancel"
                 class="border rounded px-3 py-1 text-sm">キャンセル</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="block-modal" class="p-4 rounded-lg shadow-md">
+    <form id="block-form" method="dialog" class="space-y-2">
+      <label class="block">
+        <span class="text-sm">タイトル</span>
+        <input id="block-title" name="title" type="text" class="border rounded w-full p-1 text-sm" />
+      </label>
+      <label class="block">
+        <span class="text-sm">開始時刻</span>
+        <input id="block-start" name="start" type="time" class="border rounded w-full p-1 text-sm" required />
+      </label>
+      <label class="block">
+        <span class="text-sm">終了時刻</span>
+        <input id="block-end" name="end" type="time" class="border rounded w-full p-1 text-sm" required />
+      </label>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="submit" class="border rounded px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">保存</button>
+        <button type="button" id="block-cancel" class="border rounded px-3 py-1 text-sm">キャンセル</button>
       </div>
     </form>
   </dialog>
