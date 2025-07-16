@@ -30,7 +30,7 @@ def _setup(monkeypatch, rows):
         return DummyResponse(rows)
 
     dummy_open.calls = 0
-    monkeypatch.setattr(gc, "request.urlopen", dummy_open)
+    monkeypatch.setattr(gc.request, "urlopen", dummy_open)
     gc._BLOCK_CACHE = None
     return dummy_open
 
