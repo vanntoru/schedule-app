@@ -163,6 +163,93 @@ export const openDb = (() => {
 // Kick off immediately so the DB appears in DevTools without user action
 window.dbReady = openDb();
 
+/* ---------------------------------------------------------------------------
+ * Alpine.js store for Blocks panel (step 12)
+ * ------------------------------------------------------------------------ */
+document.addEventListener('alpine:init', () => {
+  Alpine.store('blocks', {
+    data: [],
+    isLoading: false,
+
+    async fetch() {
+      this.isLoading = true;
+      try {
+        // TODO: GET /api/blocks
+        // const blocks = await apiFetch('/api/blocks');
+        const blocks = [];
+        this.data = blocks;
+        window.dispatchEvent(new CustomEvent('blocks:fetched', { detail: blocks }));
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async create(payload) {
+      this.isLoading = true;
+      try {
+        // TODO: POST /api/blocks
+        // const block = await apiFetch('/api/blocks', { method: 'POST', body: JSON.stringify(payload) });
+        const block = payload;
+        this.data.push(block);
+        window.dispatchEvent(new CustomEvent('blocks:created', { detail: block }));
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async update(id, payload) {
+      this.isLoading = true;
+      try {
+        // TODO: PUT /api/blocks/${id}
+        // const updated = await apiFetch(`/api/blocks/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        const updated = { id, ...payload };
+        const idx = this.data.findIndex((b) => b.id === id);
+        if (idx !== -1) this.data.splice(idx, 1, updated);
+        window.dispatchEvent(new CustomEvent('blocks:updated', { detail: updated }));
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async remove(id) {
+      this.isLoading = true;
+      try {
+        // TODO: DELETE /api/blocks/${id}
+        // await apiFetch(`/api/blocks/${id}`, { method: 'DELETE' });
+        this.data = this.data.filter((b) => b.id !== id);
+        window.dispatchEvent(new CustomEvent('blocks:removed', { detail: id }));
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async importPreview() {
+      this.isLoading = true;
+      try {
+        // TODO: GET /api/blocks/import
+        // const blocks = await apiFetch('/api/blocks/import');
+        const blocks = [];
+        window.dispatchEvent(new CustomEvent('blocks:import-preview', { detail: blocks }));
+        return blocks;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async importReplace() {
+      this.isLoading = true;
+      try {
+        // TODO: POST /api/blocks/import
+        // await apiFetch('/api/blocks/import', { method: 'POST' });
+        window.dispatchEvent(new CustomEvent('blocks:import-replace'));
+        await this.fetch();
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  });
+});
+
 /* ─────────────────── 既存コードの下 (DnD 即上あたり) ────────────────── */
 //////////////////////////////////////////////////////////////////////
 //  SECTION: Task loading / rendering
