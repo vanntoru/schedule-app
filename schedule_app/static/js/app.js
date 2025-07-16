@@ -241,6 +241,40 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndRenderTasks();
 });
 
+// ---------------------------------------------------------------------------
+// Simple tab switching for Tasks / Blocks panels
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const buttons = document.querySelectorAll('[data-tab]');
+  const panes = {
+    'task-pane': document.getElementById('task-pane'),
+    'blocks-panel': document.getElementById('blocks-panel'),
+  };
+
+  function activate(id) {
+    for (const [pid, el] of Object.entries(panes)) {
+      if (!el) continue;
+      if (pid === id) {
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    buttons.forEach((btn) => {
+      const active = btn.dataset.tab === id;
+      btn.classList.toggle('border-blue-600', active);
+      btn.classList.toggle('border-transparent', !active);
+    });
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => activate(btn.dataset.tab));
+  });
+
+  activate('task-pane');
+});
+
 // Sheets Import button handler
 document.addEventListener('DOMContentLoaded', () => {
   const btnImport = document.getElementById('btn-import-sheets');
