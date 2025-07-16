@@ -18,12 +18,16 @@ try:
 except Exception:  # pragma: no cover - missing env vars in some test runs
     config_module = None
 import json
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time as dt_time, timedelta, timezone
 import pytz
 
-from schedule_app.models import Event
+from schedule_app.models import Event, Block
 from schedule_app.exceptions import APIError
 from schedule_app.utils.validation import _parse_dt
+from schedule_app.errors import InvalidBlockRow
+from schedule_app.services.rounding import quantize
+import uuid
+import time
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -36,9 +40,7 @@ class GoogleAPIUnauthorized(APIError):
 # OAuth scopes required for accessing Google APIs
 
 # Scope for read-only access to Google Sheets
-SPREADSHEETS_READONLY_SCOPE = (
-    "https://www.googleapis.com/auth/spreadsheets.readonly"
-)
+SPREADSHEETS_READONLY_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
 
 SCOPES = [
     "openid",
@@ -47,6 +49,80 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
     SPREADSHEETS_READONLY_SCOPE,
 ]
+
+# ---------------------------------------------------------------------------
+# Sheet helpers
+# ---------------------------------------------------------------------------
+
+
+def _to_block(data: dict[str, str]) -> Block:
+    """Convert a sheet row ``data`` to a :class:`Block`."""
+
+    start_raw = (data.get("start_utc") or "").strip()
+    end_raw = (data.get("end_utc") or "").strip()
+    if not start_raw or not end_raw:
+        raise InvalidBlockRow()
+
+    try:
+        start_dt = _parse_dt(start_raw)
+        end_dt = _parse_dt(end_raw)
+    except ValueError as exc:  # pragma: no cover - invalid data
+        raise InvalidBlockRow() from exc
+
+    if start_dt is None or end_dt is None or start_dt >= end_dt:
+        raise InvalidBlockRow()
+
+    start_dt = quantize(start_dt, up=False)
+    end_dt = quantize(end_dt, up=True)
+
+    title = (data.get("title") or "").strip() or None
+
+    return Block(id=uuid.uuid4().hex, start_utc=start_dt, end_utc=end_dt, title=title)
+
+
+def fetch_blocks_from_sheet(spreadsheet_id: str, cell_range: str) -> list[Block]:
+    """Return blocks fetched from Google Sheets."""
+
+    global _BLOCK_CACHE
+
+    now = time.time()
+    if _BLOCK_CACHE is not None:
+        blocks, expiry = _BLOCK_CACHE
+        if now < expiry:
+            return blocks
+
+    encoded_range = parse.quote(cell_range, safe="")
+    url = (
+        "https://sheets.googleapis.com/v4/spreadsheets/"
+        f"{spreadsheet_id}/values/{encoded_range}"
+    )
+
+    req = request.Request(url)
+    try:
+        with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
+            data = json.loads(resp.read().decode())
+    except HTTPError as e:  # pragma: no cover - network stubbed
+        if e.code in (401, 403):
+            raise GoogleAPIUnauthorized() from e
+        raise
+
+    rows = data.get("values", [])
+    blocks: list[Block] = []
+    if rows:
+        headers = [str(h).strip().lower() for h in rows[0]]
+        for row in rows[1:]:
+            item = {headers[i]: row[i] for i in range(min(len(headers), len(row)))}
+            blocks.append(_to_block(item))
+
+    cache_sec = 300
+    if config_module is not None:
+        cache_sec = config_module.cfg.SHEETS_CACHE_SEC
+    _BLOCK_CACHE = (blocks, now + cache_sec)
+    return blocks
+
+
+# blocks sheet cache: list of Block objects and expiry timestamp
+_BLOCK_CACHE: tuple[list[Block], float] | None = None
 
 
 class GoogleClient:
@@ -94,9 +170,7 @@ class GoogleClient:
                 "singleEvents": "true",
             }
         )
-        url = (
-            "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
-        )
+        url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?" + query
         req = request.Request(url, headers={"Authorization": f"Bearer {token}"})
         try:
             with request.urlopen(req) as resp:  # pragma: no cover - network stubbed
@@ -106,7 +180,6 @@ class GoogleClient:
                 raise GoogleAPIUnauthorized() from e
             raise
         return data.get("items", [])
-
 
     def _to_event(self, data: dict) -> Event:
         """Convert a Google Calendar event dictionary to an :class:`Event`."""
@@ -148,11 +221,11 @@ class GoogleClient:
 
         if date.tzinfo is None:
             # naïve → JST
-            local_start = tz.localize(datetime.combine(date.date(), time.min))
+            local_start = tz.localize(datetime.combine(date.date(), dt_time.min))
         else:
             # すでに aware なら JST に合わせる
-            local_start = (
-                date.astimezone(tz).replace(hour=0, minute=0, second=0, microsecond=0)
+            local_start = date.astimezone(tz).replace(
+                hour=0, minute=0, second=0, microsecond=0
             )
 
         start = local_start.astimezone(timezone.utc)
@@ -198,4 +271,10 @@ class GoogleClient:
         return events
 
 
-__all__ = ["GoogleClient", "GoogleAPIUnauthorized", "APIError", "SCOPES"]
+__all__ = [
+    "GoogleClient",
+    "GoogleAPIUnauthorized",
+    "APIError",
+    "SCOPES",
+    "fetch_blocks_from_sheet",
+]
