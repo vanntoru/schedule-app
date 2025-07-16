@@ -16,6 +16,9 @@ test('delete block removes list item', async ({ page }) => {
 
   await page.goto('/');
 
+  // Switch to the Blocks tab so the panel is visible
+  await page.locator('[data-tab="blocks-panel"]').click();
+
   // Inject a fake block entry for testing
   await page.evaluate(() => {
     const list = document.querySelector('#block-list');
