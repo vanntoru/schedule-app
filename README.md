@@ -19,6 +19,7 @@ python -m venv .venv
 python -m pip install -U pip
 pip install -r requirements.dev.txt  # installs dev packages like freezegun
 pre-commit install
+python -m schedule_app.cli shell  # interactive shell
 flask --app schedule_app run --debug --port 5173
 ```
 
