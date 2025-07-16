@@ -10,6 +10,12 @@ from __future__ import annotations
 import os
 from werkzeug.exceptions import HTTPException
 
+from schedule_app.errors import InvalidBlockRow
+
+ERROR_TYPE_MAP = {
+    InvalidBlockRow: "invalid-block-row",
+}
+
 from schedule_app.services.google_client import GoogleClient, SCOPES
 from schedule_app.exceptions import APIError
 
@@ -146,8 +152,14 @@ def create_app(*, testing: bool = False) -> Flask:  # type: ignore[name-defined]
     @app.errorhandler(HTTPException)
     def handle_http_exception(exc: HTTPException):
         status = exc.code or 500
-        code = "invalid-field" if status == 422 else exc.name.lower().replace(" ", "-")
-        title = "Validation failed" if status == 422 else exc.name
+        mapped = ERROR_TYPE_MAP.get(type(exc))
+        if mapped is not None:
+            code = mapped
+            title = exc.description
+        else:
+            code = "invalid-field" if status == 422 else exc.name.lower().replace(" ", "-")
+            title = "Validation failed" if status == 422 else exc.name
+
         payload = {
             "type": f"https://schedule.app/errors/{code}",
             "title": title,
