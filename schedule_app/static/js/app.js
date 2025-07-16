@@ -328,11 +328,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await loadAndRenderTasks();
   } finally {
-    try {
-      await Alpine.store('blocks').fetch();
-    } catch (err) {
-      console.error('[blocks] failed to load', err);
-      showToast(err.message ?? err);
+    if (window.Alpine) {
+      try {
+        await Alpine.store('blocks').fetch();
+      } catch (err) {
+        console.error('[blocks] failed to load', err);
+        showToast(err.message ?? err);
+      }
     }
   }
 });
