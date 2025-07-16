@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import pytest
 from flask import Flask
+import time
 
 from schedule_app import create_app as create_flask_app  # factory 関数を想定
 
@@ -197,3 +198,58 @@ def test_import_blocks_post_api_error(client, monkeypatch):
     data = resp.get_json()
     assert len(data) == 1
     assert data[0]["id"] == old_id
+
+
+def test_clear_cache_endpoint(client, monkeypatch) -> None:
+    from schedule_app.services import google_client as gc
+    from schedule_app.models import Block
+    from datetime import datetime, timezone
+
+    blocks1 = [
+        Block(
+            id="a",
+            start_utc=datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc),
+            end_utc=datetime(2025, 1, 1, 0, 10, tzinfo=timezone.utc),
+        )
+    ]
+    blocks2 = [
+        Block(
+            id="b",
+            start_utc=datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc),
+            end_utc=datetime(2025, 1, 1, 0, 10, tzinfo=timezone.utc),
+        )
+    ]
+
+    current = {"val": blocks1}
+    calls = {"n": 0}
+
+    def fake_fetch(_ssid, _range):
+        if gc._BLOCK_CACHE is not None:
+            blocks, expiry = gc._BLOCK_CACHE
+            if time.time() < expiry:
+                return blocks
+        calls["n"] += 1
+        gc._BLOCK_CACHE = (current["val"], time.time() + 60)
+        return current["val"]
+
+    monkeypatch.setattr("schedule_app.api.blocks.fetch_blocks_from_sheet", fake_fetch)
+
+    gc._BLOCK_CACHE = None
+    resp = client.get("/api/blocks/import")
+    assert resp.status_code == 200
+    assert calls["n"] == 1
+
+    resp = client.get("/api/blocks/import")
+    assert resp.status_code == 200
+    assert calls["n"] == 1
+
+    resp = client.delete("/api/blocks/cache")
+    assert resp.status_code == 204
+    assert gc._BLOCK_CACHE is None
+
+    current["val"] = blocks2
+    resp = client.get("/api/blocks/import")
+    assert resp.status_code == 200
+    assert calls["n"] == 2
+    data = resp.get_json()
+    assert data[0]["id"] == "b"
