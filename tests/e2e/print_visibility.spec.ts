@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('header and toolbar buttons hidden when printing', async ({ page }) => {
   await page.goto('/');
 
-  const header = page.locator('header');
+  const header = page.locator('body > header');
   await expect(header).toBeVisible();
 
   const buttons = header.locator('button');
