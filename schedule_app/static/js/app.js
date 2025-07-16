@@ -324,8 +324,19 @@ async function loadAndRenderTasks() {
 }
 
 /* DOMContentLoaded → まずタスクを描画 */
-document.addEventListener('DOMContentLoaded', () => {
-  loadAndRenderTasks();
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await loadAndRenderTasks();
+  } finally {
+    if (window.Alpine) {
+      try {
+        await Alpine.store('blocks').fetch();
+      } catch (err) {
+        console.error('[blocks] failed to load', err);
+        showToast(err.message ?? err);
+      }
+    }
+  }
 });
 
 // ---------------------------------------------------------------------------
