@@ -41,6 +41,7 @@ development you can create a `.env` file containing:
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-secret
 OAUTH_REDIRECT_URI=http://localhost:5173/callback
+BLOCKS_SHEET_ID=your-blocks-sheet-id
 ```
 
 The application requests the following scopes:

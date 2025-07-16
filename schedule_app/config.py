@@ -49,6 +49,7 @@ class _Config:
     SHEETS_TASKS_SSID: str | None = os.getenv("SHEETS_TASKS_SSID")
     SHEETS_TASKS_RANGE: str = os.getenv("SHEETS_TASKS_RANGE", "Tasks!A:F")
     SHEETS_CACHE_SEC: int = int(os.getenv("SHEETS_CACHE_SEC", "300"))
+    BLOCKS_SHEET_ID: str | None = os.getenv("BLOCKS_SHEET_ID")
 
     # 追加があった場合はここへ…
 
