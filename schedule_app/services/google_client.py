@@ -21,9 +21,13 @@ import json
 from datetime import datetime, time, timedelta, timezone
 import pytz
 
-from schedule_app.models import Event
+import time
+import uuid
+
+from schedule_app.models import Event, Block
 from schedule_app.exceptions import APIError
 from schedule_app.utils.validation import _parse_dt
+from schedule_app.errors import InvalidBlockRow
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -197,5 +201,77 @@ class GoogleClient:
 
         return events
 
+# ---------------------------------------------------------------------------
+# Blocks sheet support
+# ---------------------------------------------------------------------------
 
-__all__ = ["GoogleClient", "GoogleAPIUnauthorized", "APIError", "SCOPES"]
+_BLOCK_CACHE: tuple[list[Block], float] | None = None
+
+
+def _to_block(data: dict[str, str]) -> Block:
+    start = _parse_dt(data.get("start_utc"))
+    end = _parse_dt(data.get("end_utc"))
+    if start is None or end is None or start >= end:
+        raise InvalidBlockRow()
+    return Block(
+        id=data.get("id") or uuid.uuid4().hex,
+        start_utc=start,
+        end_utc=end,
+        title=data.get("title") or None,
+    )
+
+
+def fetch_blocks_from_sheet(session: dict[str, Any], *, force: bool = False) -> list[Block]:
+    global _BLOCK_CACHE
+    if config_module is not None:
+        ssid = config_module.cfg.BLOCKS_SHEET_ID
+        rng = config_module.cfg.SHEETS_BLOCK_RANGE
+        cache_sec = config_module.cfg.SHEETS_CACHE_SEC
+    else:
+        ssid = os.getenv("BLOCKS_SHEET_ID")
+        rng = os.getenv("SHEETS_BLOCK_RANGE", "Blocks!A2:C")
+        cache_sec = int(os.getenv("SHEETS_CACHE_SEC", "300"))
+    now = time.time()
+    if _BLOCK_CACHE is not None and not force:
+        blocks, expiry = _BLOCK_CACHE
+        if now < expiry:
+            return blocks
+    if not ssid:
+        return []
+    creds = session.get("credentials")
+    if not creds:
+        raise RuntimeError("missing credentials")
+    token = creds.get("access_token")
+    url = f"https://sheets.googleapis.com/v4/spreadsheets/{ssid}/values/{parse.quote(rng)}"
+    req = request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode())
+    except HTTPError as e:
+        if e.code in (401, 403):
+            raise GoogleAPIUnauthorized() from e
+        raise
+    rows = data.get("values", [])
+    blocks: list[Block] = []
+    if rows:
+        headers = [str(h).strip().lower() for h in rows[0]]
+        for row in rows[1:]:
+            row_data = {headers[i]: row[i] for i in range(min(len(headers), len(row)))}
+            blocks.append(_to_block(row_data))
+    _BLOCK_CACHE = (blocks, now + cache_sec)
+    return blocks
+
+
+def invalidate_block_cache() -> None:
+    global _BLOCK_CACHE
+    _BLOCK_CACHE = None
+
+
+__all__ = [
+    "GoogleClient",
+    "GoogleAPIUnauthorized",
+    "APIError",
+    "SCOPES",
+    "fetch_blocks_from_sheet",
+    "invalidate_block_cache",
+]
