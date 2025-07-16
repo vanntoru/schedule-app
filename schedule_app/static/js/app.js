@@ -1072,6 +1072,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal     = document.getElementById('block-modal');
   const form      = document.getElementById('block-form');
   const btnCancel = document.getElementById('block-cancel');
+  const list      = document.getElementById('block-list');
+
+  let isEdit = false;
+  let editId = null;
 
   function openBlockModal() {
     modal.showModal();
@@ -1082,7 +1086,38 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!btnAdd || !modal || !form) return;
 
   btnAdd.addEventListener('click', () => {
+    isEdit = false;
+    editId = null;
     form.reset();
+    form.querySelectorAll('[aria-invalid]')
+        .forEach(el => el.removeAttribute('aria-invalid'));
+    openBlockModal();
+  });
+
+  list?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.edit-block');
+    if (!btn) return;
+    const item = btn.closest('li');
+    if (!item) return;
+
+    isEdit = true;
+    editId = item.dataset.blockId;
+    document.getElementById('block-title').value = item.dataset.blockTitle || '';
+
+    const start = item.dataset.blockStart;
+    if (start) {
+      document.getElementById('block-start').value = new Date(start).toISOString().slice(0,16);
+    } else {
+      document.getElementById('block-start').value = '';
+    }
+
+    const end = item.dataset.blockEnd;
+    if (end) {
+      document.getElementById('block-end').value = new Date(end).toISOString().slice(0,16);
+    } else {
+      document.getElementById('block-end').value = '';
+    }
+
     form.querySelectorAll('[aria-invalid]')
         .forEach(el => el.removeAttribute('aria-invalid'));
     openBlockModal();
@@ -1109,13 +1144,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.Alpine) {
       const payload = {
         title: document.getElementById('block-title').value.trim(),
-        start: document.getElementById('block-start').value,
-        end: document.getElementById('block-end').value,
+        start_utc: new Date(document.getElementById('block-start').value).toISOString().replace('.000Z', 'Z'),
+        end_utc: new Date(document.getElementById('block-end').value).toISOString().replace('.000Z', 'Z'),
       };
       try {
-        await Alpine.store('blocks').create(payload);
+        if (isEdit && editId) {
+          await Alpine.store('blocks').update(editId, payload);
+        } else {
+          await Alpine.store('blocks').create(payload);
+        }
       } catch (err) {
-        console.error('block create failed', err);
+        console.error('block save failed', err);
       }
     }
     modal.close();

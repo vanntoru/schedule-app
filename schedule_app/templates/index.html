@@ -113,9 +113,13 @@
          class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 hidden"
          aria-label="Blocks list">
     <p class="text-gray-500 text-sm" x-show="!blocks.length">No blocks</p>
-    <ul role="list" class="space-y-2 max-h-80 overflow-y-auto" x-show="blocks.length">
+    <ul id="block-list" role="list" class="space-y-2 max-h-80 overflow-y-auto" x-show="blocks.length">
       <template x-for="block in blocks" :key="block.id">
-        <li class="p-2 bg-white rounded shadow border flex items-center gap-2 text-sm">
+        <li class="p-2 bg-white rounded shadow border flex items-center gap-2 text-sm"
+            x-bind:data-block-id="block.id"
+            x-bind:data-block-title="block.title || ''"
+            x-bind:data-block-start="block.start_utc"
+            x-bind:data-block-end="block.end_utc">
           <span class="flex-1" x-text="block.title || 'Block'"></span>
           <span class="text-xs" x-text="block.start_utc"></span>
           <span class="text-xs" x-text="block.end_utc"></span>
@@ -208,15 +212,15 @@
       </label>
       <label class="block">
         <span class="text-sm">開始時刻</span>
-        <input id="block-start" name="start" type="time" class="border rounded w-full p-1 text-sm" required />
+        <input id="block-start" name="start" type="datetime-local" step="600" class="border rounded w-full p-1 text-sm" required />
       </label>
       <label class="block">
         <span class="text-sm">終了時刻</span>
-        <input id="block-end" name="end" type="time" class="border rounded w-full p-1 text-sm" required />
+        <input id="block-end" name="end" type="datetime-local" step="600" class="border rounded w-full p-1 text-sm" required />
       </label>
       <div class="flex justify-end gap-2 pt-2">
-        <button type="submit" class="border rounded px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">保存</button>
-        <button type="button" id="block-cancel" class="border rounded px-3 py-1 text-sm">キャンセル</button>
+        <button type="submit" class="border rounded px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">Save</button>
+        <button type="button" id="block-cancel" class="border rounded px-3 py-1 text-sm">Cancel</button>
       </div>
     </form>
   </dialog>
