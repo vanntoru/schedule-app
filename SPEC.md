@@ -65,6 +65,7 @@ python -m venv .venv
 python -m pip install -U pip
 pip install -r requirements.dev.txt
 pre-commit install
+python -m schedule_app.cli shell
 flask --app schedule_app run --debug --port 5173
 ```
 
