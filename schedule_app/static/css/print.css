@@ -39,12 +39,14 @@
 @media print {
   /* 斜ストライプを付ける疑似要素を無効化 */
   .grid-slot--busy::after,
+  .grid-slot--blocked::after,
   .task-card::after {
     display: none !important;
   }
 
   /* 以前に付けたストライプ用 background を上書きして消す */
   .grid-slot--busy,
+  .grid-slot--blocked,
   .task-card {
     background-image: none !important;          /* ← ここで完全に無効化 */
     -webkit-print-color-adjust: exact;
