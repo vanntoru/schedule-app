@@ -21,6 +21,10 @@ from flask import Blueprint, Response, jsonify, request, url_for
 from werkzeug.exceptions import BadRequest, NotFound
 
 from schedule_app.models import Block
+from schedule_app.config import cfg
+from schedule_app.services.google_client import fetch_blocks_from_sheet
+from schedule_app.exceptions import APIError
+from schedule_app.errors import InvalidBlockRow
 
 __all__ = ["blocks_bp", "init_blocks_api"]
 
@@ -67,6 +71,21 @@ def _block_to_dict(block: Block) -> dict[str, Any]:
     return d
 
 
+def _load_sheet_blocks() -> list[Block]:
+    """Return blocks fetched from Google Sheets."""
+
+    ssid = cfg.BLOCKS_SHEET_ID
+    if not ssid:
+        return []
+
+    try:
+        return fetch_blocks_from_sheet(ssid, cfg.SHEETS_BLOCK_RANGE)
+    except InvalidBlockRow:
+        raise
+    except Exception as exc:  # pragma: no cover - network errors
+        raise APIError(str(exc))
+
+
 # --------------------------------------------------------------------------- #
 # Blueprint
 # --------------------------------------------------------------------------- #
@@ -77,6 +96,14 @@ blocks_bp = Blueprint("blocks", __name__, url_prefix="/api/blocks")
 def list_blocks() -> Response:
     """GET /api/blocks → 200 Block[]"""
     return jsonify([_block_to_dict(b) for b in BLOCKS.values()])
+
+
+@blocks_bp.get("/import")
+def import_blocks() -> Response:
+    """GET /api/blocks/import → 200 Block[]"""
+
+    blocks = _load_sheet_blocks()
+    return jsonify([_block_to_dict(b) for b in blocks])
 
 
 @blocks_bp.post("")

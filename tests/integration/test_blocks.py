@@ -29,6 +29,12 @@ def iso(dt: str) -> str:
     return f"{dt}:00Z"
 
 
+def _assert_problem_details(data) -> None:
+    assert isinstance(data, dict)
+    for key in ("type", "title", "status"):
+        assert key in data
+
+
 def test_block_crud_cycle(client):
     # ---------- POST ----------
     resp = client.post(
@@ -68,3 +74,48 @@ def test_block_crud_cycle(client):
     resp = client.get("/api/blocks")
     assert resp.status_code == 200
     assert resp.get_json() == []
+
+
+def test_import_blocks_success(client, monkeypatch):
+    from schedule_app.models import Block
+    from datetime import datetime, timezone
+
+    sample_blocks = [
+        Block(id="b1", start_utc=datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc), end_utc=datetime(2025, 1, 1, 0, 10, tzinfo=timezone.utc))
+    ]
+
+    monkeypatch.setattr(
+        "schedule_app.api.blocks.fetch_blocks_from_sheet",
+        lambda *a, **k: sample_blocks,
+    )
+
+    resp = client.get("/api/blocks/import")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["id"] == "b1"
+
+
+def test_import_blocks_invalid_row(client, monkeypatch):
+    from schedule_app.errors import InvalidBlockRow
+
+    def raise_error(*a, **k):
+        raise InvalidBlockRow()
+
+    monkeypatch.setattr("schedule_app.api.blocks.fetch_blocks_from_sheet", raise_error)
+
+    resp = client.get("/api/blocks/import")
+    assert resp.status_code == 422
+    _assert_problem_details(resp.get_json())
+
+
+def test_import_blocks_api_error(client, monkeypatch):
+    def boom(*a, **k):
+        raise Exception("boom")
+
+    monkeypatch.setattr("schedule_app.api.blocks.fetch_blocks_from_sheet", boom)
+
+    resp = client.get("/api/blocks/import")
+    assert resp.status_code == 502
+    _assert_problem_details(resp.get_json())
