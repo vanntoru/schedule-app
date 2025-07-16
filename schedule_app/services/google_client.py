@@ -18,7 +18,7 @@ try:
 except Exception:  # pragma: no cover - missing env vars in some test runs
     config_module = None
 import json
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time as dt_time, timedelta, timezone
 import pytz
 
 from schedule_app.models import Event, Block
@@ -152,7 +152,7 @@ class GoogleClient:
 
         if date.tzinfo is None:
             # naïve → JST
-            local_start = tz.localize(datetime.combine(date.date(), time.min))
+            local_start = tz.localize(datetime.combine(date.date(), dt_time.min))
         else:
             # すでに aware なら JST に合わせる
             local_start = (
