@@ -546,8 +546,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const card = e.target.closest('.task-card');
     if (!card) return;
 
+    const idx = parseInt(card.dataset.slotIndex ?? '-1', 10);
+    if (idx >= 0 && blockedSlots.has(idx)) {
+      e.preventDefault();
+      return;
+    }
+
     draggingCard = card;
-    originIndex  = parseInt(card.dataset.slotIndex ?? '-1', 10) || null;
+    originIndex  = idx >= 0 ? idx : null;
 
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', card.dataset.taskId);
@@ -560,9 +566,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!slot) return;
 
     const idx = parseInt(slot.dataset.slotIndex, 10);
-    if (!slotOccupied(idx)) {
+    if (!slotOccupied(idx) && !blockedSlots.has(idx)) {
       e.preventDefault();                    // enable drop
       slot.classList.add('ring-2', 'ring-blue-400');
+    } else {
+      slot.classList.remove('ring-2', 'ring-blue-400');
     }
   });
 
@@ -577,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!slot) return;
 
     const nextIdx = parseInt(slot.dataset.slotIndex, 10);
-    if (slotOccupied(nextIdx)) return;
+    if (slotOccupied(nextIdx) || blockedSlots.has(nextIdx)) return;
 
     e.preventDefault();
 
