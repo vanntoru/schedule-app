@@ -1169,11 +1169,15 @@ document.addEventListener('DOMContentLoaded', () => {
   list?.addEventListener('click', async (e) => {
     const btn = e.target.closest('.delete-block');
     if (!btn) return;
+
     const item = btn.closest('li');
     if (!item) return;
+
     const id = item.dataset.blockId;
     if (!id) return;
+
     if (!confirm('このブロックを削除しますか?')) return;
+
     try {
       if (window.Alpine) {
         await Alpine.store('blocks').remove(id);
@@ -1181,6 +1185,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('block delete failed', err);
     }
-    modal.close();
+
+    if (modal.open) {
+      modal.close();
+    }
   });
 });
