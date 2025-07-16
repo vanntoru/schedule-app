@@ -21,9 +21,13 @@ import json
 from datetime import datetime, time, timedelta, timezone
 import pytz
 
-from schedule_app.models import Event
+from schedule_app.models import Event, Block
 from schedule_app.exceptions import APIError
 from schedule_app.utils.validation import _parse_dt
+from schedule_app.errors import InvalidBlockRow
+from schedule_app.services.rounding import quantize
+import uuid
+import time
 
 
 class GoogleAPIUnauthorized(APIError):
@@ -198,4 +202,78 @@ class GoogleClient:
         return events
 
 
-__all__ = ["GoogleClient", "GoogleAPIUnauthorized", "APIError", "SCOPES"]
+__all__ = [
+    "GoogleClient",
+    "GoogleAPIUnauthorized",
+    "APIError",
+    "SCOPES",
+    "fetch_blocks_from_sheet",
+]
+
+
+# ---------------------------------------------------------------------------
+# Google Sheets Blocks Fetcher
+# ---------------------------------------------------------------------------
+
+_BLOCK_CACHE: tuple[list[Block], float] | None = None
+
+
+def _to_block(row: list[str]) -> Block:
+    """Convert a spreadsheet row to a :class:`Block`."""
+
+    if len(row) < 2:
+        raise InvalidBlockRow("missing columns")
+
+    try:
+        start = _parse_dt(str(row[0]).strip())
+        end = _parse_dt(str(row[1]).strip())
+    except Exception as exc:  # pragma: no cover - invalid data
+        raise InvalidBlockRow("invalid datetime") from exc
+
+    if start is None or end is None:
+        raise InvalidBlockRow("invalid datetime")
+
+    start = quantize(start, up=False)
+    end = quantize(end, up=True)
+
+    if start >= end:
+        raise InvalidBlockRow("start must be earlier than end")
+
+    title = str(row[2]).strip() if len(row) > 2 else ""
+    title = title or None
+
+    return Block(id=uuid.uuid4().hex, start_utc=start, end_utc=end, title=title)
+
+
+def fetch_blocks_from_sheet(spreadsheet_id: str, cell_range: str) -> list[Block]:
+    """Return blocks fetched from Google Sheets."""
+
+    global _BLOCK_CACHE
+
+    now = time.time()
+    if _BLOCK_CACHE is not None:
+        blocks, expiry = _BLOCK_CACHE
+        if now < expiry:
+            return blocks
+
+    quoted_range = parse.quote(cell_range, safe="")
+    url = (
+        "https://sheets.googleapis.com/v4/spreadsheets/"
+        f"{parse.quote(spreadsheet_id, safe='')}/values/{quoted_range}"
+    )
+
+    try:
+        with request.urlopen(url) as resp:  # pragma: no cover - network stubbed
+            data = json.loads(resp.read().decode())
+    except HTTPError as e:  # pragma: no cover - network stubbed
+        if e.code in (401, 403):
+            raise GoogleAPIUnauthorized() from e
+        raise
+
+    rows = data.get("values", [])
+    blocks: list[Block] = []
+    for row in rows:
+        blocks.append(_to_block(row))
+
+    _BLOCK_CACHE = (blocks, now + 300)
+    return blocks
