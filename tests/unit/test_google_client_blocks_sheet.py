@@ -60,14 +60,20 @@ def test_fetch_blocks_cache(monkeypatch):
         assert opener1.calls == 1
 
         rows2 = [["2025-01-01T03:00:00Z", "2025-01-01T04:00:00Z"]]
-        opener2 = _setup(monkeypatch, rows2)
+
+        def dummy_open(url):
+            dummy_open.calls += 1
+            return DummyResponse(rows2)
+
+        dummy_open.calls = 0
+        monkeypatch.setattr(gc.request, "urlopen", dummy_open)
         blocks2 = gc.fetch_blocks_from_sheet("sid", "Blocks!A2:C")
-        assert opener2.calls == 0
+        assert dummy_open.calls == 0
         assert blocks2 == blocks1
 
         frozen.tick(delta=timedelta(seconds=301))
         blocks3 = gc.fetch_blocks_from_sheet("sid", "Blocks!A2:C")
-        assert opener2.calls == 1
+        assert dummy_open.calls == 1
         assert blocks3 != blocks1
 
 
