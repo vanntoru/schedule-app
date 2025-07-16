@@ -11,13 +11,12 @@ import os
 from werkzeug.exceptions import HTTPException
 
 from schedule_app.errors import InvalidBlockRow
+from schedule_app.exceptions import APIError
+from schedule_app.services.google_client import GoogleClient, SCOPES
 
 ERROR_TYPE_MAP = {
     InvalidBlockRow: "invalid-block-row",
 }
-
-from schedule_app.services.google_client import GoogleClient, SCOPES
-from schedule_app.exceptions import APIError
 
 try:  # Flask may be absent in some test environments
     from flask import Flask  # type: ignore
