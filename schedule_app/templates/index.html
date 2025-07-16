@@ -109,9 +109,21 @@
   </aside>
 
   <aside id="blocks-panel"
-         class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 overflow-y-auto hidden"
+         x-data="{ get blocks() { return $store.blocks?.data || [] } }"
+         class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 hidden"
          aria-label="Blocks list">
-    <p class="text-gray-500 text-sm">No blocks</p>
+    <p class="text-gray-500 text-sm" x-show="!blocks.length">No blocks</p>
+    <ul role="list" class="space-y-2 max-h-80 overflow-y-auto" x-show="blocks.length">
+      <template x-for="block in blocks" :key="block.id">
+        <li class="p-2 bg-white rounded shadow border flex items-center gap-2 text-sm">
+          <span class="flex-1" x-text="block.title || 'Block'"></span>
+          <span class="text-xs" x-text="block.start_utc"></span>
+          <span class="text-xs" x-text="block.end_utc"></span>
+          <button type="button" class="edit-block ml-1 border rounded px-1 text-xs">編集</button>
+          <button type="button" class="delete-block ml-1 border rounded px-1 text-xs">削除</button>
+        </li>
+      </template>
+    </ul>
   </aside>
 
   <!-- ── time grid ─────────────────────────────────────────────────── -->
