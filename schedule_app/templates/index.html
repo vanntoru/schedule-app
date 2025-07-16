@@ -112,6 +112,12 @@
          x-data="{ get blocks() { return $store.blocks?.data || [] } }"
          class="w-60 shrink-0 border-r border-gray-300 pr-4 space-y-2 hidden"
          aria-label="Blocks list">
+    <header class="flex justify-end">
+      <button id="btn-import-blocks" type="button"
+              class="border rounded px-3 py-1 text-sm bg-purple-600 text-white hover:bg-purple-700 active:translate-y-0.5">
+        Import from Sheets
+      </button>
+    </header>
     <p class="text-gray-500 text-sm" x-show="!blocks.length">No blocks</p>
     <ul id="block-list" role="list" class="space-y-2 max-h-80 overflow-y-auto" x-show="blocks.length">
       <template x-for="block in blocks" :key="block.id">
