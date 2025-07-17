@@ -1,7 +1,14 @@
 import { test, expect, devices } from '@playwright/test';
 import { pseudoLogin, mockGoogleCalendar } from './helpers';
 
-test.use({ ...devices['iPhone 11'] });
+// Simulate a mobile viewport without switching to WebKit
+test.use({
+  viewport: devices['iPhone 11'].viewport,
+  userAgent: devices['iPhone 11'].userAgent,
+  deviceScaleFactor: devices['iPhone 11'].deviceScaleFactor,
+  isMobile: true,
+  hasTouch: true,
+});
 
 test('mobile block workflow via modal form', async ({ page, request }) => {
   await mockGoogleCalendar(page);
@@ -59,3 +66,4 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
   expect(delReq.method()).toBe('DELETE');
   await expect(page.locator(`[data-block-id="${blockId}"]`)).toHaveCount(0);
 });
+

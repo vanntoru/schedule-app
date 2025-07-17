@@ -74,10 +74,12 @@ pytest -q
 
 ## End-to-End Tests
 
-Playwright is listed under `devDependencies` and must be installed with `npm install` before running the browser tests.
+Playwright is listed under `devDependencies`. After installing the packages with
+`npm install`, download the browsers using `npx playwright install`.
 
 ```bash
 npm install
+npx playwright install
 npm run test:e2e
 ```
 
