@@ -25,6 +25,7 @@ test('unplaced task shows red highlight & toast', async ({ page, request }) => {
 
   /* ------- 3. Toast が表示される ------- */
   const toastText = page.locator('text=/未配置: TooLong[12]/');   // どちらか 1 件を許容
+  await toastText.waitFor({ state: 'visible' });
   await expect(toastText).toBeVisible({ timeout: 5000 });
 
   // Toast should be unique and have proper ARIA attributes

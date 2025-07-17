@@ -35,6 +35,7 @@ test('overlap tasks trigger toast and red card', async ({ page, request }) => {
 
   /* ---- 3. Verify toast appears ---- */
   const toastText = page.locator('text=/未配置: Overlap[12]/');
+  await toastText.waitFor({ state: 'visible' });
   await expect(toastText).toBeVisible({ timeout: 5000 });
 
   const toast = page.locator('.schedule-toast');

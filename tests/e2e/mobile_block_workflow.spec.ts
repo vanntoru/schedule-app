@@ -65,6 +65,7 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
   await page.fill('#block-end', '2025-01-01T00:10');
 
   await page.locator('#block-form button[type=submit]').click();
+  await page.locator('#block-list li').first().waitFor({ state: 'attached' });
 
   const item = page.locator('#block-list li').first();
   await expect(item).toHaveCount(1);
