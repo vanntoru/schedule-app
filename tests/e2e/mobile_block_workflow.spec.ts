@@ -40,8 +40,6 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
       const id = e.detail;
       document.querySelector(`[data-block-id="${id}"]`)?.remove();
     });
-
-    window.dispatchEvent(new Event('alpine:init'));
   });
 
   // Clear existing blocks
@@ -52,6 +50,9 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
   }
 
   await page.goto('/');
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('alpine:init'));
+  });
 
   // Show the Blocks panel
   await page.locator('[data-tab="blocks-panel"]').click();

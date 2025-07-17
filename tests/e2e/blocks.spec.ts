@@ -85,6 +85,16 @@ test.describe('block workflow end-to-end', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test('create, grid update, delete and import replace', async ({ page, request }) => {
+    await page.addInitScript(() => {
+      window.Alpine = {
+        stores: {},
+        store(name: string, value?: any) {
+          if (value !== undefined) this.stores[name] = value;
+          return this.stores[name];
+        },
+      } as any;
+    });
+
     await mockGoogleCalendar(page);
 
     const existing = await request.get('/api/blocks');
@@ -102,6 +112,9 @@ test.describe('block workflow end-to-end', () => {
     });
 
     await page.goto('/');
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('alpine:init'));
+    });
 
     await page.locator('[data-tab="blocks-panel"]').click();
 
