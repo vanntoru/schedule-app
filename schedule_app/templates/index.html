@@ -210,20 +210,17 @@
     </form>
   </dialog>
 
-  <dialog id="block-modal" class="p-4 rounded-lg shadow-md">
+  <dialog id="block-modal" role="dialog" aria-modal="true" aria-labelledby="block-modal-title" class="p-4 rounded-lg shadow-md">
     <form id="block-form" method="dialog" class="space-y-2">
-      <label class="block">
-        <span class="text-sm">タイトル</span>
-        <input id="block-title" name="title" type="text" class="border rounded w-full p-1 text-sm" />
-      </label>
-      <label class="block">
-        <span class="text-sm">開始時刻</span>
-        <input id="block-start" name="start" type="datetime-local" step="600" class="border rounded w-full p-1 text-sm" required />
-      </label>
-      <label class="block">
-        <span class="text-sm">終了時刻</span>
-        <input id="block-end" name="end" type="datetime-local" step="600" class="border rounded w-full p-1 text-sm" required />
-      </label>
+      <h2 id="block-modal-title" class="text-lg font-semibold mb-2">Block</h2>
+      <label for="block-title" class="block text-sm">タイトル</label>
+      <input id="block-title" name="title" type="text" class="border rounded w-full p-1 text-sm" />
+
+      <label for="block-start" class="block text-sm">開始時刻</label>
+      <input id="block-start" name="start" type="datetime-local" step="600" class="border rounded w-full p-1 text-sm" required />
+
+      <label for="block-end" class="block text-sm">終了時刻</label>
+      <input id="block-end" name="end" type="datetime-local" step="600" class="border rounded w-full p-1 text-sm" required />
       <div class="flex justify-end gap-2 pt-2">
         <button type="submit" class="border rounded px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700">Save</button>
         <button type="button" id="block-cancel" class="border rounded px-3 py-1 text-sm">Cancel</button>
