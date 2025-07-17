@@ -103,6 +103,7 @@ class Block:
     id: str
     start_utc: datetime
     end_utc: datetime
+    title: str | None = None
 ```
 
 ---
@@ -122,6 +123,9 @@ class Block:
 | POST   | `/api/blocks`                                                   | 201 Block    | 422                         |
 | PUT    | `/api/blocks/{id}`                                              | 200 Block    | 404 / 422                   |
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
+| GET    | `/api/blocks/import`                                            | 200 Block[] | 422/502                    |
+| POST   | `/api/blocks/import`                                            | 204         | 422/502                    |
+| DELETE | `/api/blocks/cache`                                             | 204         | –                           |
 | POST   | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Schedule | 400 / 422                   |
 *`POST /api/tasks/import` は取得した一覧で既存タスクをすべて置き換える。*
 
@@ -178,13 +182,29 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 * Tailwind CSS v3 + Alpine.js v3 + HTML5
 * sticky header / CSS Grid 時間軸 / サイドパネル Tasks
+* Blocks パネル: Tasks とのタブ切替式で一覧表示し、Sheets からの Import ボタンを備える
 * DnD: `.dragging{opacity:.5}`, drop target `.ring-2 ring-blue-400`
 * Undo/Redo (Command Pattern) 履歴 20
 * 印刷: `@media print` で操作 UI 非表示、A4 portrait margin 10 mm、表紙に QR
 
 ---
 
-# 9. 時刻 & タイムゾーン
+# 9. 環境変数一覧
+
+| 変数 | 既定値 | 説明 |
+| ---- | ------ | ---- |
+| SECRET_KEY | dev-secret-key | Flask セッション鍵 |
+| TIMEZONE | Asia/Tokyo | タイムゾーン省略時の解釈に使用 |
+| SLOT_SEC | 600 | 1 枠の秒数 |
+| SHEETS_TASKS_SSID | – | タスク取得元シート ID |
+| SHEETS_TASKS_RANGE | Tasks!A:F | タスクシート範囲 |
+| SHEETS_CACHE_SEC | 300 | Sheets キャッシュ有効秒 |
+| BLOCKS_SHEET_ID | – | ブロック取得元シート ID |
+| SHEETS_BLOCK_RANGE | Blocks!A2:C | ブロックシート範囲 |
+
+---
+
+# 10. 時刻 & タイムゾーン
 
 | 項目    | 内容                                                           |
 | ----- | ------------------------------------------------------------ |
@@ -196,7 +216,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 10. OAuth2 PKCE
+# 11. OAuth2 PKCE
 
 | 項目             | 値                                                   |
 | -------------- | --------------------------------------------------- |
@@ -208,7 +228,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 11. セキュリティ
+# 12. セキュリティ
 
 * **XSS**: Jinja2 `{{ v \| e }}` / `textContent` / Trusted Types
 * **CSRF**: SameSite=Lax + double‑submit token
@@ -218,7 +238,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 12. テスト戦略
+# 13. テスト戦略
 
 | レイヤ         | ツール                | 目的                     |
 | ----------- | ------------------ | ---------------------- |
@@ -229,7 +249,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 13. CI / CD（GitHub Actions）
+# 14. CI / CD（GitHub Actions）
 
 ```yaml
 name: CI
@@ -273,7 +293,7 @@ jobs:
 
 ---
 
-# 14. 運用監視
+# 15. 運用監視
 
 * **SLO**
 
@@ -285,7 +305,7 @@ jobs:
 
 ---
 
-# 15. ディレクトリ構成（最終形）
+# 16. ディレクトリ構成（最終形）
 
 ```
 schedule-app/
@@ -327,7 +347,7 @@ schedule-app/
 
 ---
 
-# 16. エージェント操作チートシート
+# 17. エージェント操作チートシート
 
 | 操作      | VS Code コマンド                  | 備考                          |
 | ------- | ----------------------------- | --------------------------- |
@@ -338,7 +358,7 @@ schedule-app/
 
 ---
 
-# 17. FAQ
+# 18. FAQ
 
 | Q             | A                                         |
 | ------------- | ----------------------------------------- |
@@ -348,7 +368,7 @@ schedule-app/
 
 ---
 
-# 18. まとめ — 5 ステップで完成
+# 19. まとめ — 5 ステップで完成
 
 1. **clone → `.venv` 作成 → 依存インストール**
 2. **`flask run` でローカル起動 → Google OAuth 通過**
