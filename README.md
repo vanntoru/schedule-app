@@ -81,6 +81,9 @@ npm install
 npm run test:e2e
 ```
 
+The suite now includes a Playwright test that runs on a mobile viewport to
+verify the block creation, update and deletion workflow.
+
 
 ## Tasks API
 
