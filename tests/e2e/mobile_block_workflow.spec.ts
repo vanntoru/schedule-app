@@ -69,14 +69,14 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
 
   const item = page.locator('#block-list li').first();
   await expect(item).toHaveCount(1);
-  await expect(item.locator('.block-title')).toHaveText('Block');
+  await expect(item.locator('.block-title')).toHaveText('E2E Block');
 
   // ---- Update ----
   await item.locator('.edit-block').click();
   await page.fill('#block-title', 'Updated Block');
 
   await page.locator('#block-form button[type=submit]').click();
-  await expect(item.locator('.block-title')).toHaveText('Block');
+  await expect(item.locator('.block-title')).toHaveText('Updated Block');
 
   // ---- Delete ----
   page.once('dialog', d => d.accept());
