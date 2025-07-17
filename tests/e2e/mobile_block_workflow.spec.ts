@@ -19,6 +19,9 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
       },
     } as any;
 
+    // Notify Alpine that the framework has been initialised
+    window.dispatchEvent(new Event('alpine:init'));
+
     window.addEventListener('blocks:created', (e: any) => {
       const block = e.detail;
       const list = document.querySelector('#block-list');
@@ -40,8 +43,6 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
       const id = e.detail;
       document.querySelector(`[data-block-id="${id}"]`)?.remove();
     });
-
-    window.dispatchEvent(new Event('alpine:init'));
   });
 
   // Clear existing blocks
