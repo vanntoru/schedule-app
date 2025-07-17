@@ -26,7 +26,7 @@ test('blocks import regenerates schedule', async ({ page }) => {
     r.fulfill({ status: 200, contentType: 'application/json', body });
   });
 
-  // Provide Alpine stub
+  // Provide Alpine stub and schedule generator helper
   await page.addInitScript(() => {
     window.Alpine = {
       stores: {},
@@ -36,6 +36,12 @@ test('blocks import regenerates schedule', async ({ page }) => {
       },
     } as any;
     window.dispatchEvent(new Event('alpine:init'));
+
+    window.generateSchedule = async (ymd: string) => {
+      await fetch(`/api/schedule/generate?date=${ymd}&algo=greedy`, {
+        method: 'POST',
+      });
+    };
   });
 
   await page.goto('/');
@@ -55,7 +61,7 @@ test('blocks import regenerates schedule', async ({ page }) => {
         const input = document.querySelector('#input-date') as HTMLInputElement | null;
         const ymd = input?.value;
         if (ymd) {
-          await (window as any).generateSchedule(ymd);
+          await window.generateSchedule(ymd);
         }
       },
     });
