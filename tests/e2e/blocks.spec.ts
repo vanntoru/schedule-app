@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mockBlocks } from './helpers';
 
 // Ensure importing blocks triggers schedule refresh
 
@@ -8,18 +9,15 @@ test('blocks import regenerates schedule', async ({ page }) => {
     r.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   );
 
-  // Stub blocks import endpoints
-  await page.route('**/api/blocks/import', r => r.fulfill({ status: 204 }));
-  await page.route('**/api/blocks', r => {
-    const data = [
-      {
-        id: 'b1',
-        start_utc: '2025-01-01T00:00:00Z',
-        end_utc: '2025-01-01T00:10:00Z',
-      },
-    ];
-    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
-  });
+  // Mock blocks API responses
+  const data = [
+    {
+      id: 'b1',
+      start_utc: '2025-01-01T00:00:00Z',
+      end_utc: '2025-01-01T00:10:00Z',
+    },
+  ];
+  await mockBlocks(page, data);
 
   await page.route('**/api/schedule/generate**', r => {
     const body = JSON.stringify({ date: '2025-01-01', slots: new Array(144).fill(0), unplaced: [] });

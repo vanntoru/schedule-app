@@ -36,3 +36,23 @@ export async function mockGoogleCalendar(
     });
   });
 }
+
+/**
+ * Mock Blocks API requests during Playwright tests.
+ *
+ * Intercepts any network calls to ``/api/blocks`` and related endpoints and
+ * returns ``body``. This handles GET, POST, PUT and DELETE requests without
+ * defining per-method routes.
+ *
+ * @param page  Playwright page instance
+ * @param body  JSON body to return (defaults to empty array)
+ */
+export async function mockBlocks(page: Page, body: any = []): Promise<void> {
+  await page.route('**/api/blocks**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    }),
+  );
+}

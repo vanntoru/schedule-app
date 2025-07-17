@@ -1,5 +1,5 @@
 import { test, expect, devices } from '@playwright/test';
-import { mockGoogleCalendar } from './helpers';
+import { mockGoogleCalendar, mockBlocks } from './helpers';
 
 // Mobile scenario for creating, updating and deleting blocks
 
@@ -50,6 +50,8 @@ test('mobile block workflow via modal form', async ({ page, request }) => {
   for (const b of blocks) {
     await request.delete(`/api/blocks/${b.id}`);
   }
+
+  await mockBlocks(page);
 
   await page.goto('/');
 
