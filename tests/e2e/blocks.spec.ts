@@ -26,7 +26,7 @@ test('blocks import regenerates schedule', async ({ page }) => {
     r.fulfill({ status: 200, contentType: 'application/json', body });
   });
 
-  // Provide Alpine stub, block helpers and schedule generator helper
+  // Provide Alpine stub, block DOM helpers and schedule generator helper
   await page.addInitScript(() => {
     window.Alpine = {
       stores: {},
