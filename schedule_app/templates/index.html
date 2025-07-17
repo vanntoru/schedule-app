@@ -162,42 +162,33 @@
   </button>
 
   <!-- タスク追加・編集モーダル -->
-  <dialog id="task-modal" class="p-4 rounded-lg shadow-md">
+  <dialog id="task-modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title" class="p-4 rounded-lg shadow-md">
     <form id="task-form" method="dialog" class="space-y-2">
+      <h2 id="task-modal-title" class="text-lg font-semibold mb-2">Task</h2>
       <input type="hidden" id="task-id" name="id" />
 
-      <label class="block">
-        <span class="text-sm">タイトル</span>
-        <input id="task-title" name="title" type="text"
-               class="border rounded w-full p-1 text-sm" required />
-      </label>
+      <label for="task-title" class="block text-sm">タイトル</label>
+      <input id="task-title" name="title" type="text"
+             class="border rounded w-full p-1 text-sm" required />
 
-      <label class="block">
-        <span class="text-sm">カテゴリ</span>
-        <input id="task-category" name="category" type="text"
-               class="border rounded w-full p-1 text-sm" />
-      </label>
+      <label for="task-category" class="block text-sm">カテゴリ</label>
+      <input id="task-category" name="category" type="text"
+             class="border rounded w-full p-1 text-sm" />
 
-      <label class="block">
-        <span class="text-sm">所要時間 (分)</span>
-        <input id="task-duration" name="duration" type="number" min="5" step="5"
-               class="border rounded w-full p-1 text-sm" required />
-      </label>
+      <label for="task-duration" class="block text-sm">所要時間 (分)</label>
+      <input id="task-duration" name="duration" type="number" min="5" step="5"
+             class="border rounded w-full p-1 text-sm" required />
 
-      <label class="block">
-        <span class="text-sm">優先度</span>
-        <select id="task-priority" name="priority"
-                class="border rounded w-full p-1 text-sm">
-          <option value="A">A</option>
-          <option value="B">B</option>
-        </select>
-      </label>
+      <label for="task-priority" class="block text-sm">優先度</label>
+      <select id="task-priority" name="priority"
+              class="border rounded w-full p-1 text-sm">
+        <option value="A">A</option>
+        <option value="B">B</option>
+      </select>
 
-      <label class="block">
-        <span class="text-sm">最速開始時刻</span>
-        <input id="task-earliest" name="earliest_start" type="time"
-               class="border rounded w-full p-1 text-sm" />
-      </label>
+      <label for="task-earliest" class="block text-sm">最速開始時刻</label>
+      <input id="task-earliest" name="earliest_start" type="time"
+             class="border rounded w-full p-1 text-sm" />
 
       <div class="flex justify-end gap-2 pt-2">
         <button type="submit"

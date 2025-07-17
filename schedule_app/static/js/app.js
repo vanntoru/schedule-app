@@ -1073,7 +1073,9 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function openModal() {
     modal.showModal();
-    const first = modal.querySelector('input, select, textarea');
+    const first = modal.querySelector(
+      'input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])'
+    );
     first?.focus();
   }
 
