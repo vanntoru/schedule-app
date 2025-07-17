@@ -644,10 +644,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const gridState = new Map();   // key: slotIndex, value: taskId
 
   function slotOccupied(i) {
+    // gridState is the drag-drop map; scheduleGrid holds the rendered state
+    if (scheduleGrid[i] !== 0 && scheduleGrid[i] !== undefined) return true;
     return gridState.has(i);
   }
   function markSlot(i, tid) {
     gridState.set(i, tid);
+    scheduleGrid[i] = 2;
     document
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.add('grid-slot--busy');
@@ -656,6 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function unmarkSlot(i) {
     gridState.delete(i);
+    scheduleGrid[i] = 0;
     document
       .querySelector(`[data-slot-index="${i}"]`)
       ?.classList.remove('grid-slot--busy');
