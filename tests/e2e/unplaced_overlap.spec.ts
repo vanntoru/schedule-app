@@ -34,10 +34,9 @@ test('overlap tasks trigger toast and red card', async ({ page, request }) => {
   await page.getByTestId('generate-btn').click();
 
   /* ---- 3. Verify toast appears ---- */
-  const toastText = page.locator('text=/未配置: Overlap[12]/');
-  await expect(toastText).toBeVisible({ timeout: 5000 });
-
   const toast = page.locator('.schedule-toast');
+  await expect(toast).toBeVisible({ timeout: 5000 });
+  await expect(toast).toHaveText(/未配置: Overlap[12]/);
   await expect(toast).toHaveCount(1);
   await expect(toast).toHaveAttribute('role', 'status');
   await expect(toast).toHaveAttribute('aria-live', 'polite');

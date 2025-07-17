@@ -55,7 +55,7 @@ test('block CRUD and import flow updates grid on mobile', async ({ page, request
 
   // Custom store methods with DOM updates
   await page.evaluate(() => {
-    const store = window.Alpine.store('blocks');
+    const store = window.Alpine.store('blocks', {} as any);
     store.data = [];
     store.fetch = async function () {
       const res = await fetch('/api/blocks');
