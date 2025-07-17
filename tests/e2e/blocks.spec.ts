@@ -26,7 +26,7 @@ test('blocks import regenerates schedule', async ({ page }) => {
     r.fulfill({ status: 200, contentType: 'application/json', body });
   });
 
-  // Provide Alpine stub and schedule generator helper
+  // Provide Alpine stub, block helpers and schedule generator helper
   await page.addInitScript(() => {
     window.Alpine = {
       stores: {},
@@ -35,6 +35,34 @@ test('blocks import regenerates schedule', async ({ page }) => {
         return this.stores[name];
       },
     } as any;
+
+    window.addEventListener('blocks:created', (e: any) => {
+      const block = e.detail;
+      const list = document.querySelector('#block-list');
+      if (!list) return;
+      const li = document.createElement('li');
+      li.dataset.blockId = block.id;
+      li.innerHTML =
+        `<span class="block-title">${block.title || 'Block'}</span>` +
+        '<button type="button" class="edit-block">edit</button>' +
+        '<button type="button" class="delete-block">del</button>';
+      list.appendChild(li);
+    });
+    window.addEventListener('blocks:updated', (e: any) => {
+      const block = e.detail;
+      const item = document.querySelector(`[data-block-id="${block.id}"]`);
+      item?.querySelector('.block-title')?.replaceWith(
+        Object.assign(document.createElement('span'), {
+          className: 'block-title',
+          textContent: block.title || 'Block',
+        })
+      );
+    });
+    window.addEventListener('blocks:removed', (e: any) => {
+      const id = e.detail;
+      document.querySelector(`[data-block-id="${id}"]`)?.remove();
+    });
+
     window.dispatchEvent(new Event('alpine:init'));
 
     window.generateSchedule = async (ymd: string) => {
