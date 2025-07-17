@@ -196,6 +196,7 @@ document.addEventListener('alpine:init', () => {
         window.dispatchEvent(
           new CustomEvent('blocks:created', { detail: block })
         );
+        showToast('Block created', 'success');
       } catch (err) {
         console.error('[blocks] create failed', err);
         showToast(err.message ?? err);
@@ -220,6 +221,7 @@ document.addEventListener('alpine:init', () => {
         window.dispatchEvent(
           new CustomEvent('blocks:updated', { detail: updated })
         );
+        showToast('Block updated', 'success');
       } catch (err) {
         console.error('[blocks] update failed', err);
         showToast(err.message ?? err);
@@ -235,6 +237,7 @@ document.addEventListener('alpine:init', () => {
         await apiFetch(`/api/blocks/${id}`, { method: 'DELETE' });
         this.data = this.data.filter((b) => b.id !== id);
         window.dispatchEvent(new CustomEvent('blocks:removed', { detail: id }));
+        showToast('Block deleted', 'success');
       } catch (err) {
         console.error('[blocks] remove failed', err);
         showToast(err.message ?? err);
@@ -276,6 +279,7 @@ document.addEventListener('alpine:init', () => {
             console.error('[blocks] grid refresh failed', err);
           }
         }
+        showToast('Blocks imported', 'success');
       } catch (err) {
         console.error('[blocks] import replace failed', err);
         showToast(err.message ?? err);
@@ -442,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnClear.addEventListener('click', async () => {
     try {
       await apiFetch('/api/tasks/cache', { method: 'DELETE' });
-      showToast('Cache cleared');
+      showToast('Cache cleared', 'success');
     } catch (err) {
       console.error('cache clear failed', err);
       if (err && err.message === 'Unauthorized') {
@@ -1011,9 +1015,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * 画面中央下に 4 秒間表示する Toast
+ *
  * @param {string} message
+ * @param {"success"|"error"} [type="error"]
  */
-function showToast(message) {
+function showToast(message, type = "error") {
   // Remove any existing toast so only one is visible at a time
   document
     .querySelectorAll('.schedule-toast')
@@ -1021,9 +1027,10 @@ function showToast(message) {
 
   const toast = document.createElement('div');
   toast.textContent = message;
+  const bgClass = type === 'success' ? 'bg-green-600' : 'bg-red-600';
   toast.className =
     'schedule-toast fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ' +
-    'bg-red-600 text-white px-4 py-2 rounded shadow-lg ' +
+    `${bgClass} text-white px-4 py-2 rounded shadow-lg ` +
     'opacity-0 transition-opacity duration-300';
   toast.setAttribute('role', 'status');
   toast.setAttribute('aria-live', 'polite');
