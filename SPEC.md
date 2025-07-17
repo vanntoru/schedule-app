@@ -123,6 +123,9 @@ class Block:
 | POST   | `/api/blocks`                                                   | 201 Block    | 422                         |
 | PUT    | `/api/blocks/{id}`                                              | 200 Block    | 404 / 422                   |
 | DELETE | `/api/blocks/{id}`                                              | 204          | 404                         |
+| GET    | `/api/blocks/import`                                           | 200 Block[] | 422/502                   |
+| POST   | `/api/blocks/import`                                           | 204        | 422/502                   |
+| DELETE | `/api/blocks/cache`                                            | 204        | –                         |
 | POST   | `/api/schedule/generate?date=YYYY‑MM‑DD` | 200 Schedule | 400 / 422                   |
 *`POST /api/tasks/import` は取得した一覧で既存タスクをすべて置き換える。*
 
