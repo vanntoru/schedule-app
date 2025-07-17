@@ -188,8 +188,20 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 * 印刷: `@media print` で操作 UI 非表示、A4 portrait margin 10 mm、表紙に QR
 
 ---
+# 9. 環境変数一覧
 
-# 9. 時刻 & タイムゾーン
+| 変数 | 既定値 | 内容 |
+| ---- | ---- | ---- |
+| `TIMEZONE` | `Asia/Tokyo` | タイムゾーン省略時に解釈する既定値 |
+| `SHEETS_TASKS_SSID` | – | タスク取得に使用する Google Sheets ID（任意） |
+| `SHEETS_TASKS_RANGE` | `Tasks!A:F` | タスクシートのセル範囲 |
+| `BLOCKS_SHEET_ID` | – | ブロック取得用 Google Sheets ID（任意） |
+| `SHEETS_BLOCK_RANGE` | `Blocks!A2:C` | ブロックシートのセル範囲 |
+| `SHEETS_CACHE_SEC` | `300` | Sheets API のキャッシュ秒数 |
+
+---
+
+# 10. 時刻 & タイムゾーン
 
 | 項目    | 内容                                                           |
 | ----- | ------------------------------------------------------------ |
@@ -201,7 +213,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 10. OAuth2 PKCE
+# 11. OAuth2 PKCE
 
 | 項目             | 値                                                   |
 | -------------- | --------------------------------------------------- |
@@ -213,7 +225,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 11. セキュリティ
+# 12. セキュリティ
 
 * **XSS**: Jinja2 `{{ v \| e }}` / `textContent` / Trusted Types
 * **CSRF**: SameSite=Lax + double‑submit token
@@ -223,7 +235,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 12. テスト戦略
+# 13. テスト戦略
 
 | レイヤ         | ツール                | 目的                     |
 | ----------- | ------------------ | ---------------------- |
@@ -234,7 +246,7 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 
 ---
 
-# 13. CI / CD（GitHub Actions）
+# 14. CI / CD（GitHub Actions）
 
 ```yaml
 name: CI
@@ -278,7 +290,7 @@ jobs:
 
 ---
 
-# 14. 運用監視
+# 15. 運用監視
 
 * **SLO**
 
@@ -290,7 +302,7 @@ jobs:
 
 ---
 
-# 15. ディレクトリ構成（最終形）
+# 16. ディレクトリ構成（最終形）
 
 ```
 schedule-app/
@@ -332,7 +344,7 @@ schedule-app/
 
 ---
 
-# 16. エージェント操作チートシート
+# 17. エージェント操作チートシート
 
 | 操作      | VS Code コマンド                  | 備考                          |
 | ------- | ----------------------------- | --------------------------- |
@@ -343,7 +355,7 @@ schedule-app/
 
 ---
 
-# 17. FAQ
+# 18. FAQ
 
 | Q             | A                                         |
 | ------------- | ----------------------------------------- |
@@ -353,7 +365,7 @@ schedule-app/
 
 ---
 
-# 18. まとめ — 5 ステップで完成
+# 19. まとめ — 5 ステップで完成
 
 1. **clone → `.venv` 作成 → 依存インストール**
 2. **`flask run` でローカル起動 → Google OAuth 通過**
