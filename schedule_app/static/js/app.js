@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('blocks import failed', err);
-      alert(err.message ?? err);
+      showToast(err.message ?? err);
     }
   });
 });
@@ -1279,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
           handled = true;
         } catch (err) {
           console.error('block delete failed', err);
-          alert(err.message ?? err);
+          showToast(err.message ?? err);
           return;
         }
       }
