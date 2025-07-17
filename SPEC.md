@@ -181,7 +181,8 @@ def quantize(dt: datetime, *, up: bool) -> datetime:
 # 8. UI / UX
 
 * Tailwind CSS v3 + Alpine.js v3 + HTML5
-* sticky header / CSS Grid 時間軸 / サイドパネル Tasks
+* sticky header / CSS Grid 時間軸 / サイドパネル Tasks ↔ Blocks (タブ切替)
+* Blocks パネルは Sheets インポートからのブロックをプレビューして置換可能
 * DnD: `.dragging{opacity:.5}`, drop target `.ring-2 ring-blue-400`
 * Undo/Redo (Command Pattern) 履歴 20
 * 印刷: `@media print` で操作 UI 非表示、A4 portrait margin 10 mm、表紙に QR
