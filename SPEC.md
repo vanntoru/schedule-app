@@ -103,6 +103,7 @@ class Block:
     id: str
     start_utc: datetime
     end_utc: datetime
+    title: str | None = None
 ```
 
 ---
